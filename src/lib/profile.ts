@@ -23,6 +23,12 @@ const SIGNED_URL_SECONDS = 60 * 60 * 24;
 const CACHE_KEY = "money.profile.v1";
 export const NAME_MAX = 40;
 
+/** Supabase errors are plain objects with a message, not always Error instances. */
+export function errorMessage(e: unknown, fallback: string): string {
+  if (e && typeof e === "object" && "message" in e && typeof e.message === "string" && e.message) return e.message;
+  return fallback;
+}
+
 // ---- store -----------------------------------------------------------------
 
 let state: State = { status: "loading", profile: null };
@@ -72,10 +78,20 @@ async function load() {
   const cached = state.profile ?? readCache();
   if (cached && state.status === "loading") set({ status: "loading", profile: cached });
 
+  let fallback: Profile | null = cached;
   try {
     const { data: auth } = await supabase().auth.getSession();
     const user = auth.session?.user;
     if (!user) throw new Error("Not signed in");
+    // If the profile row can't be read, still greet with the email name.
+    fallback ??= {
+      userId: user.id,
+      email: user.email ?? "",
+      displayName: (user.email ?? "").split("@")[0],
+      photoPath: null,
+      photoUrl: null,
+      photoUrlExpires: 0,
+    };
 
     const { data: row, error } = await supabase()
       .from("profiles")
@@ -101,7 +117,7 @@ async function load() {
       },
     });
   } catch (e) {
-    set({ status: "error", profile: cached, message: e instanceof Error ? e.message : "Could not load profile" });
+    set({ status: "error", profile: fallback, message: errorMessage(e, "Could not load profile") });
   }
 }
 

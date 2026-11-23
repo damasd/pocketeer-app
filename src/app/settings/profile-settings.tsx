@@ -6,7 +6,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { Camera, ChevronLeft } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
-import { NAME_MAX, saveDisplayName, savePhoto, signOut, useProfile } from "@/lib/profile";
+import { NAME_MAX, errorMessage, saveDisplayName, savePhoto, signOut, useProfile } from "@/lib/profile";
 
 export function ProfileSettings() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export function ProfileSettings() {
       await task();
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(errorMessage(e, "Something went wrong"));
       return false;
     } finally {
       setBusy(null);
