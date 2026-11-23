@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, PiggyBank, Plus, Wallet as WalletIcon } from "lucide-react";
-import { AccountCardFace } from "@/components/account-card";
+import Link from "next/link";
+import { ChevronRight, Pencil, PiggyBank, Plus, Wallet as WalletIcon } from "lucide-react";
+import { AccountCardFace, CARD_STYLES } from "@/components/account-card";
 import { Sheet } from "@/components/sheet";
 import { Button, ErrorNote } from "@/components/ui";
 import { useAccounts, type Account, type AccountGroup } from "@/lib/accounts";
@@ -123,21 +124,31 @@ export function AccountsScreen() {
               {loading &&
                 [0, 1].map((i) => <span key={i} aria-hidden className="block h-[216px] rounded-3xl bg-line" />)}
               {list.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => setEditing(a)}
-                  aria-label={`${a.name}, balance ${formatRupiah(a.balance)}. Edit`}
-                  className="rounded-3xl transition-transform duration-150 ease-out active:scale-[0.98]"
-                >
-                  <AccountCardFace
-                    name={a.name}
-                    accountNumber={a.accountNumber}
-                    colour={a.colour}
-                    balance={a.balance}
-                    saved={a.saved}
-                  />
-                </button>
+                <div key={a.id} className="relative">
+                  {/* Card opens this account's transactions; the pencil edits the account. */}
+                  <Link
+                    href={`/history?account=${a.id}`}
+                    aria-label={`${a.name}, balance ${formatRupiah(a.balance)}. Show transactions`}
+                    className="block rounded-3xl transition-transform duration-150 ease-out active:scale-[0.98]"
+                  >
+                    <AccountCardFace
+                      name={a.name}
+                      accountNumber={a.accountNumber}
+                      colour={a.colour}
+                      balance={a.balance}
+                      saved={a.saved}
+                    />
+                  </Link>
+                  <button
+                    type="button"
+                    aria-label={`Edit ${a.name}`}
+                    onClick={() => setEditing(a)}
+                    className="absolute top-3 right-3 flex size-11 items-center justify-center rounded-full"
+                    style={{ color: CARD_STYLES[a.colour].fg, background: CARD_STYLES[a.colour].circle }}
+                  >
+                    <Pencil aria-hidden size={18} strokeWidth={2.25} />
+                  </button>
+                </div>
               ))}
               {!loading && list.length === 0 && (
                 <p className="rounded-3xl bg-card p-5 text-[13px] font-medium text-muted">

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import { Greeting } from "@/components/greeting";
 
 export const metadata: Metadata = { title: "Home" };
@@ -16,8 +17,14 @@ export default function HomePage() {
         className="flex-1 rounded-t-[28px] bg-card px-5 pt-3 pb-36"
       >
         <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-line" />
-        <p className="mt-6 text-[13px] font-medium text-muted">
-          Budget and recent transactions will show here.
+        <div className="mt-6 flex items-baseline justify-between">
+          <h2 className="text-[22px] font-semibold tracking-[-0.01em]">Transaction</h2>
+          <Link href="/history" className="flex h-11 items-center text-[15px] font-semibold">
+            View all
+          </Link>
+        </div>
+        <p className="mt-2 text-[13px] font-medium text-muted">
+          Budget tiles and the last 3 days of transactions will show here (slice 8).
         </p>
       </section>
     </main>

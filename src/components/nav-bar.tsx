@@ -26,7 +26,9 @@ const RIGHT: Tab[] = [
 ];
 
 function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  // History opens from Home, so Home stays selected there (mockup).
+  if (href === "/") return pathname === "/" || pathname.startsWith("/history");
+  return pathname.startsWith(href);
 }
 
 function TabLink({ tab, active }: { tab: Tab; active: boolean }) {

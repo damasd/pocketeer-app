@@ -103,3 +103,37 @@ export async function deleteTransaction(id: string) {
   if (error) throw error;
   store.update((list) => list.filter((t) => t.id !== id));
 }
+
+export async function updateTransaction(id: string, input: NewTransaction): Promise<Transaction> {
+  const { data, error } = await supabase()
+    .from("transactions")
+    .update({
+      date: input.date,
+      type: input.type,
+      amount: input.amount,
+      account_id: input.accountId,
+      to_account_id: input.toAccountId,
+      category_id: input.categoryId,
+      note: input.note?.trim().slice(0, NOTE_MAX) || null,
+    })
+    .eq("id", id)
+    .select(COLUMNS)
+    .single();
+  if (error) throw error;
+  const tx = fromRow(data as Row);
+  store.update((list) => list.map((t) => (t.id === id ? tx : t)).sort(newestFirst));
+  return tx;
+}
+
+/** Fields needed to put a deleted transaction back (Undo after delete). */
+export function toNewTransaction(t: Transaction): NewTransaction {
+  return {
+    date: t.date,
+    type: t.type,
+    amount: t.amount,
+    accountId: t.accountId,
+    toAccountId: t.toAccountId,
+    categoryId: t.categoryId,
+    note: t.note,
+  };
+}

@@ -21,7 +21,15 @@ import {
   type KeypadKey,
 } from "@/lib/log";
 import { formatRupiah } from "@/lib/money";
-import { NOTE_MAX, createTransaction, deleteTransaction, useTransactions } from "@/lib/transactions";
+import {
+  NOTE_MAX,
+  createTransaction,
+  deleteTransaction,
+  toNewTransaction,
+  updateTransaction,
+  useTransactions,
+  type Transaction,
+} from "@/lib/transactions";
 
 type LogType = "expense" | "income";
 
@@ -30,36 +38,44 @@ const TYPES: { value: LogType; label: string }[] = [
   { value: "income", label: "Income" },
 ];
 
-/** Log transaction form (mockup Log.dc.html). Expense and income for now; transfer and saving in slice 6. */
-export function LogForm({ onDone }: { onDone: () => void }) {
+/**
+ * Log transaction form (mockup Log.dc.html). Expense and income for now; transfer and saving in slice 6.
+ * With `editing`, the form is filled in from that transaction and saves changes to it.
+ */
+export function LogForm({ onDone, editing = null }: { onDone: () => void; editing?: Transaction | null }) {
   const accounts = useAccounts();
   const categories = useCategories();
   const transactions = useTransactions();
 
-  const [type, setType] = useState<LogType>("expense");
-  const [digits, setDigits] = useState("");
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [chosenAccountId, setChosenAccountId] = useState<string | null>(null);
+  const [type, setType] = useState<LogType>(editing?.type === "income" ? "income" : "expense");
+  const [digits, setDigits] = useState(editing ? String(editing.amount) : "");
+  const [categoryId, setCategoryId] = useState<string | null>(editing?.categoryId ?? null);
+  const [chosenAccountId, setChosenAccountId] = useState<string | null>(editing?.accountId ?? null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [date, setDate] = useState(localDate);
-  const [note, setNote] = useState("");
+  const [date, setDate] = useState(editing?.date ?? localDate());
+  const [note, setNote] = useState(editing?.note ?? "");
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dateRef = useRef<HTMLInputElement>(null);
 
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
-  const active = useMemo(() => (accounts.data ?? []).filter((a) => !a.archived), [accounts.data]);
+  // Archived accounts and categories are hidden, except the ones the edited transaction already uses.
+  const active = useMemo(
+    () => (accounts.data ?? []).filter((a) => !a.archived || a.id === editing?.accountId),
+    [accounts.data, editing?.accountId],
+  );
   const accountId = chosenAccountId ?? defaultAccountId(active, txs);
   const account = active.find((a) => a.id === accountId) ?? null;
   const balanceOf = (id: string, start: number) => accountBalance(id, start, txs);
 
   const chips = useMemo(() => {
-    const ofKind = (categories.data ?? []).filter((c) => c.kind === type && !c.archived);
+    const ofKind = (categories.data ?? []).filter((c) => c.kind === type && (!c.archived || c.id === editing?.categoryId));
     return rankByUse(
       ofKind,
       txs.filter((t) => t.type === type).map((t) => t.categoryId),
     );
-  }, [categories.data, txs, type]);
+  }, [categories.data, txs, type, editing?.categoryId]);
 
   const amount = digitsToAmount(digits);
   const loading = (accounts.status === "loading" && !accounts.data) || (categories.status === "loading" && !categories.data);
@@ -78,33 +94,45 @@ export function LogForm({ onDone }: { onDone: () => void }) {
     if (!account) return setError("Pick an account.");
     setBusy(true);
     setError(null);
+    const input = { date, type, amount, accountId: account.id, toAccountId: null, categoryId, note };
     try {
-      const tx = await createTransaction({
-        date,
-        type,
-        amount,
-        accountId: account.id,
-        toAccountId: null,
-        categoryId,
-        note,
-      });
+      if (editing) {
+        await updateTransaction(editing.id, input);
+        onDone();
+        showToast({
+          message: `Updated · ${formatRupiah(amount)}`,
+          action: { label: "Undo", run: () => undo(() => updateTransaction(editing.id, toNewTransaction(editing))) },
+        });
+        return;
+      }
+      const tx = await createTransaction(input);
       onDone();
       showToast({
         message: `Saved · ${formatRupiah(amount)}`,
         action: {
           label: "Undo",
-          run: async () => {
-            try {
-              await deleteTransaction(tx.id);
-              showToast({ message: "Undone" });
-            } catch (e) {
-              showToast({ message: errorMessage(e, "Could not undo"), tone: "error" });
-            }
-          },
+          run: () => undo(() => deleteTransaction(tx.id)),
         },
       });
     } catch (e) {
       setError(errorMessage(e, "Could not save"));
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    if (!editing || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteTransaction(editing.id);
+      onDone();
+      showToast({
+        message: `Deleted · ${formatRupiah(editing.amount)}`,
+        action: { label: "Undo", run: () => undo(() => createTransaction(toNewTransaction(editing))) },
+      });
+    } catch (e) {
+      setError(errorMessage(e, "Could not delete"));
       setBusy(false);
     }
   }
@@ -315,6 +343,36 @@ export function LogForm({ onDone }: { onDone: () => void }) {
 
       {error && <ErrorNote>{error}</ErrorNote>}
 
+      {editing &&
+        (confirmDelete ? (
+          <div role="group" aria-label="Confirm delete" className="flex items-center gap-2 rounded-2xl bg-page p-2 pl-4">
+            <span className="flex-1 text-[13px] font-semibold">Delete this transaction?</span>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              className="h-11 rounded-full px-3 text-[13px] font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={remove}
+              className="h-11 rounded-full bg-ember px-4 text-[13px] font-bold text-white disabled:opacity-60"
+            >
+              {busy ? "Deleting…" : "Delete"}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="h-11 self-start rounded-full px-1 text-[13px] font-semibold underline-offset-4 hover:underline"
+          >
+            Delete transaction
+          </button>
+        ))}
+
       <div className="mt-auto grid grid-cols-4 grid-rows-[repeat(4,52px)] gap-2 pt-1">
         {(["1", "2", "3"] as const).map((k, i) => (
           <Key key={k} col={i + 1} row={1} onPress={() => press(k)}>
@@ -382,4 +440,14 @@ function Key({
       {children}
     </button>
   );
+}
+
+/** Run an undo step and report the result in a toast. */
+async function undo(step: () => Promise<unknown>) {
+  try {
+    await step();
+    showToast({ message: "Undone" });
+  } catch (e) {
+    showToast({ message: errorMessage(e, "Could not undo"), tone: "error" });
+  }
 }
