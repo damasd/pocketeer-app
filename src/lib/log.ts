@@ -97,26 +97,46 @@ export function categoryKindFor(mode: LogMode): "expense" | "income" | "saving" 
   return mode === "transfer" ? null : mode;
 }
 
+export type AccountGroup = "spending" | "saving";
+
+/**
+ * Which account group each side of a transaction may use (Damas, 23 Nov 2026):
+ * everyday money moves only between Spending accounts; Saving accounts are reached only
+ * through Saving (deposit: Spending -> Saving, withdraw: Saving -> Spending).
+ */
+export function accountGroupsFor(type: StoredType): { from: AccountGroup; to: AccountGroup | null } {
+  switch (type) {
+    case "expense":
+    case "income":
+      return { from: "spending", to: null };
+    case "transfer":
+      return { from: "spending", to: "spending" };
+    case "saving_deposit":
+      return { from: "spending", to: "saving" };
+    case "saving_withdraw":
+      return { from: "saving", to: "spending" };
+  }
+}
+
 /**
  * Default "To" account for transfers and savings: the "to" of the newest transaction of the same
- * type when still available (and, for a transfer, not the "from"); otherwise a saving stays in the
- * same account and a transfer goes to the first other account. `recent` must be newest first.
+ * type when it is still allowed (and, for a transfer, not the "from"); otherwise the first allowed
+ * account. `allowedTo` is already limited to the right group; `recent` must be newest first.
  */
 export function defaultToAccountId(
   type: StoredType,
   fromId: string | null,
-  available: readonly { id: string }[],
+  allowedTo: readonly { id: string }[],
   recent: readonly { type: string; toAccountId: string | null }[],
 ): string | null {
   if (type === "expense" || type === "income") return null;
-  const ids = new Set(available.map((a) => a.id));
+  const ids = new Set(allowedTo.map((a) => a.id));
   for (const t of recent) {
     if (t.type !== type || !t.toAccountId || !ids.has(t.toAccountId)) continue;
-    if (type === "transfer" && t.toAccountId === fromId) continue;
+    if (t.toAccountId === fromId) continue;
     return t.toAccountId;
   }
-  if (type === "transfer") return available.find((a) => a.id !== fromId)?.id ?? null;
-  return fromId;
+  return allowedTo.find((a) => a.id !== fromId)?.id ?? null;
 }
 
 /** What's missing before Save, as a message for the user, or null when it can be saved. */

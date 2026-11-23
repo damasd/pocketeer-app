@@ -4,6 +4,7 @@ import {
   categoryKindFor,
   dateLabel,
   defaultAccountId,
+  accountGroupsFor,
   defaultToAccountId,
   digitsToAmount,
   localDate,
@@ -136,12 +137,31 @@ describe("defaultToAccountId", () => {
     expect(defaultToAccountId("transfer", "gopay", accounts, [{ type: "transfer", toAccountId: "gopay" }])).toBe("bca");
   });
 
-  it("keeps a saving in the same account by default", () => {
-    expect(defaultToAccountId("saving_deposit", "bca", accounts, [])).toBe("bca");
+  it("falls back to the first allowed account", () => {
+    expect(defaultToAccountId("saving_deposit", "bca", [{ id: "pegadaian" }, { id: "bibit" }], [])).toBe("pegadaian");
+  });
+
+  it("ignores a last-used account that is no longer allowed", () => {
+    expect(
+      defaultToAccountId("saving_deposit", "bca", [{ id: "bibit" }], [{ type: "saving_deposit", toAccountId: "pegadaian" }]),
+    ).toBe("bibit");
   });
 
   it("is null for expense and income", () => {
     expect(defaultToAccountId("expense", "bca", accounts, [])).toBeNull();
+  });
+});
+
+describe("accountGroupsFor", () => {
+  it("keeps everyday money in Spending accounts", () => {
+    expect(accountGroupsFor("expense")).toEqual({ from: "spending", to: null });
+    expect(accountGroupsFor("income")).toEqual({ from: "spending", to: null });
+    expect(accountGroupsFor("transfer")).toEqual({ from: "spending", to: "spending" });
+  });
+
+  it("moves money into Saving on deposit and back out on withdraw", () => {
+    expect(accountGroupsFor("saving_deposit")).toEqual({ from: "spending", to: "saving" });
+    expect(accountGroupsFor("saving_withdraw")).toEqual({ from: "saving", to: "spending" });
   });
 });
 

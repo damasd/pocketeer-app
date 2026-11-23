@@ -15,6 +15,7 @@ import {
   categoryKindFor,
   dateLabel,
   defaultAccountId,
+  accountGroupsFor,
   defaultToAccountId,
   digitsToAmount,
   localDate,
@@ -86,12 +87,22 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
       ),
     [accounts.data, editing?.accountId, editing?.toAccountId],
   );
+  // Spending accounts for everyday money; Saving accounts only through Saving (see accountGroupsFor).
+  // The edited transaction keeps its own accounts even if they no longer fit the rule.
+  const groups = accountGroupsFor(type);
+  const fromList = active.filter((a) => a.group === groups.from || a.id === editing?.accountId);
+  const toList = groups.to ? active.filter((a) => a.group === groups.to || a.id === editing?.toAccountId) : [];
   // Default "from": the account on the newest transaction of this type, else the newest of any type.
   const fromId =
-    chosenFromId ?? defaultAccountId(active, [...txs.filter((t) => t.type === type), ...txs]);
-  const toId = mode === "transfer" || mode === "saving" ? (chosenToId ?? defaultToAccountId(type, fromId, active, txs)) : null;
-  const from = active.find((a) => a.id === fromId) ?? null;
-  const to = active.find((a) => a.id === toId) ?? null;
+    (chosenFromId && fromList.some((a) => a.id === chosenFromId) ? chosenFromId : null) ??
+    defaultAccountId(fromList, [...txs.filter((t) => t.type === type), ...txs]);
+  const toCandidates = mode === "transfer" ? toList.filter((a) => a.id !== fromId) : toList;
+  const toId = groups.to
+    ? (chosenToId && toCandidates.some((a) => a.id === chosenToId) ? chosenToId : null) ??
+      defaultToAccountId(type, fromId, toCandidates, txs)
+    : null;
+  const from = fromList.find((a) => a.id === fromId) ?? null;
+  const to = toCandidates.find((a) => a.id === toId) ?? null;
   const balanceOf = (a: Account) => accountBalance(a.id, a.startingBalance, txs);
 
   const chips = useMemo(() => {
@@ -303,7 +314,9 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
       <AccountPicker
         id="from"
         label={fromLabel}
-        accounts={active}
+        accounts={fromList}
+        emptyText={groups.from === "saving" ? "No Saving accounts yet." : "No Spending accounts yet."}
+        onLeave={onDone}
         value={from}
         balanceOf={balanceOf}
         open={openPicker === "from"}
@@ -320,7 +333,9 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         <AccountPicker
           id="to"
           label="To"
-          accounts={mode === "transfer" ? active.filter((a) => a.id !== from?.id) : active}
+          accounts={toCandidates}
+          emptyText={groups.to === "saving" ? "No Saving accounts yet." : "No other Spending account yet."}
+          onLeave={onDone}
           value={to}
           balanceOf={balanceOf}
           open={openPicker === "to"}
@@ -331,7 +346,6 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
             setError(null);
           }}
           badge="lime"
-          hint={mode === "saving" && from && to && from.id === to.id ? `Money stays in ${from.name}; only the saving balance changes.` : undefined}
         />
       )}
 
@@ -502,6 +516,8 @@ function AccountPicker({
   onPick,
   badge,
   hint,
+  emptyText,
+  onLeave,
 }: {
   id: string;
   label: string;
@@ -513,6 +529,9 @@ function AccountPicker({
   onPick: (a: Account) => void;
   badge: "ink" | "lime";
   hint?: string;
+  emptyText: string;
+  /** Called when the user follows a link out of the sheet. */
+  onLeave: () => void;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -536,13 +555,24 @@ function AccountPicker({
           {value ? accountBadge(value.name) : "…"}
         </span>
         <span id={`${id}-current`} className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-[15px] font-semibold">{value?.name ?? "Pick an account"}</span>
+          <span className="truncate text-[15px] font-semibold">
+            {value?.name ?? (accounts.length ? "Pick an account" : emptyText)}
+          </span>
           {value && <span className="text-xs text-muted">{formatRupiah(balanceOf(value))}</span>}
         </span>
         <ChevronDown aria-hidden size={18} className={`flex-none transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
       </button>
       {hint && <p className="text-xs text-muted">{hint}</p>}
-      {open && (
+      {open && accounts.length === 0 && (
+        <p id={`${id}-options`} className="rounded-2xl border border-line px-4 py-3 text-[13px] font-medium">
+          {emptyText}{" "}
+          <Link href="/account" onClick={onLeave} className="font-semibold underline">
+            Add one in Accounts
+          </Link>
+          , then set its type.
+        </p>
+      )}
+      {open && accounts.length > 0 && (
         <ul id={`${id}-options`} className="flex flex-col overflow-hidden rounded-2xl border border-line">
           {accounts.map((a) => (
             <li key={a.id} className="border-b border-line last:border-0">
