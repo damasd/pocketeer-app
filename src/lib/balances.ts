@@ -53,3 +53,14 @@ export function savedInAccount(accountId: string, moves: readonly MoneyMove[]): 
 export function sumBalances(items: readonly { balance: number }[]): number {
   return items.reduce((total, item) => total + item.balance, 0);
 }
+
+/** Saving balance of one saving category: all deposits − all withdrawals, across all periods. */
+export function savingBalance(categoryId: string, moves: readonly (MoneyMove & { categoryId: string | null })[]): number {
+  let total = 0;
+  for (const m of moves) {
+    if (m.categoryId !== categoryId) continue;
+    if (m.type === "saving_deposit") total += m.amount;
+    if (m.type === "saving_withdraw") total -= m.amount;
+  }
+  return total;
+}

@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { accountBadge, dateLabel, defaultAccountId, digitsToAmount, localDate, pressKey, rankByUse } from "./log";
+import {
+  accountBadge,
+  categoryKindFor,
+  dateLabel,
+  defaultAccountId,
+  defaultToAccountId,
+  digitsToAmount,
+  localDate,
+  logProblem,
+  modeOf,
+  pressKey,
+  rankByUse,
+  storedType,
+} from "./log";
 
 describe("pressKey", () => {
   it("appends digits and 000", () => {
@@ -90,5 +103,69 @@ describe("accountBadge", () => {
     expect(accountBadge("Jago")).toBe("JA");
     expect(accountBadge("HSBC")).toBe("HS");
     expect(accountBadge("cash")).toBe("CA");
+  });
+});
+
+describe("log modes", () => {
+  it("maps modes to stored types and back", () => {
+    expect(storedType("saving", "deposit")).toBe("saving_deposit");
+    expect(storedType("saving", "withdraw")).toBe("saving_withdraw");
+    expect(storedType("transfer", "deposit")).toBe("transfer");
+    expect(modeOf("saving_withdraw")).toEqual({ mode: "saving", direction: "withdraw" });
+    expect(modeOf("income").mode).toBe("income");
+  });
+
+  it("has no category kind for transfers", () => {
+    expect(categoryKindFor("transfer")).toBeNull();
+    expect(categoryKindFor("saving")).toBe("saving");
+  });
+});
+
+describe("defaultToAccountId", () => {
+  const accounts = [{ id: "bca" }, { id: "gopay" }, { id: "pegadaian" }];
+
+  it("reuses the last 'to' of the same type", () => {
+    const recent = [
+      { type: "expense", toAccountId: null },
+      { type: "transfer", toAccountId: "gopay" },
+    ];
+    expect(defaultToAccountId("transfer", "bca", accounts, recent)).toBe("gopay");
+  });
+
+  it("never defaults a transfer to its own 'from'", () => {
+    expect(defaultToAccountId("transfer", "gopay", accounts, [{ type: "transfer", toAccountId: "gopay" }])).toBe("bca");
+  });
+
+  it("keeps a saving in the same account by default", () => {
+    expect(defaultToAccountId("saving_deposit", "bca", accounts, [])).toBe("bca");
+  });
+
+  it("is null for expense and income", () => {
+    expect(defaultToAccountId("expense", "bca", accounts, [])).toBeNull();
+  });
+});
+
+describe("logProblem", () => {
+  const ok = { mode: "expense" as const, amount: 35000, categoryId: "food", fromId: "bca", toId: null };
+
+  it("accepts a complete expense", () => {
+    expect(logProblem(ok)).toBeNull();
+  });
+
+  it("asks for amount, category and account in that order", () => {
+    expect(logProblem({ ...ok, amount: 0 })).toBe("Type an amount first.");
+    expect(logProblem({ ...ok, categoryId: null })).toBe("Pick a category.");
+    expect(logProblem({ ...ok, fromId: null })).toBe("Pick an account.");
+  });
+
+  it("needs two different accounts for a transfer but no category", () => {
+    const t = { mode: "transfer" as const, amount: 200000, categoryId: null, fromId: "bca", toId: "gopay" };
+    expect(logProblem(t)).toBeNull();
+    expect(logProblem({ ...t, toId: "bca" })).toBe("A transfer needs two different accounts.");
+    expect(logProblem({ ...t, toId: null })).toBe("Pick the account to move money to.");
+  });
+
+  it("lets a saving stay in the same account", () => {
+    expect(logProblem({ mode: "saving", amount: 500000, categoryId: "gold", fromId: "jago", toId: "jago" })).toBeNull();
   });
 });

@@ -75,3 +75,65 @@ export function accountBadge(name: string): string {
   if (caps.length >= 2 && caps.length <= 3) return caps;
   return name.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "·";
 }
+
+// ---- Log modes (slice 6): the sheet's four types map onto the five stored transaction types.
+
+export type LogMode = "expense" | "income" | "transfer" | "saving";
+export type SavingDirection = "deposit" | "withdraw";
+type StoredType = "expense" | "income" | "transfer" | "saving_deposit" | "saving_withdraw";
+
+export function storedType(mode: LogMode, direction: SavingDirection): StoredType {
+  return mode === "saving" ? (direction === "deposit" ? "saving_deposit" : "saving_withdraw") : mode;
+}
+
+export function modeOf(type: StoredType): { mode: LogMode; direction: SavingDirection } {
+  if (type === "saving_deposit") return { mode: "saving", direction: "deposit" };
+  if (type === "saving_withdraw") return { mode: "saving", direction: "withdraw" };
+  return { mode: type, direction: "deposit" };
+}
+
+/** Category kind used by each mode; transfers have no category. */
+export function categoryKindFor(mode: LogMode): "expense" | "income" | "saving" | null {
+  return mode === "transfer" ? null : mode;
+}
+
+/**
+ * Default "To" account for transfers and savings: the "to" of the newest transaction of the same
+ * type when still available (and, for a transfer, not the "from"); otherwise a saving stays in the
+ * same account and a transfer goes to the first other account. `recent` must be newest first.
+ */
+export function defaultToAccountId(
+  type: StoredType,
+  fromId: string | null,
+  available: readonly { id: string }[],
+  recent: readonly { type: string; toAccountId: string | null }[],
+): string | null {
+  if (type === "expense" || type === "income") return null;
+  const ids = new Set(available.map((a) => a.id));
+  for (const t of recent) {
+    if (t.type !== type || !t.toAccountId || !ids.has(t.toAccountId)) continue;
+    if (type === "transfer" && t.toAccountId === fromId) continue;
+    return t.toAccountId;
+  }
+  if (type === "transfer") return available.find((a) => a.id !== fromId)?.id ?? null;
+  return fromId;
+}
+
+/** What's missing before Save, as a message for the user, or null when it can be saved. */
+export function logProblem(input: {
+  mode: LogMode;
+  amount: number;
+  categoryId: string | null;
+  fromId: string | null;
+  toId: string | null;
+}): string | null {
+  if (input.amount <= 0) return "Type an amount first.";
+  if (input.mode !== "transfer" && !input.categoryId) return "Pick a category.";
+  if (!input.fromId) return "Pick an account.";
+  if (input.mode === "transfer") {
+    if (!input.toId) return "Pick the account to move money to.";
+    if (input.toId === input.fromId) return "A transfer needs two different accounts.";
+  }
+  if (input.mode === "saving" && !input.toId) return "Pick where the saved money goes.";
+  return null;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountBalance, savedInAccount, sumBalances, type MoneyMove } from "./balances";
+import { accountBalance, savedInAccount, savingBalance, sumBalances, type MoneyMove } from "./balances";
 
 const BCA = "bca";
 const GOPAY = "gopay";
@@ -81,5 +81,20 @@ describe("sumBalances", () => {
   it("adds balances", () => {
     expect(sumBalances([{ balance: 4205000 }, { balance: 6150000 }, { balance: -35000 }])).toBe(10320000);
     expect(sumBalances([])).toBe(0);
+  });
+});
+
+describe("savingBalance", () => {
+  it("is deposits minus withdrawals for that category, wherever the money sits", () => {
+    const moves = [
+      { type: "saving_deposit" as const, amount: 500000, accountId: BCA, toAccountId: PEGADAIAN, categoryId: "gold" },
+      { type: "saving_deposit" as const, amount: 300000, accountId: JAGO, toAccountId: JAGO, categoryId: "gold" },
+      { type: "saving_withdraw" as const, amount: 200000, accountId: PEGADAIAN, toAccountId: BCA, categoryId: "gold" },
+      { type: "saving_deposit" as const, amount: 1000000, accountId: JAGO, toAccountId: JAGO, categoryId: "emergency" },
+      { type: "expense" as const, amount: 35000, accountId: BCA, toAccountId: null, categoryId: "food" },
+    ];
+    expect(savingBalance("gold", moves)).toBe(600000);
+    expect(savingBalance("emergency", moves)).toBe(1000000);
+    expect(savingBalance("food", moves)).toBe(0);
   });
 });

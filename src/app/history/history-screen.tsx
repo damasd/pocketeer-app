@@ -216,7 +216,7 @@ export function HistoryScreen() {
                       categoryName={category(t.categoryId)?.name ?? ""}
                       categoryIcon={category(t.categoryId)?.icon ?? "ellipsis"}
                       accountName={accountName}
-                      onOpen={t.type === "expense" || t.type === "income" ? () => setEditing(t) : undefined}
+                      onOpen={() => setEditing(t)}
                     />
                   </li>
                 ))}

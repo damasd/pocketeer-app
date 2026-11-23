@@ -6,19 +6,26 @@ import { CalendarDays, ChevronDown, Delete } from "lucide-react";
 import { Segmented } from "@/components/segmented";
 import { showToast } from "@/components/toast";
 import { ErrorNote } from "@/components/ui";
-import { useAccounts } from "@/lib/accounts";
-import { accountBalance } from "@/lib/balances";
+import { useAccounts, type Account } from "@/lib/accounts";
+import { accountBalance, savingBalance } from "@/lib/balances";
 import { useCategories } from "@/lib/categories";
 import { errorMessage } from "@/lib/errors";
 import {
   accountBadge,
+  categoryKindFor,
   dateLabel,
   defaultAccountId,
+  defaultToAccountId,
   digitsToAmount,
   localDate,
+  logProblem,
+  modeOf,
   pressKey,
   rankByUse,
+  storedType,
   type KeypadKey,
+  type LogMode,
+  type SavingDirection,
 } from "@/lib/log";
 import { formatRupiah } from "@/lib/money";
 import {
@@ -31,15 +38,20 @@ import {
   type Transaction,
 } from "@/lib/transactions";
 
-type LogType = "expense" | "income";
-
-const TYPES: { value: LogType; label: string }[] = [
+const MODES: { value: LogMode; label: string }[] = [
   { value: "expense", label: "Expense" },
   { value: "income", label: "Income" },
+  { value: "transfer", label: "Transfer" },
+  { value: "saving", label: "Saving" },
+];
+
+const DIRECTIONS: { value: SavingDirection; label: string }[] = [
+  { value: "deposit", label: "Deposit" },
+  { value: "withdraw", label: "Withdraw" },
 ];
 
 /**
- * Log transaction form (mockup Log.dc.html). Expense and income for now; transfer and saving in slice 6.
+ * Log transaction form (mockup Log.dc.html): expense, income, transfer and saving (deposit or withdraw).
  * With `editing`, the form is filled in from that transaction and saves changes to it.
  */
 export function LogForm({ onDone, editing = null }: { onDone: () => void; editing?: Transaction | null }) {
@@ -47,11 +59,14 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
   const categories = useCategories();
   const transactions = useTransactions();
 
-  const [type, setType] = useState<LogType>(editing?.type === "income" ? "income" : "expense");
+  const start = editing ? modeOf(editing.type) : { mode: "expense" as LogMode, direction: "deposit" as SavingDirection };
+  const [mode, setMode] = useState<LogMode>(start.mode);
+  const [direction, setDirection] = useState<SavingDirection>(start.direction);
   const [digits, setDigits] = useState(editing ? String(editing.amount) : "");
   const [categoryId, setCategoryId] = useState<string | null>(editing?.categoryId ?? null);
-  const [chosenAccountId, setChosenAccountId] = useState<string | null>(editing?.accountId ?? null);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [chosenFromId, setChosenFromId] = useState<string | null>(editing?.accountId ?? null);
+  const [chosenToId, setChosenToId] = useState<string | null>(editing?.toAccountId ?? null);
+  const [openPicker, setOpenPicker] = useState<"from" | "to" | null>(null);
   const [date, setDate] = useState(editing?.date ?? localDate());
   const [note, setNote] = useState(editing?.note ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -59,28 +74,39 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
   const [error, setError] = useState<string | null>(null);
   const dateRef = useRef<HTMLInputElement>(null);
 
+  const type = storedType(mode, direction);
+  const kind = categoryKindFor(mode);
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
+
   // Archived accounts and categories are hidden, except the ones the edited transaction already uses.
   const active = useMemo(
-    () => (accounts.data ?? []).filter((a) => !a.archived || a.id === editing?.accountId),
-    [accounts.data, editing?.accountId],
+    () =>
+      (accounts.data ?? []).filter(
+        (a) => !a.archived || a.id === editing?.accountId || a.id === editing?.toAccountId,
+      ),
+    [accounts.data, editing?.accountId, editing?.toAccountId],
   );
-  const accountId = chosenAccountId ?? defaultAccountId(active, txs);
-  const account = active.find((a) => a.id === accountId) ?? null;
-  const balanceOf = (id: string, start: number) => accountBalance(id, start, txs);
+  // Default "from": the account on the newest transaction of this type, else the newest of any type.
+  const fromId =
+    chosenFromId ?? defaultAccountId(active, [...txs.filter((t) => t.type === type), ...txs]);
+  const toId = mode === "transfer" || mode === "saving" ? (chosenToId ?? defaultToAccountId(type, fromId, active, txs)) : null;
+  const from = active.find((a) => a.id === fromId) ?? null;
+  const to = active.find((a) => a.id === toId) ?? null;
+  const balanceOf = (a: Account) => accountBalance(a.id, a.startingBalance, txs);
 
   const chips = useMemo(() => {
-    const ofKind = (categories.data ?? []).filter((c) => c.kind === type && (!c.archived || c.id === editing?.categoryId));
-    return rankByUse(
-      ofKind,
-      txs.filter((t) => t.type === type).map((t) => t.categoryId),
-    );
-  }, [categories.data, txs, type, editing?.categoryId]);
+    if (!kind) return [];
+    const ofKind = (categories.data ?? []).filter((c) => c.kind === kind && (!c.archived || c.id === editing?.categoryId));
+    const sameKind = txs.filter((t) => (kind === "saving" ? t.type.startsWith("saving") : t.type === kind));
+    return rankByUse(ofKind, sameKind.map((t) => t.categoryId));
+  }, [categories.data, txs, kind, editing?.categoryId]);
 
   const amount = digitsToAmount(digits);
   const loading = (accounts.status === "loading" && !accounts.data) || (categories.status === "loading" && !categories.data);
   const loadError =
     accounts.status === "error" ? accounts.message : categories.status === "error" ? categories.message : null;
+
+  const fromLabel = { expense: "Pay from", income: "Into", transfer: "From", saving: "From" }[mode];
 
   function press(key: KeypadKey) {
     setDigits((d) => pressKey(d, key));
@@ -89,12 +115,19 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
 
   async function save() {
     if (busy) return;
-    if (amount <= 0) return setError("Type an amount first.");
-    if (!categoryId) return setError("Pick a category.");
-    if (!account) return setError("Pick an account.");
+    const problem = logProblem({ mode, amount, categoryId: kind ? categoryId : null, fromId: from?.id ?? null, toId: to?.id ?? null });
+    if (problem) return setError(problem);
     setBusy(true);
     setError(null);
-    const input = { date, type, amount, accountId: account.id, toAccountId: null, categoryId, note };
+    const input = {
+      date,
+      type,
+      amount,
+      accountId: from!.id,
+      toAccountId: mode === "transfer" || mode === "saving" ? to!.id : null,
+      categoryId: kind ? categoryId : null,
+      note,
+    };
     try {
       if (editing) {
         await updateTransaction(editing.id, input);
@@ -184,11 +217,13 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
     <div className="flex flex-1 flex-col gap-3">
       <Segmented
         label="Transaction type"
-        options={TYPES}
-        value={type}
-        onChange={(t) => {
-          setType(t);
+        options={MODES}
+        value={mode}
+        onChange={(m) => {
+          setMode(m);
           setCategoryId(null);
+          setChosenToId(null);
+          setOpenPicker(null);
           setError(null);
         }}
       />
@@ -208,94 +243,97 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
 
       {loadError && <ErrorNote>{loadError}</ErrorNote>}
 
-      <div className="flex flex-col gap-2">
-        <span id="category-label" className="text-[13px] font-medium text-muted">
-          Category
-        </span>
-        <div
-          role="group"
-          aria-labelledby="category-label"
-          className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5"
-        >
-          {loading &&
-            [0, 1, 2].map((i) => <span key={i} aria-hidden className="h-11 w-24 flex-none rounded-full bg-page" />)}
-          {chips.map((c) => {
-            const on = c.id === categoryId;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                aria-pressed={on}
-                onClick={() => {
-                  setCategoryId(c.id);
-                  setError(null);
-                }}
-                className={`h-11 flex-none rounded-full border px-4 text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 ${
-                  on ? "border-lime bg-lime text-ink" : "border-line bg-card text-ink"
-                }`}
-              >
-                {c.name}
-              </button>
-            );
-          })}
-          {!loading && chips.length === 0 && (
-            <Link href="/settings/categories" onClick={onDone} className="text-[13px] font-semibold underline">
-              Add a category
-            </Link>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <span id="account-label" className="text-[13px] font-medium text-muted">
-          {type === "expense" ? "Pay from" : "Into"}
-        </span>
-        <button
-          type="button"
-          aria-labelledby="account-label account-current"
-          aria-expanded={pickerOpen}
-          aria-controls="account-options"
-          onClick={() => setPickerOpen((o) => !o)}
-          className="flex h-14 items-center gap-3 rounded-2xl bg-page px-3.5 text-left"
-        >
-          <span aria-hidden className="flex size-8 flex-none items-center justify-center rounded-full bg-ink text-[11px] font-bold text-lime">
-            {account ? accountBadge(account.name) : "…"}
-          </span>
-          <span id="account-current" className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="truncate text-[15px] font-semibold">{account?.name ?? "Loading…"}</span>
-            {account && (
-              <span className="text-xs text-muted">{formatRupiah(balanceOf(account.id, account.startingBalance))}</span>
-            )}
-          </span>
-          <ChevronDown
-            aria-hidden
-            size={18}
-            className={`flex-none transition-transform duration-150 ${pickerOpen ? "rotate-180" : ""}`}
-          />
-        </button>
-        {pickerOpen && (
-          <ul id="account-options" className="flex flex-col overflow-hidden rounded-2xl border border-line">
-            {active.map((a) => (
-              <li key={a.id} className="border-b border-line last:border-0">
-                <button
-                  type="button"
-                  aria-pressed={a.id === accountId}
-                  onClick={() => {
-                    setChosenAccountId(a.id);
-                    setPickerOpen(false);
+      {kind && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <span id="category-label" className="text-[13px] font-medium text-muted">
+              {mode === "saving" ? "Saving category" : "Category"}
+            </span>
+            {mode === "saving" && (
+              <div className="w-[200px]">
+                <Segmented
+                  label="Deposit or withdraw"
+                  options={DIRECTIONS}
+                  value={direction}
+                  onChange={(d) => {
+                    setDirection(d);
+                    setChosenToId(null);
+                    setError(null);
                   }}
-                  className={`flex min-h-12 w-full items-center justify-between gap-3 px-4 py-2 text-left ${
-                    a.id === accountId ? "bg-page" : "bg-card"
+                />
+              </div>
+            )}
+          </div>
+          <div role="group" aria-labelledby="category-label" className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
+            {loading &&
+              [0, 1, 2].map((i) => <span key={i} aria-hidden className="h-11 w-24 flex-none rounded-full bg-page" />)}
+            {chips.map((c) => {
+              const on = c.id === categoryId;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => {
+                    setCategoryId(c.id);
+                    setError(null);
+                  }}
+                  className={`h-11 flex-none rounded-full border px-4 text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 ${
+                    on ? "border-lime bg-lime text-ink" : "border-line bg-card text-ink"
                   }`}
                 >
-                  <span className="text-[15px] font-semibold">{a.name}</span>
-                  <span className="text-[13px] text-muted">{formatRupiah(balanceOf(a.id, a.startingBalance))}</span>
+                  {c.name}
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+              );
+            })}
+            {!loading && chips.length === 0 && (
+              <Link href="/settings/categories" onClick={onDone} className="flex h-11 items-center text-[13px] font-semibold underline">
+                Add a category
+              </Link>
+            )}
+          </div>
+          {mode === "saving" && categoryId && (
+            <p className="text-xs text-muted">
+              Saved in {chips.find((c) => c.id === categoryId)?.name}: {formatRupiah(savingBalance(categoryId, txs))}
+            </p>
+          )}
+        </div>
+      )}
+
+      <AccountPicker
+        id="from"
+        label={fromLabel}
+        accounts={active}
+        value={from}
+        balanceOf={balanceOf}
+        open={openPicker === "from"}
+        onToggle={() => setOpenPicker((p) => (p === "from" ? null : "from"))}
+        onPick={(a) => {
+          setChosenFromId(a.id);
+          setOpenPicker(null);
+          setError(null);
+        }}
+        badge="ink"
+      />
+
+      {(mode === "transfer" || mode === "saving") && (
+        <AccountPicker
+          id="to"
+          label="To"
+          accounts={mode === "transfer" ? active.filter((a) => a.id !== from?.id) : active}
+          value={to}
+          balanceOf={balanceOf}
+          open={openPicker === "to"}
+          onToggle={() => setOpenPicker((p) => (p === "to" ? null : "to"))}
+          onPick={(a) => {
+            setChosenToId(a.id);
+            setOpenPicker(null);
+            setError(null);
+          }}
+          badge="lime"
+          hint={mode === "saving" && from && to && from.id === to.id ? `Money stays in ${from.name}; only the saving balance changes.` : undefined}
+        />
+      )}
 
       <div className="flex gap-2">
         <button
@@ -450,4 +488,79 @@ async function undo(step: () => Promise<unknown>) {
   } catch (e) {
     showToast({ message: errorMessage(e, "Could not undo"), tone: "error" });
   }
+}
+
+/** Account picker (mockup "Pay from" / "To" rows): shows the account and its balance; opens a list below. */
+function AccountPicker({
+  id,
+  label,
+  accounts,
+  value,
+  balanceOf,
+  open,
+  onToggle,
+  onPick,
+  badge,
+  hint,
+}: {
+  id: string;
+  label: string;
+  accounts: Account[];
+  value: Account | null;
+  balanceOf: (a: Account) => number;
+  open: boolean;
+  onToggle: () => void;
+  onPick: (a: Account) => void;
+  badge: "ink" | "lime";
+  hint?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span id={`${id}-label`} className="text-[13px] font-medium text-muted">
+        {label}
+      </span>
+      <button
+        type="button"
+        aria-labelledby={`${id}-label ${id}-current`}
+        aria-expanded={open}
+        aria-controls={`${id}-options`}
+        onClick={onToggle}
+        className="flex h-14 items-center gap-3 rounded-2xl bg-page px-3.5 text-left"
+      >
+        <span
+          aria-hidden
+          className={`flex size-8 flex-none items-center justify-center rounded-full text-[11px] font-bold ${
+            badge === "ink" ? "bg-ink text-lime" : "bg-lime text-ink"
+          }`}
+        >
+          {value ? accountBadge(value.name) : "…"}
+        </span>
+        <span id={`${id}-current`} className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-[15px] font-semibold">{value?.name ?? "Pick an account"}</span>
+          {value && <span className="text-xs text-muted">{formatRupiah(balanceOf(value))}</span>}
+        </span>
+        <ChevronDown aria-hidden size={18} className={`flex-none transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {hint && <p className="text-xs text-muted">{hint}</p>}
+      {open && (
+        <ul id={`${id}-options`} className="flex flex-col overflow-hidden rounded-2xl border border-line">
+          {accounts.map((a) => (
+            <li key={a.id} className="border-b border-line last:border-0">
+              <button
+                type="button"
+                aria-pressed={a.id === value?.id}
+                onClick={() => onPick(a)}
+                className={`flex min-h-12 w-full items-center justify-between gap-3 px-4 py-2 text-left ${
+                  a.id === value?.id ? "bg-page" : "bg-card"
+                }`}
+              >
+                <span className="text-[15px] font-semibold">{a.name}</span>
+                <span className="text-[13px] text-muted">{formatRupiah(balanceOf(a))}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
