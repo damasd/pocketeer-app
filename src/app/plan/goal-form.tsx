@@ -3,13 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { showToast } from "@/components/toast";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
-import {
-  CATEGORY_NAME_MAX,
-  createCategory,
-  saveCategory,
-  setCategoryArchived,
-  type Category,
-} from "@/lib/categories";
+import { CATEGORY_NAME_MAX, createCategory, saveCategory, type Category } from "@/lib/categories";
 import { errorMessage } from "@/lib/errors";
 import { deleteGoal, saveGoal, type Goal } from "@/lib/goals";
 import { localDate } from "@/lib/log";
@@ -17,7 +11,7 @@ import { groupThousands, parseRupiahInput } from "@/lib/money";
 
 /**
  * A goal is a saving category (same thing, same name in the Log sheet), with an optional
- * target amount and date. New goal = new saving category; Remove = archive the category.
+ * target amount and date. New goal = new saving category. Archive one in Settings > Categories.
  */
 export function GoalForm({
   category,
@@ -33,7 +27,6 @@ export function GoalForm({
   const [name, setName] = useState(category?.name ?? "");
   const [target, setTarget] = useState(goal?.target ?? 0);
   const [date, setDate] = useState(goal?.targetDate ?? "");
-  const [confirmRemove, setConfirmRemove] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,26 +59,6 @@ export function GoalForm({
       if (target > 0) await saveGoal(goal?.id ?? null, { categoryId: c.id, target, targetDate: date });
       else if (goal) await deleteGoal(goal.id);
       showToast({ message: category ? "Goal updated" : `${trimmed} added` });
-    });
-  }
-
-  function remove() {
-    if (!category) return;
-    run(async () => {
-      await setCategoryArchived(category.id, true);
-      showToast({
-        message: `${category.name} removed`,
-        action: {
-          label: "Undo",
-          run: async () => {
-            try {
-              await setCategoryArchived(category.id, false);
-            } catch (e) {
-              showToast({ message: errorMessage(e, "Could not undo"), tone: "error" });
-            }
-          },
-        },
-      });
     });
   }
 
@@ -141,28 +114,6 @@ export function GoalForm({
       <Button type="submit" disabled={busy} className="mt-2">
         {busy ? "Saving…" : category ? "Save changes" : "Add goal"}
       </Button>
-
-      {category &&
-        (confirmRemove ? (
-          <div role="group" aria-label="Confirm remove" className="flex flex-col gap-2 rounded-2xl bg-page p-4">
-            <p className="text-[13px] font-semibold">Remove {category.name}?</p>
-            <p className="text-xs text-muted">
-              It disappears from the Log sheet. Past savings stay in History, and you can restore it in Settings › Categories.
-            </p>
-            <div className="mt-1 flex gap-2">
-              <Button type="button" variant="secondary" size="md" className="flex-1" onClick={() => setConfirmRemove(false)}>
-                Cancel
-              </Button>
-              <Button type="button" variant="danger" size="md" className="flex-1" disabled={busy} onClick={remove}>
-                Remove
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button type="button" variant="ghost" size="sm" className="self-center" onClick={() => setConfirmRemove(true)}>
-            Remove goal
-          </Button>
-        ))}
     </form>
   );
 }

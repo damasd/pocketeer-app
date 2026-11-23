@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Copy, Plus, X } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { ChevronLeft, ChevronRight, Copy, Plus } from "lucide-react";
 import { Segmented } from "@/components/segmented";
 import { Sheet } from "@/components/sheet";
 import { showToast } from "@/components/toast";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
-import { copyBudgets, removeBudget, setBudget, useBudgets } from "@/lib/budgets";
+import { copyBudgets, setBudget, useBudgets } from "@/lib/budgets";
 import { CATEGORY_NAME_MAX, createCategory, useCategories, type Category } from "@/lib/categories";
 import { errorMessage } from "@/lib/errors";
 import { savingBalance } from "@/lib/balances";
@@ -84,15 +84,11 @@ function PlanBody({ today }: { today: string }) {
   const budgetFor = (categoryId: string) =>
     (budgets.data ?? []).find((b) => b.periodId === period?.id && b.categoryId === categoryId)?.amount ?? 0;
 
-  // The budget list is the categories picked for this period (a budget row exists), in category order.
-  const budgeted = new Set((budgets.data ?? []).filter((b) => b.periodId === period?.id).map((b) => b.categoryId));
+  // Every expense category is in the budget (the setup list plus any you add), in category order.
+  // Archived ones stay only for periods where they have an amount or spending.
   const expenseCategories = allCategories.filter((c) => c.kind === "expense");
-  const expenseRows = expenseCategories.filter((c) => budgeted.has(c.id));
-  const addable = expenseCategories.filter((c) => !c.archived && !budgeted.has(c.id));
+  const expenseRows = expenseCategories.filter((c) => !c.archived || budgetFor(c.id) > 0 || spentBy(c.id) > 0);
   const expenseBudget = expenseRows.reduce((s, c) => s + budgetFor(c.id), 0);
-  const unbudgetedSpent = periodTxs
-    .filter((t) => t.type === "expense" && t.categoryId && !budgeted.has(t.categoryId))
-    .reduce((s, t) => s + t.amount, 0);
 
   // Saving categories are the goals: every active one is a card; target and date are optional.
   const savingRows = allCategories
@@ -255,17 +251,6 @@ function PlanBody({ today }: { today: string }) {
                   ))}
               </ul>
             )}
-            {period && !loading && expenseRows.length === 0 && (
-              <p className="rounded-3xl bg-card px-5 py-4 text-[13px] font-medium text-muted">
-                No categories in this budget yet. Add the ones you want to plan
-                {olderHasBudgets ? `, or copy ${older?.name}'s list above` : ""}.
-              </p>
-            )}
-            {unbudgetedSpent > 0 && (
-              <p className="px-1 text-[13px] text-muted">
-                {formatRupiah(unbudgetedSpent)} spent in categories without a budget this period.
-              </p>
-            )}
             {period && (
               <button
                 type="button"
@@ -273,7 +258,7 @@ function PlanBody({ today }: { today: string }) {
                 className="flex h-12 items-center justify-center gap-2 rounded-full border border-dashed border-[#BDBDBD] text-sm font-semibold"
               >
                 <Plus aria-hidden size={16} strokeWidth={2.5} />
-                Add category
+                New expense category
               </button>
             )}
           </section>
@@ -282,11 +267,10 @@ function PlanBody({ today }: { today: string }) {
         <GoalsTab rows={plansFor(current ?? period)} onNew={() => setGoalSheet("new")} onOpen={(c) => setGoalSheet(c)} />
       )}
 
-      <Sheet open={addOpen} onClose={() => setAddOpen(false)} title="Add to budget">
+      <Sheet open={addOpen} onClose={() => setAddOpen(false)} title="New expense category">
         {period && (
-          <AddBudgetCategory
+          <NewExpenseCategory
             periodId={period.id}
-            choices={addable}
             nextSortOrder={Math.max(0, ...expenseCategories.map((c) => c.sortOrder)) + 1}
             onDone={() => setAddOpen(false)}
           />
@@ -355,27 +339,6 @@ function BudgetRow({
     }
   }
 
-  async function remove() {
-    try {
-      await removeBudget(periodId, category.id);
-      showToast({
-        message: `${category.name} removed from the budget`,
-        action: {
-          label: "Undo",
-          run: async () => {
-            try {
-              await setBudget(periodId, category.id, budget);
-            } catch (e) {
-              showToast({ message: errorMessage(e, "Could not undo"), tone: "error" });
-            }
-          },
-        },
-      });
-    } catch (e) {
-      showToast({ message: errorMessage(e, "Could not remove"), tone: "error" });
-    }
-  }
-
   return (
     <li className={`flex flex-col gap-2 py-3 ${first ? "" : "border-t border-page"}`}>
       <div className="flex items-center justify-between gap-2">
@@ -402,14 +365,6 @@ function BudgetRow({
             className="min-w-0 flex-1 border-0 bg-transparent text-right text-base font-bold outline-none"
           />
         </span>
-        <button
-          type="button"
-          aria-label={`Remove ${category.name} from this budget`}
-          onClick={remove}
-          className="-mr-2 flex size-11 flex-none items-center justify-center rounded-full text-muted"
-        >
-          <X aria-hidden size={18} strokeWidth={2.25} />
-        </button>
       </div>
       <div
         role="progressbar"
@@ -535,94 +490,77 @@ function GoalsTab({ rows, onNew, onOpen }: { rows: SavingRow[]; onNew: () => voi
   );
 }
 
-/** Add an expense category to this period's budget: pick one, or create a new one. */
-function AddBudgetCategory({
+/**
+ * Create a new expense category from the Budget tab. It joins the budget list and the
+ * Log sheet's Expense chips straight away; an optional amount sets its budget for this period.
+ */
+function NewExpenseCategory({
   periodId,
-  choices,
   nextSortOrder,
   onDone,
 }: {
   periodId: string;
-  choices: Category[];
   nextSortOrder: number;
   onDone: () => void;
 }) {
   const [name, setName] = useState("");
+  const [amount, setAmount] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function add(task: () => Promise<string>) {
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) return setError("Type a name for the category.");
     setBusy(true);
     setError(null);
     try {
-      const label = await task();
+      const c = await createCategory("expense", { name: trimmed, icon: "ellipsis", note: null }, nextSortOrder);
+      if (amount > 0) await setBudget(periodId, c.id, amount);
       onDone();
-      showToast({ message: `${label} added to the budget` });
-    } catch (e) {
-      setError(errorMessage(e, "Could not add"));
+      showToast({ message: `${c.name} added` });
+    } catch (err) {
+      setError(errorMessage(err, "Could not add the category"));
       setBusy(false);
     }
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {choices.length > 0 ? (
-        <ul aria-label="Expense categories" className="flex max-h-[45dvh] flex-col overflow-y-auto rounded-2xl border border-line">
-          {choices.map((c) => (
-            <li key={c.id} className="border-b border-line last:border-0">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() =>
-                  add(async () => {
-                    await setBudget(periodId, c.id, 0);
-                    return c.name;
-                  })
-                }
-                className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-2 text-left"
-              >
-                <span className="text-[15px] font-semibold">{c.name}</span>
-                <Plus aria-hidden size={18} strokeWidth={2.25} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-[13px] font-medium text-muted">Every expense category is already in this budget.</p>
-      )}
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const trimmed = name.trim();
-          if (!trimmed) return setError("Type a name for the new category.");
-          add(async () => {
-            const c = await createCategory("expense", { name: trimmed, icon: "ellipsis", note: null }, nextSortOrder);
-            await setBudget(periodId, c.id, 0);
-            return c.name;
-          });
-        }}
-        noValidate
-        className="flex flex-col gap-2"
-      >
-        <Label htmlFor="new-expense-category">Or create a new expense category</Label>
-        <div className="flex gap-2">
-          <Input
-            id="new-expense-category"
-            placeholder="e.g. Groceries"
-            maxLength={CATEGORY_NAME_MAX}
+    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="new-expense-category">Name</Label>
+        <Input
+          id="new-expense-category"
+          placeholder="e.g. Groceries"
+          maxLength={CATEGORY_NAME_MAX}
+          autoComplete="off"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="bg-page"
+        />
+        <p className="text-xs text-muted">It also appears in the Log sheet under Expense. Change its icon in Settings › Categories.</p>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="new-expense-budget">Budget this period (optional)</Label>
+        <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4">
+          <span aria-hidden className="text-[15px] font-semibold text-muted">
+            Rp
+          </span>
+          <input
+            id="new-expense-budget"
+            inputMode="numeric"
             autoComplete="off"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="bg-page"
+            value={groupThousands(amount)}
+            onFocus={(e) => e.currentTarget.select()}
+            onChange={(e) => setAmount(parseRupiahInput(e.target.value))}
+            className="h-12 min-w-0 flex-1 border-0 bg-transparent text-base font-semibold outline-none"
           />
-          <Button type="submit" size="md" disabled={busy} className="flex-none">
-            Add
-          </Button>
         </div>
-      </form>
-
+      </div>
       {error && <ErrorNote>{error}</ErrorNote>}
-    </div>
+      <Button type="submit" disabled={busy}>
+        {busy ? "Adding…" : "Add category"}
+      </Button>
+    </form>
   );
 }
