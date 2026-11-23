@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ChevronLeft, ChevronRight, Copy, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "lucide-react";
+import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { Segmented } from "@/components/segmented";
 import { Sheet } from "@/components/sheet";
 import { showToast } from "@/components/toast";
@@ -59,6 +60,7 @@ function PlanBody({ today }: { today: string }) {
   const [periodId, setPeriodId] = useState<string | null>(null);
   const [goalSheet, setGoalSheet] = useState<Category | "new" | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [deleting, setDeleting] = useState<Category | null>(null);
 
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
   const list = periods.data ?? []; // newest first
@@ -247,6 +249,7 @@ function PlanBody({ today }: { today: string }) {
                       budget={budgetFor(c.id)}
                       spent={spentBy(c.id)}
                       first={i === 0}
+                      onDelete={c.builtIn ? undefined : () => setDeleting(c)}
                     />
                   ))}
               </ul>
@@ -266,6 +269,17 @@ function PlanBody({ today }: { today: string }) {
       ) : (
         <GoalsTab rows={plansFor(current ?? period)} onNew={() => setGoalSheet("new")} onOpen={(c) => setGoalSheet(c)} />
       )}
+
+      <Sheet open={deleting !== null} onClose={() => setDeleting(null)} title="Delete category">
+        {deleting && (
+          <DeleteCategoryConfirm
+            key={deleting.id}
+            category={deleting}
+            onCancel={() => setDeleting(null)}
+            onDone={() => setDeleting(null)}
+          />
+        )}
+      </Sheet>
 
       <Sheet open={addOpen} onClose={() => setAddOpen(false)} title="New expense category">
         {period && (
@@ -306,12 +320,15 @@ function BudgetRow({
   budget,
   spent,
   first,
+  onDelete,
 }: {
   category: Category;
   periodId: string;
   budget: number;
   spent: number;
   first: boolean;
+  /** Only for categories you added; built-in ones cannot be deleted. */
+  onDelete?: () => void;
 }) {
   const [text, setText] = useState(groupThousands(budget));
   const [saving, setSaving] = useState(false);
@@ -365,6 +382,16 @@ function BudgetRow({
             className="min-w-0 flex-1 border-0 bg-transparent text-right text-base font-bold outline-none"
           />
         </span>
+        {onDelete && (
+          <button
+            type="button"
+            aria-label={`Delete ${category.name}`}
+            onClick={onDelete}
+            className="-mr-2 flex size-11 flex-none items-center justify-center rounded-full text-muted"
+          >
+            <Trash2 aria-hidden size={18} strokeWidth={2} />
+          </button>
+        )}
       </div>
       <div
         role="progressbar"

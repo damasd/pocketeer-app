@@ -13,6 +13,8 @@ export type Category = {
   note: string | null;
   sortOrder: number;
   archived: boolean;
+  /** Part of the setup list: can be archived but never deleted. */
+  builtIn: boolean;
 };
 
 export type CategoryInput = Pick<Category, "name" | "icon" | "note">;
@@ -28,9 +30,10 @@ type Row = {
   note: string | null;
   sort_order: number;
   archived: boolean;
+  built_in: boolean;
 };
 
-const COLUMNS = "id, name, kind, icon, note, sort_order, archived";
+const COLUMNS = "id, name, kind, icon, note, sort_order, archived, built_in";
 
 const fromRow = (r: Row): Category => ({
   id: r.id,
@@ -40,6 +43,7 @@ const fromRow = (r: Row): Category => ({
   note: r.note,
   sortOrder: r.sort_order,
   archived: r.archived,
+  builtIn: r.built_in,
 });
 
 const toRow = (input: CategoryInput) => ({
@@ -64,6 +68,7 @@ export const resetCategories = store.reset;
 
 function friendly(e: { message?: string; code?: string }) {
   if (e.code === "23505") return new Error("A category with that name already exists here.");
+  if (e.code === "23503") return new Error("It has transactions, so it can't be deleted. Archive it instead.");
   return new Error(e.message ?? "Could not save the category");
 }
 
@@ -93,4 +98,13 @@ export function saveCategory(id: string, input: CategoryInput) {
 
 export function setCategoryArchived(id: string, archived: boolean) {
   return patchCategory(id, { archived });
+}
+
+/** Delete a category you added. Its budgets and goal go with it; transactions block it. */
+export async function deleteCategory(id: string) {
+  const { data, error } = await supabase().from("categories").delete().eq("id", id).select("id");
+  if (error) throw friendly(error);
+  // Row level security silently skips built-in categories.
+  if (!data?.length) throw new Error("Setup categories can't be deleted. Archive it instead.");
+  store.update((list) => list.filter((c) => c.id !== id));
 }

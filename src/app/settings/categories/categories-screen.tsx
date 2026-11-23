@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { Segmented } from "@/components/segmented";
 import { Sheet } from "@/components/sheet";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
@@ -151,6 +152,7 @@ function CategoryForm({
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const trimmed = name.trim();
   const nameMissing = tried && !trimmed;
 
@@ -256,6 +258,15 @@ function CategoryForm({
           {category.archived ? "Restore category" : "Archive category"}
         </Button>
       )}
+      {category &&
+        !category.builtIn &&
+        (confirmDelete ? (
+          <DeleteCategoryConfirm category={category} onCancel={() => setConfirmDelete(false)} onDone={onDone} />
+        ) : (
+          <Button type="button" variant="ghost" size="sm" className="self-center" onClick={() => setConfirmDelete(true)}>
+            Delete category
+          </Button>
+        ))}
     </form>
   );
 }
