@@ -11,11 +11,14 @@ export function Sheet({
   open,
   onClose,
   title,
+  tall = false,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Fixed 92% height, content fills it (Log sheet with the keypad at the bottom). */
+  tall?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -23,7 +26,11 @@ export function Sheet({
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
-    if (open && !d.open) d.showModal();
+    if (open && !d.open) {
+      d.showModal();
+      // A child can ask for first focus (the Log sheet focuses the amount, not ✕).
+      d.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    }
     if (!open && d.open) d.close();
   }, [open]);
 
@@ -31,13 +38,13 @@ export function Sheet({
     <dialog
       ref={ref}
       aria-label={title}
-      className="sheet"
+      className={tall ? "sheet sheet-tall" : "sheet"}
       onClose={onClose}
       onClick={(e) => {
         if (e.target === e.currentTarget) e.currentTarget.close();
       }}
     >
-      <div className="flex flex-col gap-4 px-5 pt-2.5 pb-[max(24px,env(safe-area-inset-bottom))]">
+      <div className={`flex flex-col gap-4 px-5 pt-2.5 pb-[max(24px,env(safe-area-inset-bottom))] ${tall ? "min-h-full" : ""}`}>
         <div aria-hidden className="h-[5px] w-10 self-center rounded-full bg-line" />
         <div className="flex items-center gap-2">
           <button

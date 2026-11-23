@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { NavBar } from "@/components/nav-bar";
+import { Toaster } from "@/components/toast";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-dvh">
         {children}
         <NavBar />
+        <Toaster />
       </body>
     </html>
   );

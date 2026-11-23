@@ -8,6 +8,7 @@ import { Avatar } from "@/components/avatar";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
 import { resetAccounts } from "@/lib/accounts";
 import { resetCategories } from "@/lib/categories";
+import { resetTransactions } from "@/lib/transactions";
 import { NAME_MAX, errorMessage, saveDisplayName, savePhoto, signOut, useProfile } from "@/lib/profile";
 
 export function ProfileSettings() {
@@ -57,6 +58,7 @@ export function ProfileSettings() {
     if (await run("signout", signOut)) {
       resetAccounts();
       resetCategories();
+      resetTransactions();
       router.replace("/login");
       router.refresh();
     }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { useState } from "react";
 import {
   ChartNoAxesColumn,
   House,
@@ -11,7 +11,8 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { LogSheet } from "@/components/log-sheet";
+import { LogForm } from "@/components/log-sheet";
+import { Sheet } from "@/components/sheet";
 
 type Tab = { href: string; label: string; Icon: LucideIcon };
 
@@ -49,7 +50,7 @@ function TabLink({ tab, active }: { tab: Tab; active: boolean }) {
 
 export function NavBar() {
   const pathname = usePathname();
-  const sheetRef = useRef<HTMLDialogElement>(null);
+  const [logOpen, setLogOpen] = useState(false);
 
   if (pathname === "/login") return null;
 
@@ -67,7 +68,7 @@ export function NavBar() {
           type="button"
           aria-label="Log transaction"
           aria-haspopup="dialog"
-          onClick={() => sheetRef.current?.showModal()}
+          onClick={() => setLogOpen(true)}
           className="flex size-[68px] flex-none items-center justify-center rounded-full bg-lime text-ink shadow-[0_6px_16px_rgba(17,17,17,0.25)] transition-transform duration-150 ease-out active:scale-[0.96]"
         >
           <Plus aria-hidden size={30} strokeWidth={2.5} />
@@ -76,7 +77,9 @@ export function NavBar() {
           <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} />
         ))}
       </nav>
-      <LogSheet ref={sheetRef} />
+      <Sheet open={logOpen} onClose={() => setLogOpen(false)} title="Log transaction" tall>
+        <LogForm onDone={() => setLogOpen(false)} />
+      </Sheet>
     </>
   );
 }

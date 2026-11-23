@@ -6,7 +6,8 @@ import { AccountCardFace } from "@/components/account-card";
 import { Sheet } from "@/components/sheet";
 import { Button, ErrorNote } from "@/components/ui";
 import { useAccounts, type Account, type AccountGroup } from "@/lib/accounts";
-import { accountBalance, sumBalances } from "@/lib/balances";
+import { accountBalance, savedInAccount, sumBalances } from "@/lib/balances";
+import { useTransactions } from "@/lib/transactions";
 import { formatRupiah } from "@/lib/money";
 import { AccountForm } from "./account-form";
 
@@ -19,12 +20,18 @@ const GROUPS: { id: AccountGroup; title: string }[] = [
 
 export function AccountsScreen() {
   const state = useAccounts();
+  const transactions = useTransactions();
+  const txs = transactions.data ?? [];
   // Sheet: null = closed, "new" = create, Account = edit.
   const [editing, setEditing] = useState<Account | "new" | null>(null);
 
   const all = state.data ?? [];
-  // No transactions yet (slice 4+), so balance is the starting balance. Saved arrives with savings in slice 6.
-  const withBalance: WithBalance[] = all.map((a) => ({ ...a, balance: accountBalance(a.id, a.startingBalance, []), saved: 0 }));
+  // Balances are calculated from the starting balance and every transaction (never stored).
+  const withBalance: WithBalance[] = all.map((a) => ({
+    ...a,
+    balance: accountBalance(a.id, a.startingBalance, txs),
+    saved: savedInAccount(a.id, txs),
+  }));
   const active = withBalance.filter((a) => !a.archived);
   const archived = withBalance.filter((a) => a.archived);
   const byGroup = (g: AccountGroup) => active.filter((a) => a.group === g);
