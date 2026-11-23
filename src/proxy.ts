@@ -12,25 +12,35 @@ export async function proxy(request: NextRequest) {
   if (!supabaseConfigured) return NextResponse.next();
 
   let response = NextResponse.next({ request });
+  let signedIn: boolean;
 
-  const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
+  try {
+    const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet, headers) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
+          Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
+        },
       },
-      setAll(cookiesToSet, headers) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options),
-        );
-        Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
-      },
-    },
-  });
+    });
+    const { data } = await supabase.auth.getClaims();
+    signedIn = Boolean(data?.claims);
+  } catch (error) {
+    // Misconfigured Supabase settings: show what is wrong instead of a blank 500.
+    console.error("Supabase session check failed", error);
+    return new NextResponse(
+      "Sign-in is not working: check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in Vercel, then redeploy.",
+      { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } },
+    );
+  }
 
-  const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims);
   const onLogin = request.nextUrl.pathname === LOGIN;
 
   if (signedIn === onLogin) {

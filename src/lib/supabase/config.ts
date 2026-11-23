@@ -1,5 +1,21 @@
 // Public Supabase settings. The publishable (anon) key is safe in the browser:
 // row level security decides what each signed-in user can read and write.
-export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-export const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
+
+/** Forgive common copy-paste slips: spaces, quotes, a missing https://, a trailing path. */
+export function normalizeSupabaseUrl(value: string | undefined): string {
+  const raw = (value ?? "").trim().replace(/^["']+|["']+$/g, "").trim();
+  if (!raw) return "";
+  try {
+    return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).origin;
+  } catch {
+    return "";
+  }
+}
+
+function clean(value: string | undefined): string {
+  return (value ?? "").trim().replace(/^["']+|["']+$/g, "").trim();
+}
+
+export const SUPABASE_URL = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+export const SUPABASE_KEY = clean(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 export const supabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_KEY);
