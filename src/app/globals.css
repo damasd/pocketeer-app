@@ -101,3 +101,25 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Installed-app feel on iPhone. */
+a,
+button,
+input,
+select,
+label,
+summary {
+  /* No double-tap zoom when tapping keypad keys quickly. */
+  touch-action: manipulation;
+}
+button,
+nav a {
+  /* Long-press on a button shouldn't select its text or open a callout. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+html.dark-top {
+  /* Home: the rubber-band above the dark header stays dark. */
+  background: var(--color-ink);
+}

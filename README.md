@@ -1,4 +1,4 @@
-# Money
+# Pocketeer
 
 Personal finance web app (expenses, income, transfers, savings per pay period). See `docs/brief.md` for the spec and `CLAUDE.md` for the rules.
 

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Money",
-    short_name: "Money",
+    name: "Pocketeer",
+    short_name: "Pocketeer",
     description: "Expenses, income, transfers and savings, per pay period.",
     start_url: "/",
     display: "standalone",

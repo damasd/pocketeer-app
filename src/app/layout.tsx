@@ -10,12 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Money", template: "%s · Money" },
+  title: { default: "Pocketeer", template: "%s · Pocketeer" },
   description: "Expenses, income, transfers and savings, per pay period.",
-  applicationName: "Money",
+  applicationName: "Pocketeer",
   appleWebApp: {
     capable: true,
-    title: "Money",
+    title: "Pocketeer",
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },

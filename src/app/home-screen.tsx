@@ -41,6 +41,12 @@ export function HomeScreen() {
     coverPeriodsFrom(oldest);
   }, [oldest]);
 
+  // Pulling down past the top shows dark, not grey, above the dark header.
+  useEffect(() => {
+    document.documentElement.classList.add("dark-top");
+    return () => document.documentElement.classList.remove("dark-top");
+  }, []);
+
   // The stored period (budgets hang off it); until periods load, the 25th rule gives the dates.
   const stored = today ? periodOf(periods.data ?? [], today) : null;
   const period = stored ?? (today ? periodFor(today) : null);
