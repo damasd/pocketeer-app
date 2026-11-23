@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* Design tokens: see CLAUDE.md and docs/brief.md (Design system). */
+@theme {
+  --color-ink: #111111;
+  --color-page: #f2f2f2;
+  --color-card: #ffffff;
+  --color-muted: #6b6b6b;
+  --color-line: #e4e4e4;
+  --color-lime: #d1fc00;
+  --color-ember: #d63f22;
+
+  /* Nav bar only */
+  --color-nav-idle: #9a9a9a;
+  --color-nav-selected: #2e2e2e;
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+html {
+  background: var(--color-page);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keyboard focus: lime ring reads on both the black nav and light pages. */
+:focus-visible {
+  outline: 2px solid var(--color-lime);
+  outline-offset: 2px;
+}
+
+/* Bottom sheet (Log). Native <dialog> gives Escape, focus trap and inert background. */
+.sheet {
+  margin: auto auto 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 92dvh;
+  border: 0;
+  padding: 0;
+  border-radius: 24px 24px 0 0;
+  background: var(--color-card);
+  color: var(--color-ink);
+}
+.sheet::backdrop {
+  background: rgb(17 17 17 / 0.4);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sheet[open] {
+    animation: sheet-in 260ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .sheet[open]::backdrop {
+    animation: fade-in 200ms ease-out;
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}

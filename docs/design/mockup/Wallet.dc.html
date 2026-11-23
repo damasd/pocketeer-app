@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Accounts</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#111111}a:hover{color:#111111}
+</style>
+</helmet>
+<div style="width: 390px; height: 2380px; position: relative; box-sizing: border-box; padding: 20px 20px 120px; background: #F2F2F2; color: #111111; font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 24px; overflow: hidden">
+
+<header style="padding-top: 12px; display: flex; justify-content: space-between; align-items: center">
+<h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em">Accounts</h1>
+<a href="NewWallet.dc.html" aria-label="Add account" style="width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; border: 1px solid #E4E4E4; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.25" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></a>
+</header>
+
+<section aria-label="Total balance" style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 500; color: #6B6B6B">Total balance</span>
+<span style="font-size: 38px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2">Rp 18.432.000</span>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px">
+<a href="#spending" style="background: #FFFFFF; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; text-decoration: none"><span style="font-size: 12px; font-weight: 500; color: #6B6B6B">Spending</span><span style="font-size: 17px; font-weight: 700">Rp 13.232.000</span></a>
+<a href="#saving" style="background: #D1FC00; border-radius: 20px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; text-decoration: none"><span style="font-size: 12px; font-weight: 500; color: #333333">Saving</span><span style="font-size: 17px; font-weight: 700">Rp 5.200.000</span></a>
+</div>
+</section>
+
+<section id="spending" aria-label="Spending accounts" style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 17px; font-weight: 600">Spending</h2><span style="font-size: 13px; color: #6B6B6B">5 accounts · Rp 13.232.000</span></div>
+<div style="display: flex; flex-direction: column; gap: 16px">
+<a href="#account-bca" style="position: relative; overflow: hidden; height: 216px; box-sizing: border-box; border-radius: 24px; padding: 20px; background: #111111; color: #FFFFFF; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between">
+<span aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255, 255, 255, 0.06)"></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 700">BCA</span><span aria-label="Account ending 4821" style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #BDBDBD">•••• 4821</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 500; color: #BDBDBD">Balance</span><span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Rp 4.205.000</span></span>
+</a>
+
+<a href="#account-jago" style="position: relative; overflow: hidden; height: 216px; box-sizing: border-box; border-radius: 24px; padding: 20px; background: #D1FC00; color: #111111; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between">
+<span aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(17, 17, 17, 0.06)"></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 700">Jago</span><span aria-label="Account ending 0937" style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #333333">•••• 0937</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 500; color: #333333">Balance</span><span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Rp 6.150.000</span><span style="font-size: 12px; font-weight: 600; color: #333333">Rp 3.000.000 saved</span></span>
+</a>
+
+<a href="#account-hsbc" style="position: relative; overflow: hidden; height: 216px; box-sizing: border-box; border-radius: 24px; padding: 20px; background: #FFFFFF; border: 1px solid #E4E4E4; color: #111111; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between">
+<span aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(17, 17, 17, 0.04)"></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 700">HSBC</span><span aria-label="Account ending 6612" style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #6B6B6B">•••• 6612</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 500; color: #6B6B6B">Balance</span><span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Rp 2.380.000</span></span>
+</a>
+
+<a href="#account-gopay" style="position: relative; overflow: hidden; height: 216px; box-sizing: border-box; border-radius: 24px; padding: 20px; background: #E4E4E4; color: #111111; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between">
+<span aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255, 255, 255, 0.4)"></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 700">GoPay</span><span aria-label="Account ending 7745" style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #4A4A4A">•••• 7745</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 500; color: #4A4A4A">Balance</span><span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Rp 182.000</span></span>
+</a>
+
+<a href="#account-cash" style="position: relative; overflow: hidden; height: 216px; box-sizing: border-box; border-radius: 24px; padding: 20px; background: #111111; color: #FFFFFF; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between">
+<span aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255, 255, 255, 0.06)"></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 700">Cash</span><span style="font-size: 13px; font-weight: 500; color: #BDBDBD">No account number</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 500; color: #BDBDBD">Balance</span><span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Rp 315.000</span></span>
+</a>
+</div>
+</section>
+
+<section id="saving" aria-label="Saving accounts" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 17px; font-weight: 600">Saving</h2><span style="font-size: 13px; color: #6B6B6B">3 accounts · Rp 5.200.000</span></div>
+<div style="display: flex; flex-direction: column; gap: 16px">
+<a href="#account-pegadaian" style="position: relative; overflow: hidden; height: 216px; box-sizing: border-box; border-radius: 24px; padding: 20px; background: #D1FC00; color: #111111; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between">
+<span aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(17, 17, 17, 0.06)"></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 700">Pegadaian</span><span aria-label="Account ending 3308" style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #333333">•••• 3308</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 500; color: #333333">Balance</span><span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Rp 2.500.000</span><span style="font-size: 12px; font-weight: 600; color: #333333">Rp 2.500.000 saved</span></span>
+</a>
+
+<a href="#account-ipot" style="position: relative; overflow: hidden; height: 216px; box-sizing: border-box; border-radius: 24px; padding: 20px; background: #FFFFFF; border: 1px solid #E4E4E4; color: #111111; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between">
+<span aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(17, 17, 17, 0.04)"></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 700">iPOT</span><span aria-label="Account ending 1290" style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #6B6B6B">•••• 1290</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 500; color: #6B6B6B">Balance</span><span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Rp 1.700.000</span><span style="font-size: 12px; font-weight: 600; color: #6B6B6B">Rp 1.700.000 saved</span></span>
+</a>
+
+<a href="#account-bibit" style="position: relative; overflow: hidden; height: 216px; box-sizing: border-box; border-radius: 24px; padding: 20px; background: #E4E4E4; color: #111111; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between">
+<span aria-hidden="true" style="position: absolute; right: -70px; top: -70px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255, 255, 255, 0.4)"></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 17px; font-weight: 700">Bibit</span><span aria-label="Account ending 5561" style="font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: #4A4A4A">•••• 5561</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; font-weight: 500; color: #4A4A4A">Balance</span><span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em">Rp 1.000.000</span><span style="font-size: 12px; font-weight: 600; color: #4A4A4A">Rp 1.000.000 saved</span></span>
+</a>
+</div>
+</section>
+
+<nav aria-label="Main" style="position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); width: 320px; height: 56px; box-sizing: border-box; padding: 0 12px; background: #111111; border-radius: 999px; box-shadow: 0 10px 30px rgba(17, 17, 17, 0.28); display: flex; align-items: center; justify-content: space-between">
+<a href="Main.dc.html" aria-label="Home" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></a>
+<a href="Wallet.dc.html" aria-label="Account" aria-current="page" style="width: 44px; height: 44px; border-radius: 50%; background: #2E2E2E; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #FFFFFF"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18"/><circle cx="16.5" cy="15" r="1.2"/></svg></a>
+<a href="Log.dc.html" aria-label="Log transaction" style="width: 68px; height: 68px; flex: none; border-radius: 50%; background: #D1FC00; box-shadow: 0 6px 16px rgba(17, 17, 17, 0.25); display: flex; align-items: center; justify-content: center; text-decoration: none"><svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></a>
+<a href="Analytics.dc.html" aria-label="Analytics" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></a>
+<a href="Budgets.dc.html" aria-label="Plan: budget and goals" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></a>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2380}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

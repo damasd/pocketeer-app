@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#111111}a:hover{color:#111111}
+</style>
+</helmet>
+<div style="width: 390px; height: 1480px; position: relative; box-sizing: border-box; background: {{ hdrBg }}; color: #111111; font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; overflow: hidden">
+
+<div style="position: relative; padding: 32px 20px 28px; display: flex; flex-direction: column; gap: 24px; color: {{ hdrText }}">
+
+<header style="display: flex; align-items: center; gap: 12px">
+<a href="#settings" aria-label="Profile and settings" style="width: 48px; height: 48px; flex: none; border-radius: 50%; background: {{ avatarBg }}; color: {{ avatarText }}; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; text-decoration: none">D</a>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; font-weight: 500; color: {{ hdrMuted }}">Welcome back,</span>
+<span style="font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1">Damas</span>
+</div>
+</header>
+
+<section aria-label="Budget this period" style="margin-right: 92px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 500; color: {{ hdrMuted }}">Remaining budget · December</span>
+<span style="font-size: 38px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; margin-top: 4px">Rp 3.240.000</span>
+<span style="font-size: 13px; font-weight: 500; color: {{ hdrMuted }}">of Rp 8.500.000 budget</span>
+<div style="height: 8px; border-radius: 999px; background: {{ trackBg }}; margin-top: 14px; overflow: hidden"><div style="width: 62%; height: 100%; border-radius: 999px; background: {{ fillBg }}"></div></div>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: {{ hdrMuted }}; margin-top: 6px"><span>Rp 5.260.000 spent</span><span>62% · 17 days left</span></div>
+</section>
+
+<a href="Wallet.dc.html" aria-label="Open accounts" style="position: absolute; right: 0; top: 100px; width: 84px; height: 160px; overflow: hidden; display: block">
+<span aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 140px; height: 160px; border-radius: 18px; background: {{ peekFront }}"></span>
+<span aria-hidden="true" style="position: absolute; left: 26px; top: 0; width: 140px; height: 160px; border-radius: 18px; background: {{ peekMid }}; border: {{ peekMidBorder }}; box-sizing: border-box; box-shadow: -6px 0 12px rgba(0, 0, 0, 0.28)"></span>
+<span aria-hidden="true" style="position: absolute; left: 52px; top: 0; width: 140px; height: 160px; border-radius: 18px; background: {{ peekBack }}; border: {{ peekBackBorder }}; box-sizing: border-box; box-shadow: -6px 0 12px rgba(0, 0, 0, 0.28)"></span>
+</a>
+
+</div>
+
+<div style="flex: 1; background: #FFFFFF; border-radius: 28px 28px 0 0; padding: 10px 20px 120px; display: flex; flex-direction: column; gap: 24px">
+<div aria-hidden="true" style="width: 40px; height: 5px; border-radius: 999px; background: #E4E4E4; align-self: center"></div>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600">Budget &amp; saving</h2>
+<a href="Budgets.dc.html" style="font-size: 13px; font-weight: 600; text-decoration: none">See all</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+
+<div style="background: #F2F2F2; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 6px"><span style="width: 28px; height: 28px; flex: none; border-radius: 50%; background: #D63F22; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 1-3 3.5-3 6.5V13h3v8"></path></svg></span><span style="font-size: 13px; font-weight: 600">Food 2</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 700">Rp 840.000</span><span style="font-size: 12px; color: #6B6B6B">of Rp 750.000</span></div>
+<div style="height: 6px; border-radius: 999px; background: #FFFFFF; overflow: hidden"><div style="width: 100%; height: 100%; background: #D63F22"></div></div>
+<span style="align-self: flex-start; font-size: 12px; font-weight: 700; color: #FFFFFF; background: #D63F22; padding: 2px 8px; border-radius: 999px">Rp 90.000 over</span>
+</div>
+
+<div style="background: #F2F2F2; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 6px"><span style="width: 28px; height: 28px; flex: none; border-radius: 50%; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 1-3 3.5-3 6.5V13h3v8"></path></svg></span><span style="font-size: 13px; font-weight: 600">Food</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 700">Rp 1.560.000</span><span style="font-size: 12px; color: #6B6B6B">of Rp 1.650.000</span></div>
+<div style="height: 6px; border-radius: 999px; background: #FFFFFF; overflow: hidden"><div style="width: 95%; height: 100%; border-radius: 999px; background: #111111"></div></div>
+<span style="font-size: 12px; color: #6B6B6B">95% used</span>
+</div>
+
+<div style="background: #F2F2F2; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 6px"><span style="width: 28px; height: 28px; flex: none; border-radius: 50%; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="3"></rect><path d="M5 11h14M8 21v-3M16 21v-3"></path></svg></span><span style="font-size: 13px; font-weight: 600">Transportation</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 700">Rp 650.000</span><span style="font-size: 12px; color: #6B6B6B">of Rp 800.000</span></div>
+<div style="height: 6px; border-radius: 999px; background: #FFFFFF; overflow: hidden"><div style="width: 81%; height: 100%; border-radius: 999px; background: #111111"></div></div>
+<span style="font-size: 12px; color: #6B6B6B">81% used</span>
+</div>
+
+<div style="background: #F2F2F2; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 6px"><span style="width: 28px; height: 28px; flex: none; border-radius: 50%; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9M20 4v5h-5M20 12a8 8 0 0 1-13.7 5.6L4 15M4 20v-5h5"></path></svg></span><span style="font-size: 13px; font-weight: 600">Subscription</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 700">Rp 340.000</span><span style="font-size: 12px; color: #6B6B6B">of Rp 450.000</span></div>
+<div style="height: 6px; border-radius: 999px; background: #FFFFFF; overflow: hidden"><div style="width: 76%; height: 100%; border-radius: 999px; background: #111111"></div></div>
+<span style="font-size: 12px; color: #6B6B6B">76% used</span>
+</div>
+
+<div style="background: #F2F2F2; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 6px"><span style="width: 28px; height: 28px; flex: none; border-radius: 50%; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 13H6z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg></span><span style="font-size: 13px; font-weight: 600">Shopping</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 700">Rp 600.000</span><span style="font-size: 12px; color: #6B6B6B">of Rp 1.000.000</span></div>
+<div style="height: 6px; border-radius: 999px; background: #FFFFFF; overflow: hidden"><div style="width: 60%; height: 100%; border-radius: 999px; background: #111111"></div></div>
+<span style="font-size: 12px; color: #6B6B6B">60% used</span>
+</div>
+
+<div style="background: #F2F2F2; border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 6px"><span style="width: 28px; height: 28px; flex: none; border-radius: 50%; background: #D1FC00; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"></path></svg></span><span style="font-size: 13px; font-weight: 600">Emergency Fund</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 700">Rp 500.000</span><span style="font-size: 12px; color: #6B6B6B">of Rp 1.000.000 target</span></div>
+<div style="height: 6px; border-radius: 999px; background: #FFFFFF; overflow: hidden"><div style="width: 50%; height: 100%; border-radius: 999px; background: #111111"></div></div>
+<span style="font-size: 12px; color: #6B6B6B">50% saved</span>
+</div>
+
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600">Transaction</h2>
+<a href="History.dc.html" style="font-size: 13px; font-weight: 600; text-decoration: none">View all</a>
+</div>
+
+<div style="font-size: 12px; font-weight: 600; color: #6B6B6B; padding: 12px 0 2px">Today</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 0"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #F2F2F2; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 1-3 3.5-3 6.5V13h3v8"></path></svg></span><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Nasi padang</span><span style="font-size: 12px; color: #6B6B6B">Food 2 · GoPay</span></div><span style="font-size: 15px; font-weight: 600">−Rp 35.000</span></div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 0"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #F2F2F2; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 1-3 3.5-3 6.5V13h3v8"></path></svg></span><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Lunch at the office</span><span style="font-size: 12px; color: #6B6B6B">Food · BCA</span></div><span style="font-size: 15px; font-weight: 600">−Rp 45.000</span></div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 0"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #F2F2F2; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="3"></rect><path d="M5 11h14M8 21v-3M16 21v-3"></path></svg></span><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">KRL to office</span><span style="font-size: 12px; color: #6B6B6B">Transportation · Jago</span></div><span style="font-size: 15px; font-weight: 600">−Rp 8.000</span></div>
+
+<div style="font-size: 12px; font-weight: 600; color: #6B6B6B; padding: 12px 0 2px">Yesterday</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 0"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #D1FC00; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle></svg></span><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Gold savings</span><span style="font-size: 12px; color: #6B6B6B">Saving · BCA → Pegadaian</span></div><span style="font-size: 15px; font-weight: 600">Rp 500.000</span></div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 0"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #F2F2F2; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9M20 4v5h-5M20 12a8 8 0 0 1-13.7 5.6L4 15M4 20v-5h5"></path></svg></span><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Netflix</span><span style="font-size: 12px; color: #6B6B6B">Subscription · BCA</span></div><span style="font-size: 15px; font-weight: 600">−Rp 186.000</span></div>
+
+<div style="font-size: 12px; font-weight: 600; color: #6B6B6B; padding: 12px 0 2px">Sat, 5 Dec</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 0"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #F2F2F2; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 13H6z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg></span><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Uniqlo</span><span style="font-size: 12px; color: #6B6B6B">Shopping · HSBC</span></div><span style="font-size: 15px; font-weight: 600">−Rp 399.000</span></div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 0"><span style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #F2F2F2; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13M13 4l4 4-4 4M20 16H7M11 12l-4 4 4 4"></path></svg></span><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">GoPay top-up</span><span style="font-size: 12px; color: #6B6B6B">Transfer · BCA → GoPay</span></div><span style="font-size: 15px; font-weight: 600">Rp 200.000</span></div>
+</section>
+</div>
+
+<nav aria-label="Main" style="position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); width: 320px; height: 56px; box-sizing: border-box; padding: 0 12px; background: #111111; border-radius: 999px; box-shadow: 0 10px 30px rgba(17, 17, 17, 0.28); display: flex; align-items: center; justify-content: space-between">
+<a href="Main.dc.html" aria-label="Home" aria-current="page" style="width: 44px; height: 44px; border-radius: 50%; background: #2E2E2E; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #FFFFFF"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg></a>
+<a href="Wallet.dc.html" aria-label="Account" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"></rect><path d="M3 10h18"></path><circle cx="16.5" cy="15" r="1.2"></circle></svg></a>
+<a href="Log.dc.html" aria-label="Log transaction" style="width: 68px; height: 68px; flex: none; border-radius: 50%; background: #D1FC00; box-shadow: 0 6px 16px rgba(17, 17, 17, 0.25); display: flex; align-items: center; justify-content: center; text-decoration: none"><svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></a>
+<a href="Analytics.dc.html" aria-label="Analytics" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"></path></svg></a>
+<a href="Budgets.dc.html" aria-label="Plan: budget and goals" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg></a>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"header":{"editor":"enum","options":["Dark","Light"],"default":"Dark","section":"Home"},"$preview":{"width":390,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = (this.props.header ?? 'Dark') === 'Dark';
+    return dark ? {
+      hdrBg: '#111111', hdrText: '#FFFFFF', hdrMuted: '#BDBDBD',
+      avatarBg: '#D1FC00', avatarText: '#111111',
+      trackBg: '#2E2E2E', fillBg: '#D1FC00',
+      peekFront: '#D1FC00', peekMid: '#FFFFFF', peekMidBorder: '0', peekBack: '#6B6B6B', peekBackBorder: '0'
+    } : {
+      hdrBg: '#F2F2F2', hdrText: '#111111', hdrMuted: '#6B6B6B',
+      avatarBg: '#111111', avatarText: '#D1FC00',
+      trackBg: '#E4E4E4', fillBg: '#111111',
+      peekFront: '#111111', peekMid: '#D1FC00', peekMidBorder: '0', peekBack: '#FFFFFF', peekBackBorder: '1px solid #E4E4E4'
+    };
+  }
+}
+</script>
+</body>
+</html>

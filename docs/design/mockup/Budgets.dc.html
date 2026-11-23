@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Budget &amp; goals</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#111111}a:hover{color:#111111}
+</style>
+</helmet>
+<div style="width: 390px; height: 2000px; position: relative; box-sizing: border-box; padding: 20px 20px 120px; background: #F2F2F2; color: #111111; font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+
+<header style="padding-top: 12px">
+<h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em">Budget &amp; goals</h1>
+</header>
+
+<div role="group" aria-label="Show" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E4E4E4">
+<sc-for list="{{ tabs }}" as="item" hint-placeholder-count="2">
+<button type="button" onClick="{{ item.pick }}" aria-pressed="{{ item.pressed }}" style="flex: 1; height: 36px; border: 0; border-radius: 999px; background: {{ item.bg }}; color: {{ item.fg }}; font: inherit; font-size: 13px; font-weight: {{ item.weight }}; cursor: pointer">{{ item.label }}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{ isBudget }}" hint-placeholder-val="{{ true }}">
+
+<div style="height: 56px; box-sizing: border-box; padding: 0 8px; border-radius: 999px; background: #FFFFFF; display: flex; align-items: center; justify-content: space-between">
+<button type="button" aria-label="Previous month" style="width: 40px; height: 40px; border: 0; border-radius: 50%; background: #F2F2F2; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px"><span style="font-size: 15px; font-weight: 700">December</span><span style="font-size: 12px; color: #6B6B6B">25 Nov – 24 Dec · 17 days left</span></div>
+<button type="button" aria-label="Next month" style="width: 40px; height: 40px; border: 0; border-radius: 50%; background: #F2F2F2; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+</div>
+
+<section aria-label="Plan for this month" style="background: #111111; color: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 13px; color: #BDBDBD">Income this month</span><span style="font-size: 15px; font-weight: 700">Rp 8.900.000</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 13px; color: #BDBDBD">Expense budget</span><span style="font-size: 15px; font-weight: 700">{{ budgetTotal }}</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 13px; color: #BDBDBD">Saving goals this month</span><span style="font-size: 15px; font-weight: 700">Rp 2.300.000</span></div>
+<div style="height: 1px; background: #2E2E2E; margin: 4px 0"></div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-size: 13px; color: #BDBDBD">{{ leftLabel }}</span><span style="font-size: 17px; font-weight: 700; color: {{ leftColor }}; background: {{ leftBg }}; border-radius: 999px; padding: 4px 12px">{{ leftValue }}</span></div>
+</section>
+
+<button type="button" style="height: 48px; flex: none; border-radius: 999px; border: 1px solid #E4E4E4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 14px; font-weight: 600; color: #111111; cursor: pointer"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>Copy amounts from November</button>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 17px; font-weight: 600">Expense budget</h2><span style="font-size: 13px; color: #6B6B6B">Tap an amount to change it</span></div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 4px 16px">
+<sc-for list="{{ rows }}" as="item" hint-placeholder-count="14">
+<div style="padding: 12px 0; border-top: {{ item.divider }}; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<span style="font-size: 15px; font-weight: 600">{{ item.name }}</span>
+<label style="width: 140px; flex: none; height: 36px; box-sizing: border-box; padding: 0 12px; border-radius: 999px; background: #F2F2F2; display: flex; align-items: center; gap: 4px"><span style="font-size: 13px; font-weight: 600; color: #6B6B6B">Rp</span><input type="text" inputMode="numeric" value="{{ item.value }}" onChange="{{ item.set }}" aria-label="{{ item.aria }}" style="flex: 1; min-width: 0; border: 0; background: transparent; text-align: right; font: inherit; font-size: 14px; font-weight: 700; color: #111111"></label>
+</div>
+<div style="height: 6px; border-radius: 999px; background: #F2F2F2; overflow: hidden"><div style="width: {{ item.barW }}; height: 100%; border-radius: 999px; background: {{ item.barBg }}"></div></div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px"><span style="color: #6B6B6B">{{ item.spent }}</span><span style="font-weight: 600; color: {{ item.tagColor }}; background: {{ item.tagBg }}; padding: {{ item.tagPad }}; border-radius: 999px">{{ item.tag }}</span></div>
+</div>
+</sc-for>
+</div>
+</section>
+
+</sc-if>
+
+<sc-if value="{{ isGoals }}" hint-placeholder-val="{{ false }}">
+
+<section aria-label="All goals" style="background: #111111; color: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; color: #BDBDBD">Saved toward goals</span>
+<span style="font-size: 32px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.25">Rp 8.200.000</span>
+<span style="font-size: 13px; color: #BDBDBD">of Rp 37.300.000 across 4 goals</span>
+<div style="height: 8px; border-radius: 999px; background: #2E2E2E; margin-top: 12px; overflow: hidden"><div style="width: 22%; height: 100%; border-radius: 999px; background: #D1FC00"></div></div>
+<span style="font-size: 12px; color: #BDBDBD; margin-top: 6px">This month: Rp 1.500.000 of Rp 2.300.000 set aside</span>
+</section>
+
+<button type="button" style="height: 48px; flex: none; border-radius: 999px; border: 0; background: #D1FC00; display: flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 14px; font-weight: 700; color: #111111; cursor: pointer"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New goal</button>
+
+<sc-for list="{{ goals }}" as="g" hint-placeholder-count="4">
+<a href="#goal" style="background: #FFFFFF; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: #111111">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 17px; font-weight: 700">{{ g.name }}</span><span style="font-size: 12px; color: #6B6B6B">{{ g.by }}</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 20px; font-weight: 700">{{ g.saved }}</span><span style="font-size: 13px; color: #6B6B6B">{{ g.of }}</span></div>
+<div style="height: 6px; border-radius: 999px; background: #F2F2F2; overflow: hidden"><div style="width: {{ g.barW }}; height: 100%; border-radius: 999px; background: #111111"></div></div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; margin-top: 2px"><span style="color: #6B6B6B">{{ g.monthly }}</span><span style="font-weight: 600; background: {{ g.tagBg }}; padding: 2px 8px; border-radius: 999px">{{ g.thisMonth }}</span></div>
+</a>
+</sc-for>
+
+<a href="#set-goals" style="background: #FFFFFF; border-radius: 24px; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-decoration: none; color: #111111"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">7 saving categories without a goal</span><span style="font-size: 12px; color: #6B6B6B">US Stock, Crypto, Travel Saving and 4 more</span></span><span style="font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 2px">Set<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span></a>
+
+</sc-if>
+
+<nav aria-label="Main" style="position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); width: 320px; height: 56px; box-sizing: border-box; padding: 0 12px; background: #111111; border-radius: 999px; box-shadow: 0 10px 30px rgba(17, 17, 17, 0.28); display: flex; align-items: center; justify-content: space-between">
+<a href="Main.dc.html" aria-label="Home" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></a>
+<a href="Wallet.dc.html" aria-label="Account" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18"/><circle cx="16.5" cy="15" r="1.2"/></svg></a>
+<a href="Log.dc.html" aria-label="Log transaction" style="width: 68px; height: 68px; flex: none; border-radius: 50%; background: #D1FC00; box-shadow: 0 6px 16px rgba(17, 17, 17, 0.25); display: flex; align-items: center; justify-content: center; text-decoration: none"><svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></a>
+<a href="Analytics.dc.html" aria-label="Analytics" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></a>
+<a href="Budgets.dc.html" aria-label="Plan: budget and goals" aria-current="page" style="width: 44px; height: 44px; border-radius: 50%; background: #2E2E2E; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #FFFFFF"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></a>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tab: 'Budget',
+      budgets: {
+        'Food 2': 750000, 'Insurance': 350000, 'Food': 1650000, 'Transportation': 800000, 'Subscription': 450000,
+        'Shopping': 1000000, 'Transportation 2': 400000, 'Entertainment': 500000, 'Gifts': 300000, 'Charity': 200000,
+        'Health & Selfcare': 400000, 'Other Expenses': 400000, 'Education': 300000, 'Travel': 1000000
+      }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const dots = (v) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const rp = (v) => 'Rp ' + dots(v);
+    const spent = {
+      'Food 2': 840000, 'Insurance': 350000, 'Food': 1560000, 'Transportation': 650000, 'Subscription': 340000,
+      'Shopping': 600000, 'Transportation 2': 210000, 'Entertainment': 250000, 'Gifts': 150000, 'Charity': 100000,
+      'Health & Selfcare': 180000, 'Other Expenses': 30000, 'Education': 0, 'Travel': 0
+    };
+    const names = Object.keys(s.budgets);
+    const rows = names.map((name, i) => {
+      const b = s.budgets[name];
+      const u = spent[name];
+      const over = u > b;
+      const pct = b > 0 ? Math.round((u / b) * 100) : (u > 0 ? 100 : 0);
+      return {
+        name,
+        value: dots(b),
+        aria: name + ' budget in rupiah',
+        divider: i === 0 ? '0' : '1px solid #F2F2F2',
+        barW: Math.min(pct, 100) + '%',
+        barBg: over ? '#D63F22' : '#111111',
+        spent: rp(u) + ' spent',
+        tag: over ? rp(u - b) + ' over' : rp(b - u) + ' left',
+        tagBg: over ? '#D63F22' : 'transparent',
+        tagColor: over ? '#FFFFFF' : '#111111',
+        tagPad: over ? '2px 8px' : '0',
+        set: (e) => {
+          const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+          this.setState({ budgets: { ...this.state.budgets, [name]: Number(d || 0) } });
+        }
+      };
+    });
+    const total = names.reduce((a, n) => a + s.budgets[n], 0);
+    const left = 8900000 - total - 2300000;
+    const goalData = [
+      ['Emergency Fund', 3000000, 15000000, 'by Dec 2027', 1000000, 500000],
+      ['Gold', 2500000, 10000000, 'by Mar 2028', 500000, 500000],
+      ['Reksadana', 1000000, 7000000, 'by Dec 2027', 500000, 300000],
+      ['Indo Stock', 1700000, 5300000, 'by Dec 2027', 300000, 200000]
+    ];
+    const goals = goalData.map((g) => ({
+      name: g[0],
+      saved: rp(g[1]),
+      of: 'of ' + rp(g[2]),
+      by: g[3],
+      barW: Math.round((g[1] / g[2]) * 100) + '%',
+      monthly: rp(g[4]) + ' a month to get there',
+      thisMonth: g[5] >= g[4] ? 'Done this month' : rp(g[5]) + ' this month',
+      tagBg: g[5] >= g[4] ? '#D1FC00' : '#F2F2F2'
+    }));
+    const tabs = ['Budget', 'Goals'].map((t) => ({
+      label: t,
+      pressed: t === s.tab ? 'true' : 'false',
+      bg: t === s.tab ? '#111111' : 'transparent',
+      fg: t === s.tab ? '#FFFFFF' : '#4A4A4A',
+      weight: t === s.tab ? 600 : 500,
+      pick: () => this.setState({ tab: t })
+    }));
+    return {
+      tabs, rows, goals,
+      isBudget: s.tab === 'Budget',
+      isGoals: s.tab === 'Goals',
+      budgetTotal: rp(total),
+      leftLabel: left >= 0 ? 'Left to plan' : 'Planned more than income',
+      leftValue: left >= 0 ? rp(left) : rp(-left),
+      leftBg: left >= 0 ? '#D1FC00' : '#D63F22',
+      leftColor: left >= 0 ? '#111111' : '#FFFFFF'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Analytics</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#111111}a:hover{color:#111111}
+</style>
+</helmet>
+<div style="width: 390px; height: 1460px; position: relative; box-sizing: border-box; padding: 20px 20px 120px; background: #F2F2F2; color: #111111; font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+
+<header style="padding-top: 12px">
+<h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em">Analytics</h1>
+</header>
+
+<div role="group" aria-label="Show" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E4E4E4">
+<sc-for list="{{ typeItems }}" as="item" hint-placeholder-count="3">
+<button type="button" onClick="{{ item.pick }}" style="flex: 1; height: 36px; border: 0; border-radius: 999px; background: {{ item.bg }}; color: {{ item.fg }}; font: inherit; font-size: 13px; font-weight: {{ item.weight }}; cursor: pointer">{{ item.label }}</button>
+</sc-for>
+</div>
+
+<section aria-label="Over time" style="background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; font-weight: 500; color: #6B6B6B">{{ summaryLabel }}</span>
+<span style="font-size: 34px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.25">{{ total }}</span>
+<div role="group" aria-label="Time range" style="display: flex; gap: 6px; margin-top: 12px">
+<button type="button" aria-pressed="false" style="height: 32px; padding: 0 12px; border: 1px solid #E4E4E4; border-radius: 999px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; color: #111111; cursor: pointer">Week</button>
+<button type="button" aria-pressed="true" style="height: 32px; padding: 0 12px; border: 1px solid #D1FC00; border-radius: 999px; background: #D1FC00; font: inherit; font-size: 12px; font-weight: 700; color: #111111; cursor: pointer">Month</button>
+<button type="button" aria-pressed="false" style="height: 32px; padding: 0 12px; border: 1px solid #E4E4E4; border-radius: 999px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; color: #111111; cursor: pointer">Year</button>
+<button type="button" aria-pressed="false" style="height: 32px; padding: 0 12px; border: 1px solid #E4E4E4; border-radius: 999px; background: #FFFFFF; font: inherit; font-size: 12px; font-weight: 600; color: #111111; cursor: pointer">All time</button>
+</div>
+<div role="img" aria-label="{{ chartLabel }}" style="height: 160px; margin-top: 16px; display: flex; gap: 6px; align-items: flex-end">
+<sc-for list="{{ bars }}" as="item" hint-placeholder-count="12">
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="width: 100%; height: {{ item.h }}; border-radius: 6px; background: {{ item.bg }}"></div>
+<span style="font-size: 11px; font-weight: {{ item.weight }}; color: {{ item.fg }}">{{ item.label }}</span>
+</div>
+</sc-for>
+</div>
+<span style="font-size: 12px; color: #6B6B6B; margin-top: 8px">One bar per pay period, 25th to 24th</span>
+</section>
+
+<section aria-label="Split by category" style="background: #FFFFFF; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600">Where it went</h2>
+<span style="font-size: 13px; color: #6B6B6B">December · biggest categories</span>
+</div>
+<div style="position: relative; width: 200px; height: 200px; align-self: center">
+<svg role="img" aria-label="{{ donutLabel }}" width="200" height="200" viewBox="0 0 200 200">
+<circle cx="100" cy="100" r="80" fill="none" stroke="#F2F2F2" stroke-width="28"></circle>
+<circle cx="100" cy="100" r="80" fill="none" stroke="{{ s0.color }}" stroke-width="28" stroke-dasharray="{{ s0.dash }}" stroke-dashoffset="{{ s0.off }}" transform="rotate(-90 100 100)"></circle>
+<circle cx="100" cy="100" r="80" fill="none" stroke="{{ s1.color }}" stroke-width="28" stroke-dasharray="{{ s1.dash }}" stroke-dashoffset="{{ s1.off }}" transform="rotate(-90 100 100)"></circle>
+<circle cx="100" cy="100" r="80" fill="none" stroke="{{ s2.color }}" stroke-width="28" stroke-dasharray="{{ s2.dash }}" stroke-dashoffset="{{ s2.off }}" transform="rotate(-90 100 100)"></circle>
+<circle cx="100" cy="100" r="80" fill="none" stroke="{{ s3.color }}" stroke-width="28" stroke-dasharray="{{ s3.dash }}" stroke-dashoffset="{{ s3.off }}" transform="rotate(-90 100 100)"></circle>
+<circle cx="100" cy="100" r="80" fill="none" stroke="{{ s4.color }}" stroke-width="28" stroke-dasharray="{{ s4.dash }}" stroke-dashoffset="{{ s4.off }}" transform="rotate(-90 100 100)"></circle>
+<circle cx="100" cy="100" r="80" fill="none" stroke="{{ s5.color }}" stroke-width="28" stroke-dasharray="{{ s5.dash }}" stroke-dashoffset="{{ s5.off }}" transform="rotate(-90 100 100)"></circle>
+</svg>
+<div aria-hidden="true" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+<span style="font-size: 20px; font-weight: 700">{{ short }}</span>
+<span style="font-size: 12px; color: #6B6B6B">{{ centerSub }}</span>
+</div>
+</div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{ tiles }}" as="item" hint-placeholder-count="6">
+<div style="grid-column: {{ item.span }}; background: #FFFFFF; border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px">
+<span aria-hidden="true" style="width: 10px; height: 10px; flex: none; border-radius: 50%; background: {{ item.color }}; box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.15)"></span>
+<span style="flex: 1; min-width: 0; font-size: 13px; font-weight: 600">{{ item.name }}</span>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+<span style="font-size: 18px; font-weight: 700">{{ item.amount }}</span>
+<span style="font-size: 13px; font-weight: 600; color: #6B6B6B">{{ item.share }}</span>
+</div>
+<sc-if value="{{ item.hasBar }}" hint-placeholder-val="{{ true }}">
+<div style="height: 6px; border-radius: 999px; background: #E4E4E4; overflow: hidden"><div style="width: {{ item.barW }}; height: 100%; border-radius: 999px; background: {{ item.barBg }}"></div></div>
+</sc-if>
+<sc-if value="{{ item.hasNote }}" hint-placeholder-val="{{ true }}">
+<span style="align-self: flex-start; font-size: 12px; font-weight: {{ item.noteWeight }}; color: {{ item.noteColor }}; background: {{ item.noteBg }}; padding: {{ item.notePad }}; border-radius: 999px">{{ item.note }}</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<nav aria-label="Main" style="position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); width: 320px; height: 56px; box-sizing: border-box; padding: 0 12px; background: #111111; border-radius: 999px; box-shadow: 0 10px 30px rgba(17, 17, 17, 0.28); display: flex; align-items: center; justify-content: space-between">
+<a href="Main.dc.html" aria-label="Home" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></a>
+<a href="Wallet.dc.html" aria-label="Account" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18"/><circle cx="16.5" cy="15" r="1.2"/></svg></a>
+<a href="Log.dc.html" aria-label="Log transaction" style="width: 68px; height: 68px; flex: none; border-radius: 50%; background: #D1FC00; box-shadow: 0 6px 16px rgba(17, 17, 17, 0.25); display: flex; align-items: center; justify-content: center; text-decoration: none"><svg aria-hidden="true" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></a>
+<a href="Analytics.dc.html" aria-label="Analytics" aria-current="page" style="width: 44px; height: 44px; border-radius: 50%; background: #2E2E2E; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #FFFFFF"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></a>
+<a href="Budgets.dc.html" aria-label="Plan: budget and goals" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #9A9A9A"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></a>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1460}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { type: 'Expenses' };
+  }
+  renderVals() {
+    const t = this.state.type;
+    const D = {
+      Expenses: { label: 'Spent', total: 'Rp 5.260.000', short: 'Rp 5,26 jt', sub: 'spent',
+        bars: [4.8, 5.1, 4.6, 5.9, 5.2, 4.9, 6.3, 5.5, 5.0, 5.8, 6.1, 5.26],
+        segs: [['Food', 1560000, '#D1FC00', '95% of budget', 95, false], ['Food 2', 840000, '#111111', 'Rp 90.000 over', 100, true], ['Transportation', 650000, '#4A4A4A', '81% of budget', 81, false], ['Shopping', 600000, '#7A7A7A', '60% of budget', 60, false], ['Subscription', 340000, '#A8A8A8', '76% of budget', 76, false], ['Other', 1270000, '#D4D4D4', '9 more categories', null, false]] },
+      Income: { label: 'Earned', total: 'Rp 8.900.000', short: 'Rp 8,9 jt', sub: 'earned',
+        bars: [8.5, 8.5, 8.7, 8.5, 9.6, 8.5, 8.5, 8.8, 8.5, 8.5, 12.5, 8.9],
+        segs: [['Salary', 8500000, '#D1FC00', '', null, false], ['Other Income', 400000, '#111111', '', null, false]] },
+      Saving: { label: 'Saved', total: 'Rp 1.500.000', short: 'Rp 1,5 jt', sub: 'saved',
+        bars: [1.2, 1.0, 1.5, 1.3, 1.5, 1.0, 1.4, 1.6, 1.5, 1.2, 2.0, 1.5],
+        segs: [['Emergency Fund', 500000, '#D1FC00', '50% of target', 50, false], ['Gold', 500000, '#111111', '100% of target', 100, false], ['Reksadana', 300000, '#4A4A4A', '60% of target', 60, false], ['Indo Stock', 200000, '#7A7A7A', '67% of target', 67, false]] }
+    }[t];
+    const fmt = (v) => 'Rp ' + String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const sum = D.segs.reduce((a, s) => a + s[1], 0);
+    const max = Math.max(...D.bars);
+    const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+    const bars = D.bars.map((v, i) => ({
+      h: Math.round((v / max) * 130) + 'px',
+      bg: i === 11 ? '#D1FC00' : '#E4E4E4',
+      label: months[i],
+      weight: i === 11 ? 700 : 500,
+      fg: i === 11 ? '#111111' : '#6B6B6B'
+    }));
+    const C = 2 * Math.PI * 80;
+    let cum = 0;
+    const segOut = [0, 1, 2, 3, 4, 5].map((i) => {
+      const s = D.segs[i];
+      if (!s) return { color: 'transparent', dash: '0 ' + C.toFixed(2), off: '0' };
+      const len = (s[1] / sum) * C;
+      const out = { color: s[2], dash: Math.max(len - 3, 0).toFixed(2) + ' ' + C.toFixed(2), off: (-cum).toFixed(2) };
+      cum += len;
+      return out;
+    });
+    const last = D.segs.length - 1;
+    const tiles = D.segs.map((s, i) => ({
+      name: s[0],
+      amount: fmt(s[1]),
+      share: Math.round((s[1] / sum) * 100) + '%',
+      color: s[2],
+      note: s[3],
+      hasNote: s[3] !== '',
+      hasBar: s[4] !== null,
+      barW: (s[4] || 0) + '%',
+      barBg: s[5] ? '#D63F22' : '#111111',
+      noteColor: s[5] ? '#FFFFFF' : '#6B6B6B',
+      noteBg: s[5] ? '#D63F22' : 'transparent',
+      notePad: s[5] ? '3px 10px' : '0',
+      noteWeight: s[5] ? 600 : 400,
+      span: i === 0 || (i === last && last % 2 === 1) ? 'span 2' : 'auto'
+    }));
+    const typeItems = ['Expenses', 'Income', 'Saving'].map((x) => ({
+      label: x,
+      bg: x === t ? '#111111' : 'transparent',
+      fg: x === t ? '#FFFFFF' : '#4A4A4A',
+      weight: x === t ? 600 : 500,
+      pick: () => this.setState({ type: x })
+    }));
+    return {
+      typeItems, bars, tiles,
+      summaryLabel: D.label + ' · December',
+      total: D.total,
+      short: D.short,
+      centerSub: D.sub,
+      chartLabel: D.label + ' per pay period, January to December; December is highlighted',
+      donutLabel: 'Split by category: ' + D.segs.map((s) => s[0] + ' ' + Math.round((s[1] / sum) * 100) + '%').join(', '),
+      s0: segOut[0], s1: segOut[1], s2: segOut[2], s3: segOut[3], s4: segOut[4], s5: segOut[5]
+    };
+  }
+}
+</script>
+</body>
+</html>
