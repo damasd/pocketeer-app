@@ -51,6 +51,8 @@ export function NavBar() {
   const pathname = usePathname();
   const sheetRef = useRef<HTMLDialogElement>(null);
 
+  if (pathname === "/login") return null;
+
   return (
     <>
       <nav
