@@ -31,11 +31,26 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-function TabLink({ tab, active }: { tab: Tab; active: boolean }) {
+/** Tabs in bar order, for the slide direction between them. */
+const ORDER = [...LEFT, ...RIGHT].map((t) => t.href);
+
+/**
+ * Page transition direction: a tab to the right of the current one slides forward, to the left
+ * slides back. From a page that isn't a tab (Settings, …) the page just crossfades.
+ */
+function directionTo(pathname: string, href: string): string[] | undefined {
+  const from = ORDER.findIndex((h) => isActive(pathname, h));
+  const to = ORDER.indexOf(href);
+  if (from < 0 || from === to) return undefined;
+  return [to > from ? "nav-forward" : "nav-back"];
+}
+
+function TabLink({ tab, active, pathname }: { tab: Tab; active: boolean; pathname: string }) {
   const { href, label, Icon } = tab;
   return (
     <Link
       href={href}
+      transitionTypes={directionTo(pathname, href)}
       aria-label={label}
       aria-current={active ? "page" : undefined}
       className={[
@@ -64,7 +79,7 @@ export function NavBar() {
         style={{ bottom: "max(16px, env(safe-area-inset-bottom))" }}
       >
         {LEFT.map((tab) => (
-          <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} />
+          <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} />
         ))}
         <button
           type="button"
@@ -76,7 +91,7 @@ export function NavBar() {
           <Plus aria-hidden size={30} strokeWidth={2.5} />
         </button>
         {RIGHT.map((tab) => (
-          <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} />
+          <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} />
         ))}
       </nav>
       <Sheet open={logOpen} onClose={() => setLogOpen(false)} title="Log transaction" tall>

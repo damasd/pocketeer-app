@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OTHER_COLOUR, buckets, byCategory, segments, shortRupiah, totalIn } from "./analytics";
+import { OTHER_COLOUR, buckets, byCategory, segments, totalIn } from "./analytics";
 
 const stored = [
   { start: "2026-10-26", end: "2026-11-24", name: "November" },
@@ -78,16 +78,5 @@ describe("segments", () => {
 
   it("has no Other when there are five or fewer", () => {
     expect(segments([{ categoryId: "a", amount: 1 }])).toHaveLength(1);
-  });
-});
-
-describe("shortRupiah", () => {
-  it("shortens to rb, jt and M with a comma", () => {
-    expect(shortRupiah(5260000)).toBe("Rp 5,26 jt");
-    expect(shortRupiah(8900000)).toBe("Rp 8,9 jt");
-    expect(shortRupiah(35000)).toBe("Rp 35 rb");
-    expect(shortRupiah(1200000000)).toBe("Rp 1,2 M");
-    expect(shortRupiah(500)).toBe("Rp 500");
-    expect(shortRupiah(-1500000)).toBe("−Rp 1,5 jt");
   });
 });

@@ -136,14 +136,3 @@ export function segments(items: readonly { categoryId: string; amount: number }[
   const amount = rest.reduce((s, i) => s + i.amount, 0);
   return [...head, { key: "other", categoryIds: rest.map((i) => i.categoryId), amount, colour: OTHER_COLOUR, share: pct(amount) }];
 }
-
-/** Short Indonesian amount for tight spots: "Rp 5,26 jt", "Rp 35 rb", "Rp 1,2 M". Display only. */
-export function shortRupiah(n: number): string {
-  const sign = n < 0 ? "−" : "";
-  const a = Math.abs(n);
-  const fmt = (v: number) => v.toFixed(2).replace(/\.?0+$/, "").replace(".", ",");
-  if (a >= 1_000_000_000) return `${sign}Rp ${fmt(a / 1_000_000_000)} M`;
-  if (a >= 1_000_000) return `${sign}Rp ${fmt(a / 1_000_000)} jt`;
-  if (a >= 1_000) return `${sign}Rp ${fmt(a / 1_000)} rb`;
-  return `${sign}Rp ${a}`;
-}

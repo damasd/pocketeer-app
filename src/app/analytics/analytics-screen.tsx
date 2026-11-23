@@ -7,7 +7,6 @@ import {
   buckets,
   byCategory,
   segments,
-  shortRupiah,
   totalIn,
   type AnalyticsType,
   type Bucket,
@@ -149,9 +148,9 @@ function AnalyticsBody({ today }: { today: string }) {
       <section aria-labelledby="split-title" className="flex flex-col gap-4 rounded-3xl bg-card p-5">
         <div className="flex flex-col gap-0.5">
           <h2 id="split-title" className="text-[17px] font-semibold">
-            {type === "income" ? "Where it came from" : type === "saving" ? "Where it went" : "Where it went"}
+            {type === "income" ? "Income by category" : type === "saving" ? "Savings by category" : "Spending by category"}
           </h2>
-          <span className="text-[13px] text-muted">{selected.name} · biggest categories</span>
+          <span className="text-[13px] text-muted">{selected.name} · top categories</span>
         </div>
         {split.length ? (
           <Donut segments={split} total={total} sub={VERB[type].sub} name={(s) => (s.key === "other" ? "Other" : categoryName(s.key))} />
@@ -161,54 +160,60 @@ function AnalyticsBody({ today }: { today: string }) {
       </section>
 
       {split.length > 0 && (
-        <ul className="grid grid-cols-2 gap-3">
-          {split.map((s, i) => {
-            const isOther = s.key === "other";
-            const plan = isOther ? null : planFor(s.key);
-            const line = plan !== null && plan > 0 ? budgetLine(plan, s.amount) : null;
-            const last = i === split.length - 1;
-            const wide = i === 0 || (last && (split.length - 1) % 2 === 1);
-            return (
-              <li key={s.key} className={`flex flex-col gap-2 rounded-[20px] bg-card p-3.5 ${wide ? "col-span-2" : ""}`}>
-                <span className="flex items-center gap-2">
-                  <span
-                    aria-hidden
-                    className="size-2.5 flex-none rounded-full shadow-[inset_0_0_0_1px_rgba(17,17,17,0.15)]"
-                    style={{ background: s.colour }}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">{isOther ? "Other" : categoryName(s.key)}</span>
-                </span>
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className="text-lg font-bold">{formatRupiah(s.amount)}</span>
-                  <span className="text-[13px] font-semibold text-muted">{s.share}%</span>
-                </span>
-                {line && (
-                  <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-line">
+        <section aria-labelledby="split-list-title" className="rounded-3xl bg-card px-5 py-2">
+          <h2 id="split-list-title" className="sr-only">
+            Categories in {selected.name}
+          </h2>
+          <ul>
+            {split.map((s, i) => {
+              const isOther = s.key === "other";
+              const plan = isOther ? null : planFor(s.key);
+              const line = plan !== null && plan > 0 ? budgetLine(plan, s.amount) : null;
+              const over = line !== null && line.over && type === "expense";
+              return (
+                <li key={s.key} className={`flex flex-col gap-1.5 py-3.5 ${i ? "border-t border-page" : ""}`}>
+                  <span className="flex items-center gap-2.5">
                     <span
-                      className={`block h-full rounded-full ${line.over && type === "expense" ? "bg-ember" : "bg-ink"}`}
-                      style={{ width: `${line.barPercent}%` }}
+                      aria-hidden
+                      className="size-2.5 flex-none rounded-full shadow-[inset_0_0_0_1px_rgba(17,17,17,0.15)]"
+                      style={{ background: s.colour }}
                     />
-                  </span>
-                )}
-                {isOther ? (
-                  <span className="text-xs text-muted">
-                    {s.categoryIds.length} more {s.categoryIds.length === 1 ? "category" : "categories"}
-                  </span>
-                ) : line ? (
-                  line.over && type === "expense" ? (
-                    <span className="self-start rounded-full bg-ember px-2.5 py-0.5 text-xs font-semibold text-white">
-                      {formatRupiah(line.remaining)} over
+                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
+                      {isOther ? "Other" : categoryName(s.key)}
                     </span>
-                  ) : (
-                    <span className="text-xs text-muted">
-                      {line.percent}% of {type === "saving" ? "target" : "budget"}
+                    <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(s.amount)}</span>
+                  </span>
+                  <span className="flex items-center justify-between gap-2 pl-5 text-xs">
+                    {isOther ? (
+                      <span className="text-muted">
+                        {s.categoryIds.length} more {s.categoryIds.length === 1 ? "category" : "categories"}
+                      </span>
+                    ) : over ? (
+                      <span className="rounded-full bg-ember px-2 py-0.5 font-semibold text-white">
+                        {formatRupiah(line!.remaining)} over budget
+                      </span>
+                    ) : line ? (
+                      <span className="text-muted">
+                        {line.percent}% of {type === "saving" ? "target" : "budget"}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    <span className="font-semibold text-muted">{s.share}% of total</span>
+                  </span>
+                  {line && (
+                    <span aria-hidden className="ml-5 h-1 overflow-hidden rounded-full bg-page">
+                      <span
+                        className={`block h-full rounded-full ${over ? "bg-ember" : "bg-ink"}`}
+                        style={{ width: `${line.barPercent}%` }}
+                      />
                     </span>
-                  )
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
     </div>
   );
@@ -311,7 +316,9 @@ function Donut({
         ))}
       </svg>
       <div aria-hidden className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        <span className="text-xl font-bold">{shortRupiah(total)}</span>
+        <span className={`max-w-[136px] text-center leading-tight font-bold ${formatRupiah(total).length > 13 ? "text-[15px]" : formatRupiah(total).length > 11 ? "text-[17px]" : "text-xl"}`}>
+          {formatRupiah(total)}
+        </span>
         <span className="text-xs text-muted">{sub}</span>
       </div>
     </div>
