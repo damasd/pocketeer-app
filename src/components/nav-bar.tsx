@@ -76,7 +76,7 @@ export function NavBar() {
       <nav
         aria-label="Main"
         className="fixed left-1/2 z-40 flex h-16 w-[336px] -translate-x-1/2 select-none items-center justify-between rounded-full bg-ink px-2 shadow-[0_10px_30px_rgba(17,17,17,0.28)]"
-        style={{ bottom: "max(16px, env(safe-area-inset-bottom))" }}
+        style={{ bottom: "max(16px, env(safe-area-inset-bottom))", viewTransitionName: "nav-bar" }}
       >
         {LEFT.map((tab) => (
           <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} />

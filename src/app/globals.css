@@ -139,32 +139,43 @@ html.dark-top {
 ::view-transition-new(root) {
   animation: none;
 }
+/* The nav bar is its own layer (view-transition-name: nav-bar): held still and kept above the page. */
+::view-transition-group(nav-bar) {
+  z-index: 100;
+  animation: none;
+}
+::view-transition-old(nav-bar) {
+  display: none;
+}
+::view-transition-new(nav-bar) {
+  animation: none;
+}
 
 @media (prefers-reduced-motion: no-preference) {
   /* Tab to a tab on its right: old page leaves left, new page arrives from the right. */
   ::view-transition-old(.nav-forward) {
     --slide-offset: -48px;
     animation:
-      140ms ease-in both page-fade-in reverse,
+      180ms ease-in both page-fade-in reverse,
       320ms cubic-bezier(0.32, 0.72, 0, 1) both page-slide reverse;
   }
   ::view-transition-new(.nav-forward) {
     --slide-offset: 48px;
     animation:
-      200ms ease-out 100ms both page-fade-in,
+      220ms ease-out both page-fade-in,
       320ms cubic-bezier(0.32, 0.72, 0, 1) both page-slide;
   }
   /* Tab to a tab on its left, or a back link: the other way round. */
   ::view-transition-old(.nav-back) {
     --slide-offset: 48px;
     animation:
-      140ms ease-in both page-fade-in reverse,
+      180ms ease-in both page-fade-in reverse,
       320ms cubic-bezier(0.32, 0.72, 0, 1) both page-slide reverse;
   }
   ::view-transition-new(.nav-back) {
     --slide-offset: -48px;
     animation:
-      200ms ease-out 100ms both page-fade-in,
+      220ms ease-out both page-fade-in,
       320ms cubic-bezier(0.32, 0.72, 0, 1) both page-slide;
   }
   /* Any other page change: a quick crossfade. */
@@ -172,7 +183,7 @@ html.dark-top {
     animation: 120ms ease-in both page-fade-in reverse;
   }
   ::view-transition-new(.page-fade) {
-    animation: 180ms ease-out 60ms both page-fade-in;
+    animation: 180ms ease-out both page-fade-in;
   }
 }
 
