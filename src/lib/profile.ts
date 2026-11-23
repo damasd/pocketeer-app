@@ -48,7 +48,8 @@ function subscribe(listener: () => void) {
 }
 
 const getSnapshot = () => state;
-const getServerSnapshot = (): State => ({ status: "loading", profile: null });
+const SERVER_STATE: State = { status: "loading", profile: null };
+const getServerSnapshot = (): State => SERVER_STATE;
 
 /** Last known profile from this device, so the greeting shows instantly on reopen. */
 function readCache(): Profile | null {
