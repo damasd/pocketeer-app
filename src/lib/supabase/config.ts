@@ -7,8 +7,9 @@ export function normalizeSupabaseUrl(value: string | undefined): string {
   if (!raw) return "";
   try {
     const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
-    // A real project URL has a dotted host (xyz.supabase.co); this rejects a key pasted by mistake.
-    return url.hostname.includes(".") ? url.origin : "";
+    // Must be the project's own address (xyz.supabase.co). Rejects a key, the
+    // dashboard address or this app's address pasted by mistake.
+    return /^[a-z0-9]{10,}\.supabase\.(co|in)$/i.test(url.hostname) ? url.origin : "";
   } catch {
     return "";
   }
