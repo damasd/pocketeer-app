@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Pencil, PiggyBank, Plus, Wallet as WalletIcon } from "lucide-react";
+import { ChevronRight, Pencil, Plus, Wallet as WalletIcon } from "lucide-react";
+import { ArchivedSection } from "@/components/archived-section";
 import { AccountCardFace, CARD_STYLES } from "@/components/account-card";
 import { Sheet } from "@/components/sheet";
 import { Button, ErrorNote } from "@/components/ui";
@@ -66,28 +67,6 @@ export function AccountsScreen() {
         ) : (
           <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{formatRupiah(sumBalances(active))}</span>
         )}
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {GROUPS.map((g) => {
-            const Icon = g.id === "saving" ? PiggyBank : WalletIcon;
-            return (
-              <a
-                key={g.id}
-                href={`#${g.id}`}
-                className="flex items-center gap-3 rounded-[20px] border border-line px-3.5 py-3"
-              >
-                <span aria-hidden className="flex size-8 flex-none items-center justify-center rounded-full bg-ink text-white">
-                  <Icon size={16} strokeWidth={2.25} />
-                </span>
-                <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="text-xs font-medium text-muted">{g.title}</span>
-                  <span className="truncate text-[17px] font-bold">
-                    {loading ? "…" : formatRupiah(sumBalances(byGroup(g.id)))}
-                  </span>
-                </span>
-              </a>
-            );
-          })}
-        </div>
       </section>
 
       {!loading && active.length === 0 && state.status !== "error" && (
@@ -160,12 +139,9 @@ export function AccountsScreen() {
         );
       })}
 
-      {archived.length > 0 && (
-        <section aria-labelledby="archived-title" className="mt-8 flex flex-col gap-3">
-          <h2 id="archived-title" className="text-[17px] font-semibold">
-            Archived
-          </h2>
-          <ul className="flex flex-col overflow-hidden rounded-3xl bg-card">
+      <div className="mt-8">
+      <ArchivedSection count={archived.length}>
+          <ul aria-label="Archived accounts" className="flex flex-col overflow-hidden rounded-3xl bg-card">
             {archived.map((a) => (
               <li key={a.id} className="border-b border-line last:border-0">
                 <button
@@ -182,8 +158,8 @@ export function AccountsScreen() {
               </li>
             ))}
           </ul>
-        </section>
-      )}
+      </ArchivedSection>
+      </div>
 
       <Sheet
         open={editing !== null}

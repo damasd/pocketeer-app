@@ -186,6 +186,18 @@ export async function savePhoto(file: File) {
   set({ status: "ready", profile: { ...p, photoPath: path, ...(await signedUrl(path)) } });
 }
 
+/** Remove the profile photo: the initial on a lime circle shows again. */
+export async function removePhoto() {
+  const p = current();
+  if (!p.photoPath) return;
+  const { error } = await supabase()
+    .from("profiles")
+    .upsert({ user_id: p.userId, display_name: p.displayName, photo_path: null, updated_at: new Date().toISOString() });
+  if (error) throw error;
+  await supabase().storage.from(BUCKET).remove([p.photoPath]);
+  set({ status: "ready", profile: { ...p, photoPath: null, photoUrl: null, photoUrlExpires: 0 } });
+}
+
 export async function signOut() {
   await supabase().auth.signOut();
   try {

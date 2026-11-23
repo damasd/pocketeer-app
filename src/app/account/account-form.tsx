@@ -152,7 +152,7 @@ export function AccountForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="starting-balance">Starting balance</Label>
-        <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4">
+        <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
           <span aria-hidden className="text-[15px] font-semibold text-muted">
             Rp
           </span>

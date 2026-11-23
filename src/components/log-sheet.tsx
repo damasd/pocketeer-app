@@ -239,7 +239,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         }}
       />
 
-      <div className="flex flex-col items-center gap-0.5 py-0.5">
+      <div className="mt-3 flex flex-col items-center gap-0.5 pb-1">
         <span className="text-[13px] font-medium text-muted">Amount</span>
         <output
           aria-live="polite"
@@ -261,17 +261,27 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
               {mode === "saving" ? "Saving category" : "Category"}
             </span>
             {mode === "saving" && (
-              <div className="w-[200px]">
-                <Segmented
-                  label="Deposit or withdraw"
-                  options={DIRECTIONS}
-                  value={direction}
-                  onChange={(d) => {
-                    setDirection(d);
-                    setChosenToId(null);
-                    setError(null);
-                  }}
-                />
+              <div role="group" aria-label="Deposit or withdraw" className="flex rounded-full bg-page p-0.5">
+                {DIRECTIONS.map((d) => {
+                  const on = d.value === direction;
+                  return (
+                    <button
+                      key={d.value}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => {
+                        setDirection(d.value);
+                        setChosenToId(null);
+                        setError(null);
+                      }}
+                      className={`relative h-8 rounded-full px-3 text-xs font-semibold transition-colors duration-150 after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[""] ${
+                        on ? "bg-ink text-white" : "text-[#4A4A4A]"
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -39,7 +39,7 @@ function TabLink({ tab, active }: { tab: Tab; active: boolean }) {
       aria-label={label}
       aria-current={active ? "page" : undefined}
       className={[
-        "flex size-11 items-center justify-center rounded-full transition-colors duration-150",
+        "flex size-12 items-center justify-center rounded-full transition-colors duration-150",
         active
           ? "bg-nav-selected text-white"
           : "text-nav-idle hover:text-white",
@@ -60,7 +60,7 @@ export function NavBar() {
     <>
       <nav
         aria-label="Main"
-        className="fixed left-1/2 z-40 flex h-14 w-[320px] -translate-x-1/2 select-none items-center justify-between rounded-full bg-ink px-3 shadow-[0_10px_30px_rgba(17,17,17,0.28)]"
+        className="fixed left-1/2 z-40 flex h-16 w-[336px] -translate-x-1/2 select-none items-center justify-between rounded-full bg-ink px-2 shadow-[0_10px_30px_rgba(17,17,17,0.28)]"
         style={{ bottom: "max(16px, env(safe-area-inset-bottom))" }}
       >
         {LEFT.map((tab) => (

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, Search, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react";
 import { LogForm } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
 import { ErrorNote } from "@/components/ui";
@@ -43,6 +43,7 @@ export function HistoryScreen() {
   const [categoryId, setCategoryId] = useState<string>(ALL);
   const [type, setType] = useState<TypeFilter>("all");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Transaction | null>(null);
 
@@ -82,6 +83,10 @@ export function HistoryScreen() {
   const loading = transactions.status === "loading" && !transactions.data;
   const loadError = [transactions, accounts, categories].find((s) => s.status === "error");
 
+  // Filters changed from the default view (this pay period, everything else "all").
+  const activeFilters =
+    (periodStart !== CURRENT ? 1 : 0) + (accountId !== ALL ? 1 : 0) + (categoryId !== ALL ? 1 : 0) + (type !== "all" ? 1 : 0);
+
   return (
     <div className="flex flex-col gap-4">
       <header className="flex items-center gap-2 pt-3">
@@ -105,6 +110,26 @@ export function HistoryScreen() {
         >
           {searchOpen ? <X aria-hidden size={18} strokeWidth={2.25} /> : <Search aria-hidden size={18} strokeWidth={2.25} />}
         </button>
+        <button
+          type="button"
+          aria-label={activeFilters ? `Filters, ${activeFilters} on` : "Filters"}
+          aria-expanded={filtersOpen}
+          aria-controls="history-filters"
+          onClick={() => setFiltersOpen((o) => !o)}
+          className={`relative flex size-11 flex-none items-center justify-center rounded-full border ${
+            filtersOpen ? "border-ink bg-ink text-white" : "border-line bg-card"
+          }`}
+        >
+          <SlidersHorizontal aria-hidden size={18} strokeWidth={2.25} />
+          {activeFilters > 0 && (
+            <span
+              aria-hidden
+              className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-lime text-[11px] font-bold text-ink ring-2 ring-page"
+            >
+              {activeFilters}
+            </span>
+          )}
+        </button>
       </header>
 
       {searchOpen && (
@@ -119,7 +144,9 @@ export function HistoryScreen() {
         />
       )}
 
-      <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
+      {filtersOpen && (
+      <section id="history-filters" aria-label="Filters" className="flex flex-col gap-3 rounded-3xl bg-card p-4">
+      <div className="flex flex-wrap gap-2">
         <FilterSelect
           label="Pay period"
           value={period ? period.start : ALL}
@@ -174,7 +201,7 @@ export function HistoryScreen() {
         </FilterSelect>
       </div>
 
-      <div role="group" aria-label="Transaction type" className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
+      <div role="group" aria-label="Transaction type" className="flex flex-wrap gap-2">
         {TYPE_CHIPS.map((c) => {
           const on = c.value === type;
           return (
@@ -192,11 +219,35 @@ export function HistoryScreen() {
           );
         })}
       </div>
+      {activeFilters > 0 && (
+        <button
+          type="button"
+          onClick={() => {
+            setPeriodStart(CURRENT);
+            setAccountId(ALL);
+            setCategoryId(ALL);
+            setType("all");
+          }}
+          className="flex h-11 items-center self-start px-1 text-[13px] font-semibold underline-offset-4 hover:underline"
+        >
+          Clear filters
+        </button>
+      )}
+      </section>
+      )}
 
       <p className="text-[13px] text-muted" aria-live="polite">
         {loading
           ? "Loading…"
-          : `${shown.length} ${shown.length === 1 ? "transaction" : "transactions"} · ${period ? periodRangeLabel(period) : "All time"}`}
+          : [
+              `${shown.length} ${shown.length === 1 ? "transaction" : "transactions"}`,
+              period ? `${period.name} (${periodRangeLabel(period)})` : "All time",
+              accountId !== ALL ? accountName(accountId) : null,
+              categoryId !== ALL ? category(categoryId)?.name : null,
+              type !== "all" ? TYPE_CHIPS.find((c) => c.value === type)?.label : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
       </p>
 
       {loadError && loadError.status === "error" && <ErrorNote>{loadError.message}</ErrorNote>}

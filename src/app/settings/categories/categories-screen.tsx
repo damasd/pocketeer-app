@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ArchivedSection } from "@/components/archived-section";
 import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { Segmented } from "@/components/segmented";
 import { Sheet } from "@/components/sheet";
@@ -90,18 +91,13 @@ export function CategoriesScreen() {
         )}
       </ul>
 
-      {archived.length > 0 && (
-        <section aria-labelledby="archived-cats" className="flex flex-col gap-3">
-          <h2 id="archived-cats" className="text-[17px] font-semibold">
-            Archived
-          </h2>
-          <ul className="flex flex-col overflow-hidden rounded-3xl bg-card">
-            {archived.map((c) => (
-              <CategoryRow key={c.id} category={c} onOpen={() => setEditing(c)} />
-            ))}
-          </ul>
-        </section>
-      )}
+      <ArchivedSection key={kind} count={archived.length}>
+        <ul aria-label={`Archived ${kindLabel} categories`} className="flex flex-col overflow-hidden rounded-3xl bg-card">
+          {archived.map((c) => (
+            <CategoryRow key={c.id} category={c} onOpen={() => setEditing(c)} />
+          ))}
+        </ul>
+      </ArchivedSection>
 
       <Sheet
         open={editing !== null}
@@ -259,7 +255,6 @@ function CategoryForm({
         </Button>
       )}
       {category &&
-        (!category.builtIn || category.kind === "saving") &&
         (confirmDelete ? (
           <DeleteCategoryConfirm category={category} onCancel={() => setConfirmDelete(false)} onDone={onDone} />
         ) : (

@@ -30,10 +30,13 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Keyboard focus: lime ring reads on both the black nav and light pages. */
-:focus-visible {
-  outline: 2px solid var(--color-lime);
-  outline-offset: 2px;
+/* Keyboard focus: lime ring reads on both the black nav and light pages.
+   In the base layer so a utility like outline-none can switch it off. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-lime);
+    outline-offset: 2px;
+  }
 }
 
 /* Bottom sheet (Log). Native <dialog> gives Escape, focus trap and inert background. */
@@ -43,6 +46,9 @@ body {
   max-width: 480px;
   max-height: 92dvh;
   overflow-y: auto;
+  overflow-x: hidden;
+  /* No scrollbar: it squares the sheet's rounded corner and shifts the layout. */
+  scrollbar-width: none;
   overscroll-behavior: contain;
   border: 0;
   padding: 0;
@@ -122,4 +128,7 @@ nav a {
 html.dark-top {
   /* Home: the rubber-band above the dark header stays dark. */
   background: var(--color-ink);
+}
+.sheet::-webkit-scrollbar {
+  display: none;
 }

@@ -375,7 +375,7 @@ function BudgetRow({
             </button>
           )}
         </span>
-        <span className="flex h-11 w-[150px] flex-none items-center gap-1 rounded-full bg-page px-3">
+        <span className="flex h-11 w-[150px] flex-none items-center gap-1 rounded-full bg-page px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
           <span aria-hidden className="text-[13px] font-semibold text-muted">
             Rp
           </span>
@@ -572,7 +572,7 @@ function NewExpenseCategory({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="new-expense-budget">Budget this period (optional)</Label>
-        <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4">
+        <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
           <span aria-hidden className="text-[15px] font-semibold text-muted">
             Rp
           </span>

@@ -20,7 +20,10 @@ export function DeleteCategoryConfirm({
   onDone: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [blocked, setBlocked] = useState<string | null>(null);
+  // The setup expense and income categories are kept: deleting goes straight to "Archive instead".
+  const [blocked, setBlocked] = useState<string | null>(
+    category.builtIn && category.kind !== "saving" ? "It's one of the setup categories, which stay in the list. Archive it to hide it instead." : null,
+  );
 
   async function remove() {
     setBusy(true);
