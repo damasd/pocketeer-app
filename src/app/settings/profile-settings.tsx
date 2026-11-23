@@ -163,6 +163,7 @@ export function ProfileSettings() {
           { href: "/account", label: "Accounts", hint: "Add, rename, recolour or archive" },
           { href: "/settings/categories", label: "Categories", hint: "Expense, income and saving lists" },
           { href: "/settings/periods", label: "Pay periods", hint: "Move a start day for a holiday" },
+          { href: "/settings/export", label: "Export", hint: "Download transactions as .xlsx or .csv" },
         ].map((item) => (
           <Link
             key={item.href}
