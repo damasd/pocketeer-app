@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDownLeft, ArrowLeftRight, ChevronDown, ChevronLeft, Search, X } from "lucide-react";
 import { LogForm } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
@@ -12,7 +12,8 @@ import { useCategories } from "@/lib/categories";
 import { CategoryIcon } from "@/lib/category-icons";
 import { NO_FILTER, filterHistory, groupByDay, signedAmount, type HistoryFilter, type TypeFilter } from "@/lib/history";
 import { localDate } from "@/lib/log";
-import { periodFor, periodRangeLabel, periodsBetween } from "@/lib/periods";
+import { periodFor, periodRangeLabel } from "@/lib/periods";
+import { coverPeriodsFrom, periodOf, usePeriods } from "@/lib/periods-store";
 import { useTransactions, type Transaction } from "@/lib/transactions";
 
 const TYPE_CHIPS: { value: TypeFilter; label: string }[] = [
@@ -24,6 +25,7 @@ const TYPE_CHIPS: { value: TypeFilter; label: string }[] = [
 ];
 
 const ALL = "all";
+const CURRENT = "current";
 
 /** All transactions (mockup History.dc.html), grouped by day, with filters. */
 export function HistoryScreen() {
@@ -35,7 +37,8 @@ export function HistoryScreen() {
   const categories = useCategories();
 
   const today = localDate();
-  const [periodStart, setPeriodStart] = useState<string>(() => (fromAccount ? ALL : periodFor(today).start));
+  // "current" until a period is picked, so it follows the stored (possibly hand-edited) dates.
+  const [periodStart, setPeriodStart] = useState<string>(fromAccount ? ALL : CURRENT);
   const [accountId, setAccountId] = useState<string>(fromAccount ?? ALL);
   const [categoryId, setCategoryId] = useState<string>(ALL);
   const [type, setType] = useState<TypeFilter>("all");
@@ -49,12 +52,21 @@ export function HistoryScreen() {
   const accountName = (id: string | null) => accountList.find((a) => a.id === id)?.name ?? "";
   const category = (id: string | null) => categoryList.find((c) => c.id === id) ?? null;
 
-  // Periods from the oldest transaction to today, newest first.
+  // Stored pay periods up to today, newest first; they reach back to the oldest transaction.
+  const stored = usePeriods();
+  const oldest = txs.length ? txs[txs.length - 1].date : null;
+  useEffect(() => {
+    coverPeriodsFrom(oldest);
+  }, [oldest]);
   const periods = useMemo(() => {
-    const oldest = txs.length ? txs[txs.length - 1].date : today;
-    return periodsBetween(oldest < today ? oldest : today, today);
-  }, [txs, today]);
-  const period = periodStart === ALL ? null : (periods.find((p) => p.start === periodStart) ?? periodFor(periodStart));
+    return (stored.data ?? []).filter((p) => p.start <= today);
+  }, [stored.data, today]);
+  const period =
+    periodStart === ALL
+      ? null
+      : periodStart === CURRENT
+        ? (periodOf(periods, today) ?? periodFor(today))
+        : (periods.find((p) => p.start === periodStart) ?? periodFor(periodStart));
 
   const filter: HistoryFilter = {
     ...NO_FILTER,
@@ -110,8 +122,8 @@ export function HistoryScreen() {
       <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
         <FilterSelect
           label="Pay period"
-          value={periodStart}
-          active={periodStart !== ALL}
+          value={period ? period.start : ALL}
+          active={period !== null}
           display={period ? period.name : "All time"}
           onChange={setPeriodStart}
         >

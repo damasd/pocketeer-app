@@ -9,6 +9,9 @@ import { Button, ErrorNote, Input, Label } from "@/components/ui";
 import { resetAccounts } from "@/lib/accounts";
 import { resetCategories } from "@/lib/categories";
 import { resetTransactions } from "@/lib/transactions";
+import { resetBudgets } from "@/lib/budgets";
+import { resetGoals } from "@/lib/goals";
+import { resetPeriods } from "@/lib/periods-store";
 import { NAME_MAX, errorMessage, saveDisplayName, savePhoto, signOut, useProfile } from "@/lib/profile";
 
 export function ProfileSettings() {
@@ -59,6 +62,9 @@ export function ProfileSettings() {
       resetAccounts();
       resetCategories();
       resetTransactions();
+      resetPeriods();
+      resetBudgets();
+      resetGoals();
       router.replace("/login");
       router.refresh();
     }
@@ -156,6 +162,7 @@ export function ProfileSettings() {
         {[
           { href: "/account", label: "Accounts", hint: "Add, rename, recolour or archive" },
           { href: "/settings/categories", label: "Categories", hint: "Expense, income and saving lists" },
+          { href: "/settings/periods", label: "Pay periods", hint: "Move a start day for a holiday" },
         ].map((item) => (
           <Link
             key={item.href}

@@ -1,5 +1,46 @@
 import { describe, expect, it } from "vitest";
-import { inPeriod, periodFor, periodRangeLabel, periodStartIn, periodsBetween } from "./periods";
+import {
+  buildPeriods,
+  inPeriod,
+  missingStarts,
+  periodFor,
+  periodRangeLabel,
+  periodStartIn,
+  periodsBetween,
+  periodsUntil,
+  startDayLimits,
+} from "./periods";
+
+describe("stored periods", () => {
+  it("rebuilds ends from the next start and names by the end month", () => {
+    const list = buildPeriods(["2026-10-26", "2026-11-25", "2026-12-28"], 2026);
+    expect(list.map((p) => [p.start, p.end, p.name])).toEqual([
+      ["2026-12-28", "2027-01-24", "January 2027"],
+      ["2026-11-25", "2026-12-27", "December"],
+      ["2026-10-26", "2026-11-24", "November"],
+    ]);
+  });
+
+  it("adds only months that have no start yet", () => {
+    // November's start was moved by hand to the 24th, so November is not added again.
+    expect(missingStarts(["2026-11-24"], "2026-10-01", "2026-12-30")).toEqual([
+      "2026-09-25",
+      "2026-10-26",
+      "2026-12-25",
+    ]);
+  });
+
+  it("keeps an edited start inside its month and between its neighbours", () => {
+    expect(startDayLimits("2026-11-25", "2026-10-26", "2026-12-25")).toEqual({ min: "2026-11-01", max: "2026-11-30" });
+    expect(startDayLimits("2026-12-01", "2026-11-30", "2026-12-03")).toEqual({ min: "2026-12-01", max: "2026-12-02" });
+  });
+
+  it("counts periods until a date", () => {
+    expect(periodsUntil("2026-11-25", "2026-12-20")).toBe(1);
+    expect(periodsUntil("2026-11-25", "2027-01-30")).toBe(3);
+    expect(periodsUntil("2026-11-25", "2026-01-01")).toBe(1);
+  });
+});
 
 const iso = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

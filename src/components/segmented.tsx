@@ -6,14 +6,21 @@ export function Segmented<T extends string>({
   options,
   value,
   onChange,
+  surface = "page",
 }: {
   label: string;
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  /** "page" on white sheets; "card" (white with a line) on the grey page background. */
+  surface?: "page" | "card";
 }) {
   return (
-    <div role="group" aria-label={label} className="flex gap-1 rounded-full bg-page p-1">
+    <div
+      role="group"
+      aria-label={label}
+      className={`flex gap-1 rounded-full p-1 ${surface === "card" ? "border border-line bg-card" : "bg-page"}`}
+    >
       {options.map((o) => {
         const on = o.value === value;
         return (

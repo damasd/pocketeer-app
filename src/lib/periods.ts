@@ -75,3 +75,66 @@ export function periodRangeLabel(p: Pick<Period, "start" | "end">): string {
 export function inPeriod(isoDate: string, p: Pick<Period, "start" | "end">): boolean {
   return isoDate >= p.start && isoDate <= p.end;
 }
+
+// ---- Stored periods (slice 7). The database keeps one row per period; only start days are
+// edited by hand, so the list is rebuilt from the start days: each period ends the day before
+// the next one starts, and the newest one ends where the 25th rule says.
+
+const addDays = (isoDate: string, days: number) => {
+  const d = parse(isoDate);
+  d.setDate(d.getDate() + days);
+  return iso(d);
+};
+
+/** Year-month of a start day; a period keeps its month when its start is moved for a holiday. */
+export const startMonth = (isoDate: string) => isoDate.slice(0, 7);
+
+/** Rule start of the period after the one starting on `start` (the next month's 25th rule). */
+export function nextRuleStart(start: string): string {
+  const d = parse(start);
+  return iso(periodStartIn(d.getFullYear(), d.getMonth() + 1));
+}
+
+/** Periods from their start days (any order, duplicates ignored), newest first. */
+export function buildPeriods(starts: readonly string[], currentYear = new Date().getFullYear()): Period[] {
+  const sorted = [...new Set(starts)].sort();
+  const list = sorted.map((start, i) => {
+    const end = addDays(i + 1 < sorted.length ? sorted[i + 1] : nextRuleStart(start), -1);
+    const e = parse(end);
+    const month = MONTHS[e.getMonth()];
+    return { start, end, name: e.getFullYear() === currentYear ? month : `${month} ${e.getFullYear()}` };
+  });
+  return list.reverse();
+}
+
+/**
+ * Rule start days needed so that every date from `from` to `to` falls in a period,
+ * skipping months that already have a (possibly hand-edited) start.
+ */
+export function missingStarts(existing: readonly string[], from: string, to: string): string[] {
+  const have = new Set(existing.map(startMonth));
+  return periodsBetween(from, to)
+    .map((p) => p.start)
+    .filter((s) => !have.has(startMonth(s)))
+    .sort();
+}
+
+/** Allowed range for a hand-edited start: inside its own month and strictly between its neighbours. */
+export function startDayLimits(
+  start: string,
+  prevStart: string | null,
+  nextStart: string | null,
+): { min: string; max: string } {
+  const d = parse(start);
+  const first = iso(new Date(d.getFullYear(), d.getMonth(), 1));
+  const last = iso(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+  const afterPrev = prevStart ? addDays(prevStart, 1) : first;
+  const beforeNext = nextStart ? addDays(nextStart, -1) : last;
+  return { min: afterPrev > first ? afterPrev : first, max: beforeNext < last ? beforeNext : last };
+}
+
+/** How many pay periods from the one starting `fromStart` up to the one containing `date`, at least 1. */
+export function periodsUntil(fromStart: string, date: string): number {
+  if (date < fromStart) return 1;
+  return Math.max(1, periodsBetween(fromStart, date).length);
+}
