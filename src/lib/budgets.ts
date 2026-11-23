@@ -74,3 +74,10 @@ export async function copyBudgets(all: readonly Budget[], fromPeriodId: string, 
     await store.refresh();
   };
 }
+
+/** Take a category off one period's budget. Its transactions are untouched. */
+export async function removeBudget(periodId: string, categoryId: string) {
+  const { error } = await supabase().from("budgets").delete().eq("period_id", periodId).eq("category_id", categoryId);
+  if (error) throw error;
+  store.update((list) => list.filter((b) => !(b.periodId === periodId && b.categoryId === categoryId)));
+}
