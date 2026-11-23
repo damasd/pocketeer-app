@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { EmptyNote, Screen } from "@/components/screen";
+import { AnalyticsScreen } from "./analytics-screen";
 
 export const metadata: Metadata = { title: "Analytics" };
 
 export default function AnalyticsPage() {
   return (
-    <Screen title="Analytics">
-      <EmptyNote>Spending, income and saving over time will show here.</EmptyNote>
-    </Screen>
+    <main className="mx-auto min-h-dvh w-full max-w-[480px] px-5 pt-[max(8px,env(safe-area-inset-top))] pb-36">
+      <AnalyticsScreen />
+    </main>
   );
 }
