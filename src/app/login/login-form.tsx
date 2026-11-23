@@ -64,7 +64,12 @@ export function LoginForm() {
   }
 
   if (!supabaseConfigured) {
-    return <ErrorNote>Supabase isn&apos;t set up yet. Add the keys to .env.local (see README).</ErrorNote>;
+    return (
+      <ErrorNote>
+        Sign-in isn&apos;t set up. NEXT_PUBLIC_SUPABASE_URL must be the Project URL (https://….supabase.co) and
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY the sb_publishable_… key. Fix them in Vercel (or .env.local) and redeploy.
+      </ErrorNote>
+    );
   }
 
   if (step === "email") {

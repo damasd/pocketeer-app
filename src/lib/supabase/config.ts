@@ -6,7 +6,9 @@ export function normalizeSupabaseUrl(value: string | undefined): string {
   const raw = (value ?? "").trim().replace(/^["']+|["']+$/g, "").trim();
   if (!raw) return "";
   try {
-    return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).origin;
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    // A real project URL has a dotted host (xyz.supabase.co); this rejects a key pasted by mistake.
+    return url.hostname.includes(".") ? url.origin : "";
   } catch {
     return "";
   }

@@ -9,7 +9,11 @@ const LOGIN = "/login";
  * signed-out visitors to /login. Data itself is protected by row level security.
  */
 export async function proxy(request: NextRequest) {
-  if (!supabaseConfigured) return NextResponse.next();
+  if (!supabaseConfigured) {
+    // Settings missing or wrong: keep pages closed; /login explains what to fix.
+    if (request.nextUrl.pathname === LOGIN) return NextResponse.next();
+    return NextResponse.redirect(new URL(LOGIN, request.url));
+  }
 
   let response = NextResponse.next({ request });
   let signedIn: boolean;
