@@ -259,7 +259,7 @@ function CategoryForm({
         </Button>
       )}
       {category &&
-        !category.builtIn &&
+        (!category.builtIn || category.kind === "saving") &&
         (confirmDelete ? (
           <DeleteCategoryConfirm category={category} onCancel={() => setConfirmDelete(false)} onDone={onDone} />
         ) : (

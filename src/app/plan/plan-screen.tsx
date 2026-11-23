@@ -297,6 +297,7 @@ function PlanBody({ today }: { today: string }) {
           category={goalSheet === "new" ? null : goalSheet}
           goal={goalSheet === "new" ? null : ((goals.data ?? []).find((g) => g.categoryId === goalSheet?.id) ?? null)}
           nextSortOrder={Math.max(0, ...allCategories.filter((c) => c.kind === "saving").map((c) => c.sortOrder)) + 1}
+          balance={goalSheet && goalSheet !== "new" ? savingBalance(goalSheet.id, txs) : 0}
           onDone={() => setGoalSheet(null)}
         />
       </Sheet>
@@ -359,9 +360,21 @@ function BudgetRow({
   return (
     <li className={`flex flex-col gap-2 py-3 ${first ? "" : "border-t border-page"}`}>
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={`budget-${category.id}`} className="min-w-0 truncate text-[15px] font-semibold">
-          {category.name}
-        </label>
+        <span className="flex min-w-0 items-center gap-0.5">
+          <label htmlFor={`budget-${category.id}`} className="min-w-0 truncate text-[15px] font-semibold">
+            {category.name}
+          </label>
+          {onDelete && (
+            <button
+              type="button"
+              aria-label={`Delete ${category.name}`}
+              onClick={onDelete}
+              className="flex size-11 flex-none items-center justify-center rounded-full text-muted"
+            >
+              <Trash2 aria-hidden size={18} strokeWidth={2} />
+            </button>
+          )}
+        </span>
         <span className="flex h-11 w-[150px] flex-none items-center gap-1 rounded-full bg-page px-3">
           <span aria-hidden className="text-[13px] font-semibold text-muted">
             Rp
@@ -382,16 +395,6 @@ function BudgetRow({
             className="min-w-0 flex-1 border-0 bg-transparent text-right text-base font-bold outline-none"
           />
         </span>
-        {onDelete && (
-          <button
-            type="button"
-            aria-label={`Delete ${category.name}`}
-            onClick={onDelete}
-            className="-mr-2 flex size-11 flex-none items-center justify-center rounded-full text-muted"
-          >
-            <Trash2 aria-hidden size={18} strokeWidth={2} />
-          </button>
-        )}
       </div>
       <div
         role="progressbar"

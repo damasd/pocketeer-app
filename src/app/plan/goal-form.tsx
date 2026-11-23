@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { showToast } from "@/components/toast";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
 import { CATEGORY_NAME_MAX, createCategory, saveCategory, type Category } from "@/lib/categories";
 import { errorMessage } from "@/lib/errors";
 import { deleteGoal, saveGoal, type Goal } from "@/lib/goals";
 import { localDate } from "@/lib/log";
-import { groupThousands, parseRupiahInput } from "@/lib/money";
+import { formatRupiah, groupThousands, parseRupiahInput } from "@/lib/money";
 
 /**
  * A goal is a saving category (same thing, same name in the Log sheet), with an optional
@@ -17,11 +18,14 @@ export function GoalForm({
   category,
   goal,
   nextSortOrder,
+  balance = 0,
   onDone,
 }: {
   category: Category | null;
   goal: Goal | null;
   nextSortOrder: number;
+  /** Current saving balance; a goal can be deleted only at Rp 0. */
+  balance?: number;
   onDone: () => void;
 }) {
   const [name, setName] = useState(category?.name ?? "");
@@ -29,6 +33,7 @@ export function GoalForm({
   const [date, setDate] = useState(goal?.targetDate ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function run(task: () => Promise<void>) {
     setBusy(true);
@@ -114,6 +119,19 @@ export function GoalForm({
       <Button type="submit" disabled={busy} className="mt-2">
         {busy ? "Saving…" : category ? "Save changes" : "Add goal"}
       </Button>
+
+      {category &&
+        (balance !== 0 ? (
+          <p className="rounded-2xl bg-page px-4 py-3 text-center text-[13px] font-medium text-muted">
+            {formatRupiah(balance)} is still saved here. Withdraw it to a Spending account before deleting this goal.
+          </p>
+        ) : confirmDelete ? (
+          <DeleteCategoryConfirm category={category} onCancel={() => setConfirmDelete(false)} onDone={onDone} />
+        ) : (
+          <Button type="button" variant="ghost" size="sm" className="self-center" onClick={() => setConfirmDelete(true)}>
+            Delete goal
+          </Button>
+        ))}
     </form>
   );
 }
