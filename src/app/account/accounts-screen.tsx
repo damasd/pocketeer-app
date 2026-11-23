@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, PiggyBank, Plus, Wallet as WalletIcon } from "lucide-react";
 import { AccountCardFace } from "@/components/account-card";
 import { Sheet } from "@/components/sheet";
-import { ErrorNote } from "@/components/ui";
+import { Button, ErrorNote } from "@/components/ui";
 import { useAccounts, type Account, type AccountGroup } from "@/lib/accounts";
 import { accountBalance, sumBalances } from "@/lib/balances";
 import { formatRupiah } from "@/lib/money";
@@ -59,20 +59,46 @@ export function AccountsScreen() {
           <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{formatRupiah(sumBalances(active))}</span>
         )}
         <div className="mt-3 grid grid-cols-2 gap-3">
-          {GROUPS.map((g) => (
-            <a
-              key={g.id}
-              href={`#${g.id}`}
-              className={`flex flex-col gap-0.5 rounded-[20px] px-3.5 py-3 ${g.id === "saving" ? "bg-lime" : "bg-card"}`}
-            >
-              <span className={`text-xs font-medium ${g.id === "saving" ? "text-[#333333]" : "text-muted"}`}>{g.title}</span>
-              <span className="text-[17px] font-bold">{loading ? "…" : formatRupiah(sumBalances(byGroup(g.id)))}</span>
-            </a>
-          ))}
+          {GROUPS.map((g) => {
+            const Icon = g.id === "saving" ? PiggyBank : WalletIcon;
+            return (
+              <a
+                key={g.id}
+                href={`#${g.id}`}
+                className="flex items-center gap-3 rounded-[20px] border border-line px-3.5 py-3"
+              >
+                <span aria-hidden className="flex size-8 flex-none items-center justify-center rounded-full bg-ink text-white">
+                  <Icon size={16} strokeWidth={2.25} />
+                </span>
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="text-xs font-medium text-muted">{g.title}</span>
+                  <span className="truncate text-[17px] font-bold">
+                    {loading ? "…" : formatRupiah(sumBalances(byGroup(g.id)))}
+                  </span>
+                </span>
+              </a>
+            );
+          })}
         </div>
       </section>
 
-      {GROUPS.map((g) => {
+      {!loading && active.length === 0 && state.status !== "error" && (
+        <section
+          aria-label="No accounts yet"
+          className="mt-8 flex flex-col items-center gap-3 rounded-3xl border border-dashed border-[#BDBDBD] px-6 py-10 text-center"
+        >
+          <span aria-hidden className="flex size-12 items-center justify-center rounded-full bg-card">
+            <WalletIcon size={22} strokeWidth={2} />
+          </span>
+          <h2 className="text-[17px] font-semibold">No accounts yet</h2>
+          <p className="text-[13px] font-medium text-muted">Add the bank accounts, e-wallets and cash you use.</p>
+          <Button size="md" className="mt-2" onClick={() => setEditing("new")}>
+            Add account
+          </Button>
+        </section>
+      )}
+
+      {(loading || active.length > 0) && GROUPS.map((g) => {
         const list = byGroup(g.id);
         return (
           <section key={g.id} id={g.id} aria-labelledby={`${g.id}-title`} className="mt-8 flex scroll-mt-4 flex-col gap-3">

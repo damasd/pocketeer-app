@@ -73,6 +73,7 @@ export const resetAccounts = store.reset;
 
 function friendly(e: { message?: string; code?: string }) {
   if (e.code === "23505") return new Error("You already have an account with that name.");
+  if (e.code === "23503") return new Error("This account has transactions, so it can't be deleted. Archive it instead.");
   return new Error(e.message ?? "Could not save the account");
 }
 
@@ -102,4 +103,10 @@ export function saveAccount(id: string, input: AccountInput) {
 
 export function setAccountArchived(id: string, archived: boolean) {
   return patchAccount(id, { archived });
+}
+
+export async function deleteAccount(id: string) {
+  const { error } = await supabase().from("accounts").delete().eq("id", id);
+  if (error) throw friendly(error);
+  store.update((list) => list.filter((a) => a.id !== id));
 }

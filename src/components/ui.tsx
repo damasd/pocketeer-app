@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 
 type ButtonProps = ComponentProps<"button"> & {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "lg" | "md" | "sm";
 };
 
@@ -11,6 +11,7 @@ export function Button({ variant = "primary", size = "lg", className = "", ...pr
     primary: "bg-lime text-ink",
     secondary: "bg-card text-ink ring-1 ring-inset ring-line",
     ghost: "text-ink underline-offset-4 enabled:hover:underline",
+    danger: "bg-ember text-white",
   }[variant];
   const dims = {
     lg: "h-14 px-6 text-base font-bold",

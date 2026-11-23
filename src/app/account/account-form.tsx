@@ -7,6 +7,7 @@ import { Button, ErrorNote, Input, Label } from "@/components/ui";
 import {
   ACCOUNT_NAME_MAX,
   createAccount,
+  deleteAccount,
   saveAccount,
   setAccountArchived,
   type Account,
@@ -34,6 +35,7 @@ export function AccountForm({
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const trimmed = name.trim();
   const nameMissing = tried && !trimmed;
@@ -189,6 +191,33 @@ export function AccountForm({
           Archived accounts are hidden from lists and pickers. Nothing is deleted.
         </p>
       )}
+
+      {account &&
+        (confirmDelete ? (
+          <div role="group" aria-label="Confirm delete" className="flex flex-col gap-2 rounded-3xl bg-page p-4">
+            <p className="text-[15px] font-semibold">Delete {account.name} for good?</p>
+            <p className="text-[13px] font-medium text-muted">This can&apos;t be undone.</p>
+            <div className="mt-1 flex gap-2">
+              <Button type="button" variant="secondary" size="md" className="flex-1" disabled={busy} onClick={() => setConfirmDelete(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="md"
+                className="flex-1"
+                disabled={busy}
+                onClick={() => run(() => deleteAccount(account.id))}
+              >
+                {busy ? "Deleting…" : "Delete"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button type="button" variant="ghost" size="sm" className="self-center" disabled={busy} onClick={() => setConfirmDelete(true)}>
+            Delete account
+          </Button>
+        ))}
     </form>
   );
 }
