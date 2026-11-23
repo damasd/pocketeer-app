@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
-import { Camera, ChevronLeft } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
+import { resetAccounts } from "@/lib/accounts";
+import { resetCategories } from "@/lib/categories";
 import { NAME_MAX, errorMessage, saveDisplayName, savePhoto, signOut, useProfile } from "@/lib/profile";
 
 export function ProfileSettings() {
@@ -53,6 +55,8 @@ export function ProfileSettings() {
 
   async function onSignOut() {
     if (await run("signout", signOut)) {
+      resetAccounts();
+      resetCategories();
       router.replace("/login");
       router.refresh();
     }
@@ -145,6 +149,25 @@ export function ProfileSettings() {
           <ErrorNote>{error ?? (state.status === "error" ? state.message : "")}</ErrorNote>
         )}
       </section>
+
+      <nav aria-label="Manage" className="flex flex-col overflow-hidden rounded-3xl bg-card">
+        {[
+          { href: "/account", label: "Accounts", hint: "Add, rename, recolour or archive" },
+          { href: "/settings/categories", label: "Categories", hint: "Expense, income and saving lists" },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex min-h-16 items-center justify-between gap-3 border-b border-line px-5 py-3 last:border-0"
+          >
+            <span className="flex flex-col">
+              <span className="text-[15px] font-semibold">{item.label}</span>
+              <span className="text-[13px] font-medium text-muted">{item.hint}</span>
+            </span>
+            <ChevronRight aria-hidden size={20} className="flex-none text-muted" />
+          </Link>
+        ))}
+      </nav>
 
       <Button variant="secondary" onClick={onSignOut} disabled={busy !== null}>
         {busy === "signout" ? "Signing out…" : "Sign out"}

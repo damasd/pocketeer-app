@@ -2,6 +2,9 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { errorMessage } from "@/lib/errors";
+
+export { errorMessage };
 
 export type Profile = {
   userId: string;
@@ -22,12 +25,6 @@ const BUCKET = "avatars";
 const SIGNED_URL_SECONDS = 60 * 60 * 24;
 const CACHE_KEY = "money.profile.v1";
 export const NAME_MAX = 40;
-
-/** Supabase errors are plain objects with a message, not always Error instances. */
-export function errorMessage(e: unknown, fallback: string): string {
-  if (e && typeof e === "object" && "message" in e && typeof e.message === "string" && e.message) return e.message;
-  return fallback;
-}
 
 // ---- store -----------------------------------------------------------------
 
