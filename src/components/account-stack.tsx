@@ -17,13 +17,10 @@ const SMALL_H = 124;
 const SCALE = SMALL_H / CARD_H;
 /** Swipe distance that counts as "open Accounts". */
 const COMMIT_AT = 60;
-/** iOS-like curve: quick start, long natural deceleration. */
-const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+/** Ease in and out: a gentle start, a gentle stop. */
+const EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
 const ARRANGE_MS = 620;
 const SNAP_MS = 440;
-/** Landing: each card is set down in its place, one after another. */
-const PLACE_MS = 460;
-const PLACE_STAGGER_MS = 80;
 /** Edge shadow that separates the cards in the resting stack; it fades as they come out. */
 const stackShadow = (strength: number, dark: boolean) =>
   `${dark ? `0 0 0 1.5px rgba(46,46,46,${strength.toFixed(3)}), ` : ""}-6px 0 14px rgba(0,0,0,${(0.28 * strength).toFixed(3)})`;
@@ -181,22 +178,6 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
     });
   }
 
-  /** Landing: each card comes down onto its place, a touch larger to exactly in place, no bounce. */
-  function setDown(els: HTMLElement[]) {
-    els.forEach((el, i) => {
-      const at = el.style.transform;
-      el.animate(
-        [
-          // Lifted: slightly larger around its centre.
-          { transform: `${at} translate(-1%, -1%) scale(1.02)` },
-          { transform: at },
-        ],
-        { duration: PLACE_MS, delay: i * PLACE_STAGGER_MS, easing: "cubic-bezier(0.2, 0, 0, 1)", fill: "backwards" },
-      );
-    });
-    return PLACE_MS + PLACE_STAGGER_MS * (els.length - 1);
-  }
-
   function nameCards(on: boolean, els = cards()) {
     els.forEach((el) => {
       el.style.viewTransitionName = on ? cardTransitionName(el.dataset.card ?? "") : "";
@@ -230,19 +211,16 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
     }
     place(1, `${ARRANGE_MS}ms ${EASE}`, els);
     setTimeout(() => {
-      const settled = setDown(els);
-      setTimeout(() => {
-        // Same names here and on Accounts: each card hands over to its twin on the real page.
-        nameCards(true, els);
-        setHandoff(ids);
-        keepStatusBarColour(); // Accounts sets its own colour from here
+      // Same names here and on Accounts: each card hands over to its twin on the real page.
+      nameCards(true, els);
+      setHandoff(ids);
+      keepStatusBarColour(); // Accounts sets its own colour from here
 
-        open();
-        setTimeout(() => {
-          setHandoff([]);
-          reset(els);
-        }, ZOOM_MS + 400);
-      }, settled);
+      open();
+      setTimeout(() => {
+        setHandoff([]);
+        reset(els);
+      }, ZOOM_MS + 400);
     }, ARRANGE_MS);
   }
 

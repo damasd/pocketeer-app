@@ -402,7 +402,7 @@ function PlanBody({ today }: { today: string }) {
           rows={goalRows}
           onNew={() => setGoalSheet("new")}
           onOpen={(c) => setGoalSheet(c)}
-          arrange={arrangeButton("saving", "goals")}
+          arrange={arrangeButton("saving", "goals", true)}
           arranging={arranging === "saving" ? <ArrangeList items={activeOf("saving")} empty="No goals yet." /> : null}
         />
       )}
@@ -720,7 +720,7 @@ function GoalsTab({
       </button>
 
       {rows.length > 0 && (
-        <div className="flex items-center justify-between gap-2">
+        <div className="-mb-2 flex items-center justify-between gap-2">
           <h2 className="text-[17px] font-semibold">Your goals</h2>
           {arrange}
         </div>
