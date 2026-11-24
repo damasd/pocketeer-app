@@ -1,5 +1,6 @@
 "use client";
 
+import { haptic } from "@/lib/haptics";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Delete } from "lucide-react";
 import { PIN_LENGTH } from "@/lib/lock-rules";
@@ -33,6 +34,7 @@ export function PinPad({
 
   async function press(d: string) {
     if (disabled || busy) return;
+    haptic();
     if (d === "back") return setDigits((s) => s.slice(0, -1));
     if (digits.length >= PIN_LENGTH) return;
     const next = digits + d;

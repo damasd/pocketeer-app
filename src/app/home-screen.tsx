@@ -132,7 +132,7 @@ export function HomeScreen() {
           <div className="relative">
             <section aria-label="Budget this period" className="mr-[92px] flex flex-col gap-1">
               <span className="text-[13px] font-medium text-[#BDBDBD]">
-                Remaining budget{period ? ` · ${period.name}` : ""}
+                This month budget
               </span>
               {loading ? (
                 <span aria-hidden className="mt-1 block h-[46px] w-52 rounded-xl bg-nav-selected" />
@@ -153,8 +153,10 @@ export function HomeScreen() {
                     <div className={`h-full rounded-full ${head.over ? "bg-ember" : "bg-lime"}`} style={{ width: `${head.barPercent}%` }} />
                   </div>
                   <div className="mt-1.5 flex justify-between text-xs text-[#BDBDBD]">
-                    <span>of {money(budgetTotal)} budget</span>
-                    <span>{head.percent}% spent</span>
+                    <span>
+                      <b className="font-bold text-white">{head.percent}%</b> spent of
+                    </span>
+                    <span>{money(budgetTotal)}</span>
                   </div>
                 </>
               ) : (

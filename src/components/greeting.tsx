@@ -10,22 +10,22 @@ export function Greeting() {
   const name = profile?.displayName ?? "";
 
   return (
-    <header className="flex items-center gap-3">
+    <header className="mb-2 flex items-center gap-2.5">
       <Link href="/settings" aria-label="Profile and settings" className="rounded-full">
         {profile ? (
-          <Avatar name={name} photoUrl={profile.photoUrl} />
+          <Avatar name={name} photoUrl={profile.photoUrl} size={36} />
         ) : (
-          <span aria-hidden className="block size-12 rounded-full bg-nav-selected" />
+          <span aria-hidden className="block size-9 rounded-full bg-nav-selected" />
         )}
       </Link>
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col">
         <span className="text-[13px] font-medium text-[#BDBDBD]">Welcome back,</span>
         {profile ? (
-          <h1 className="text-2xl leading-[1.1] font-bold tracking-[-0.02em]">{name}</h1>
+          <h1 className="text-[13px] leading-[1.35] font-bold">{name}</h1>
         ) : (
-          <h1 className="text-2xl leading-[1.1] font-bold">
+          <h1 className="text-[13px] leading-[1.35] font-bold">
             <span className="sr-only">Home</span>
-            <span aria-hidden className="block h-[26px] w-28 rounded-lg bg-nav-selected" />
+            <span aria-hidden className="mt-0.5 block h-3.5 w-24 rounded bg-nav-selected" />
           </h1>
         )}
       </div>

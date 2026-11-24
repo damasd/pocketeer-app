@@ -28,6 +28,7 @@ import {
   type LogMode,
   type SavingDirection,
 } from "@/lib/log";
+import { haptic } from "@/lib/haptics";
 import { formatRupiah } from "@/lib/money";
 import {
   NOTE_MAX,
@@ -73,7 +74,6 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const dateRef = useRef<HTMLInputElement>(null);
 
   const type = storedType(mode, direction);
   const kind = categoryKindFor(mode);
@@ -119,7 +119,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
 
   const fromLabel = { expense: "Pay from", income: "Into", transfer: "From", saving: "From" }[mode];
 
-  function press(key: KeypadKey) {
+  function press(key: KeypadKey, tap = true) {
+    if (tap) haptic();
     setDigits((d) => pressKey(d, key));
     setError(null);
   }
@@ -190,10 +191,10 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
     if ((e.target as HTMLElement).tagName === "INPUT" || e.metaKey || e.ctrlKey || e.altKey) return;
     if (/^[0-9]$/.test(e.key)) {
       e.preventDefault();
-      press(e.key as KeypadKey);
+      press(e.key as KeypadKey, false);
     } else if (e.key === "Backspace") {
       e.preventDefault();
-      press("back");
+      press("back", false);
     } else if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "BUTTON") {
       e.preventDefault();
       save();
@@ -250,6 +251,38 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         >
           {formatRupiah(amount)}
         </output>
+      </div>
+
+      {/* When and what: right under the amount. */}
+      <div className="flex gap-2">
+        {/* The real date field covers the pill (invisible), so a tap opens the phone's own date picker. */}
+        <label className="relative flex h-11 flex-none items-center gap-1.5 rounded-full border border-line bg-card px-3.5 text-[13px] font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+          <CalendarDays aria-hidden size={16} strokeWidth={2} />
+          <span aria-hidden>{dateLabel(date)}</span>
+          <input
+            type="date"
+            aria-label={`Date, ${dateLabel(date)}`}
+            required
+            value={date}
+            onChange={(e) => e.target.value && setDate(e.target.value)}
+            className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
+          />
+        </label>
+        <input
+          type="text"
+          aria-label="Note"
+          placeholder="Note (optional)"
+          maxLength={NOTE_MAX}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+          className="h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-base placeholder:text-muted"
+        />
       </div>
 
       {loadError && <ErrorNote>{loadError}</ErrorNote>}
@@ -359,49 +392,6 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         />
       )}
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            const input = dateRef.current;
-            if (!input) return;
-            try {
-              input.showPicker();
-            } catch {
-              input.focus();
-            }
-          }}
-          className="relative flex h-11 flex-none items-center gap-1.5 rounded-full border border-line bg-card px-3.5 text-[13px] font-semibold"
-        >
-          <CalendarDays aria-hidden size={16} strokeWidth={2} />
-          {dateLabel(date)}
-          <span className="sr-only">, change date</span>
-        </button>
-        <input
-          ref={dateRef}
-          type="date"
-          aria-label="Date"
-          required
-          value={date}
-          onChange={(e) => e.target.value && setDate(e.target.value)}
-          className="sr-only"
-        />
-        <input
-          type="text"
-          aria-label="Note"
-          placeholder="Note (optional)"
-          maxLength={NOTE_MAX}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-          className="h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-base placeholder:text-muted"
-        />
-      </div>
 
       {error && <ErrorNote>{error}</ErrorNote>}
 
