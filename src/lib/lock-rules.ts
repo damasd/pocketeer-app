@@ -76,4 +76,8 @@ export const COVER_ATTR = "data-locked";
  * Inline script for <head>: hides the page before it is drawn when a lock is set, so the numbers
  * never flash before the lock screen appears.
  */
-export const PRE_HIDE_SCRIPT = `try{if(localStorage.getItem("${LOCK_CONFIG_KEY}"))document.documentElement.setAttribute("${COVER_ATTR}","")}catch(e){}`;
+export const PRE_HIDE_SCRIPT =
+  `try{if(localStorage.getItem("${LOCK_CONFIG_KEY}")){document.documentElement.setAttribute("${COVER_ATTR}","");` +
+  // Black band behind the status bar from the first paint (see src/lib/status-bar.ts).
+  `var d=function(){var m=document.querySelector('meta[name="theme-color"]');if(m&&m.dataset.base===undefined){m.dataset.base=m.content;m.content="#111111"}};` +
+  `d();document.addEventListener("DOMContentLoaded",d)}}catch(e){}`;

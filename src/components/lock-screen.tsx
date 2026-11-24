@@ -7,6 +7,7 @@ import { PinPad } from "@/components/pin-pad";
 import { COVER_ATTR, clearLock, nextTryAt, unlockWithBiometric, unlockWithPin, useAppLock } from "@/lib/app-lock";
 import { biometricName } from "@/lib/biometric";
 import { signOut } from "@/lib/profile";
+import { STATUS_BAR, setStatusBarColour } from "@/lib/status-bar";
 
 /**
  * The PIN / Face ID screen shown over the whole app while it is locked. Not shown on the
@@ -28,6 +29,12 @@ export function LockScreen() {
   useEffect(() => {
     if (onLogin) document.documentElement.removeAttribute(COVER_ATTR);
   }, [onLogin]);
+
+  // Black band behind the iPhone status bar while locked; the page's own colour once unlocked.
+  useEffect(() => {
+    if (!lock.ready) return;
+    setStatusBarColour(show ? STATUS_BAR.dark : null);
+  }, [show, lock.ready]);
 
   // Count down a wait after too many wrong PINs.
   const waitUntil = show ? nextTryAt() : null;

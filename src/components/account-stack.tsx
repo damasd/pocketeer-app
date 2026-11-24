@@ -5,6 +5,7 @@ import { useLayoutEffect, useRef, type MouseEvent, type PointerEvent as ReactPoi
 import { AccountCardFace, CARD_STYLES } from "@/components/account-card";
 import type { Account } from "@/lib/accounts";
 import { cardTransitionName, estimatedSlots, measuredSlots, setHandoff } from "@/lib/card-handoff";
+import { STATUS_BAR, keepStatusBarColour, setStatusBarColour } from "@/lib/status-bar";
 
 /** Peek strip at the right edge, and the gap between card edges inside it (unchanged look). */
 const PEEK_WIDTH = 84;
@@ -19,9 +20,12 @@ const COMMIT_AT = 60;
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 const ARRANGE_MS = 380;
 const SNAP_MS = 320;
-/** Landing bounce once the cards are in place. */
-const BUMP_MS = 360;
-const BUMP_STAGGER_MS = 60;
+/** Landing: each card is set down in its place, one after another. */
+const PLACE_MS = 300;
+const PLACE_STAGGER_MS = 50;
+/** Edge shadow that separates the cards in the resting stack; it fades as they come out. */
+const stackShadow = (strength: number, dark: boolean) =>
+  `${dark ? `0 0 0 1.5px rgba(46,46,46,${strength.toFixed(3)}), ` : ""}-6px 0 14px rgba(0,0,0,${(0.28 * strength).toFixed(3)})`;
 /** How long the hand-over into Accounts takes (matches ::view-transition-group(.acct-card) in globals.css). */
 const ZOOM_MS = 520;
 
@@ -54,7 +58,7 @@ export type StackLayout = { cards: { id: string; group: "spending" | "saving" }[
  * Swipe-left gesture for the Home header. While pulled, Home slides left and a copy of the
  * Accounts page slides in from the right; the cards come out of the stack and move to the exact
  * places and size they have on Accounts, their details fading in. On release past the threshold
- * everything finishes the move, the cards land with a small bounce, and the real Accounts page
+ * everything finishes the move, each card is set down in its place, and the real Accounts page
  * takes over. A short swipe springs back.
  */
 export function useAccountSwipe(open: () => void, layout: StackLayout) {
@@ -130,6 +134,8 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
       else setTimeout(() => shift.current === 0 && (preview.style.visibility = "hidden"), SNAP_MS);
     }
     shift.current = pageX;
+    // Band behind the iPhone status bar: Home's black until Accounts covers most of the screen.
+    setStatusBarColour(p > 0.5 ? STATUS_BAR.light : null);
     // At rest the stack is clipped at the screen edge; while pulled, cards travel beyond Home.
     // The page clips them instead, so it never grows wider than the screen (no sideways scroll or zoom).
     const pulled = p > 0 || transition !== null;
@@ -144,8 +150,9 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
       const m = to[i] ?? { x: 0, y: 0, scale: SCALE };
       const scale = SCALE + (m.scale - SCALE) * q;
       // The cards sit inside Home, so undo Home's slide to keep them on their own path.
-      el.style.transition = css("transform");
+      el.style.transition = transition ? `transform ${transition}, box-shadow ${transition}` : "none";
       el.style.transform = `translate3d(${m.x * q - pageX}px,${m.y * q}px,0) scale(${scale})`;
+      el.style.boxShadow = stackShadow(1 - q, el.dataset.dark === "true");
       el.querySelectorAll<HTMLElement>(".card-content").forEach((c) => {
         c.style.transition = css("opacity");
         c.style.opacity = String(clamp01((q - 0.25) / 0.5));
@@ -153,21 +160,20 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
     });
   }
 
-  /** Landing: each card dips up and settles, one after another, like it was set down. */
-  function bump(els: HTMLElement[]) {
+  /** Landing: each card comes down onto its place, a touch larger to exactly in place, no bounce. */
+  function setDown(els: HTMLElement[]) {
     els.forEach((el, i) => {
       const at = el.style.transform;
       el.animate(
         [
-          { transform: at },
-          { transform: `${at} translateY(-10px)`, offset: 0.35 },
-          { transform: `${at} translateY(3px)`, offset: 0.7 },
+          // Lifted: slightly larger around its centre.
+          { transform: `${at} translate(-1%, -1%) scale(1.02)` },
           { transform: at },
         ],
-        { duration: BUMP_MS, delay: i * BUMP_STAGGER_MS, easing: "ease-in-out" },
+        { duration: PLACE_MS, delay: i * PLACE_STAGGER_MS, easing: "cubic-bezier(0.2, 0, 0, 1)", fill: "backwards" },
       );
     });
-    return BUMP_MS + BUMP_STAGGER_MS * (els.length - 1);
+    return PLACE_MS + PLACE_STAGGER_MS * (els.length - 1);
   }
 
   function nameCards(on: boolean, els = cards()) {
@@ -201,11 +207,13 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
     }
     place(1, `${ARRANGE_MS}ms ${EASE}`, els);
     setTimeout(() => {
-      const settled = bump(els);
+      const settled = setDown(els);
       setTimeout(() => {
         // Same names here and on Accounts: each card hands over to its twin on the real page.
         nameCards(true, els);
         setHandoff(ids);
+        keepStatusBarColour(); // Accounts sets its own colour from here
+
         open();
         setTimeout(() => {
           setHandoff([]);
@@ -313,6 +321,7 @@ export function AccountStack({
             <div
               key={a.id}
               data-card={a.id}
+              data-dark={dark}
               className="acct-card absolute top-0 rounded-3xl will-change-transform"
               style={{
                 width: "calc(100% - 40px)",
@@ -320,8 +329,8 @@ export function AccountStack({
                 left: `calc(100% - ${PEEK_WIDTH}px + ${i * STEP}px)`,
                 transformOrigin: "0 0",
                 transform: `scale(${SCALE})`,
-                // A thin edge keeps a black card visible on the black header; soft shadow for depth.
-                boxShadow: `${dark ? "0 0 0 1.5px #2E2E2E, " : ""}-8px 0 18px rgba(0,0,0,0.32)`,
+                // A thin edge keeps a black card visible on the black header; edge shadow for depth.
+                boxShadow: stackShadow(1, dark),
               }}
             >
               <AccountCardFace

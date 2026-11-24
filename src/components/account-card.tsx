@@ -16,6 +16,9 @@ export const CARD_STYLES: Record<
 
 export const COLOURS = Object.keys(CARD_STYLES) as AccountColour[];
 
+/** One soft shadow for every account card (Accounts page, Home stack, form preview). */
+export const CARD_SHADOW = "0 2px 10px rgba(17,17,17,0.08)";
+
 /** The visual card: name, account number, balance, and saved amount when there is one. */
 export function AccountCardFace({
   name,
@@ -50,7 +53,7 @@ export function AccountCardFace({
   return (
     <span
       className="relative flex w-full flex-col justify-between overflow-hidden rounded-3xl border p-5 text-left"
-      style={{ height: compact ? 190 : 216, background: s.bg, color: s.fg, borderColor: s.border }}
+      style={{ height: compact ? 190 : 216, background: s.bg, color: s.fg, borderColor: s.border, boxShadow: CARD_SHADOW }}
     >
       <span
         aria-hidden
