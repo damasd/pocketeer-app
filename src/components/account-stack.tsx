@@ -21,11 +21,13 @@ const COMMIT_AT = 60;
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const ARRANGE_MS = 1700;
 const SNAP_MS = 900;
+/** Spring-back after a short pull: ease in (starts gently, picks up speed). */
+const SNAP_EASE = "cubic-bezier(0.32, 0, 0.67, 0)";
 /** Edge shadow that separates the cards in the resting stack; it fades as they come out. */
 const stackShadow = (strength: number, dark: boolean) =>
   `${dark ? `0 0 0 1.5px rgba(46,46,46,${strength.toFixed(3)}), ` : ""}-6px 0 14px rgba(0,0,0,${(0.28 * strength).toFixed(3)})`;
 /** How long the hand-over into Accounts takes (matches ::view-transition-group(.acct-card) in globals.css). */
-const ZOOM_MS = 300;
+const ZOOM_MS = 100;
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
@@ -265,7 +267,7 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
     if (!cancelled && d.dx < -COMMIT_AT) commit();
     else {
       busy.current = true; // let it settle before the next pull
-      place(0, `${SNAP_MS}ms ${EASE}`);
+      place(0, `${SNAP_MS}ms ${SNAP_EASE}`);
       setTimeout(() => {
         place(0, null); // settled: clip the stack again and hide the Accounts copy
         busy.current = false;
