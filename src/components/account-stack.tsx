@@ -25,7 +25,7 @@ const SNAP_MS = 700;
 const stackShadow = (strength: number, dark: boolean) =>
   `${dark ? `0 0 0 1.5px rgba(46,46,46,${strength.toFixed(3)}), ` : ""}-6px 0 14px rgba(0,0,0,${(0.28 * strength).toFixed(3)})`;
 /** How long the hand-over into Accounts takes (matches ::view-transition-group(.acct-card) in globals.css). */
-const ZOOM_MS = 1300;
+const ZOOM_MS = 720;
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
