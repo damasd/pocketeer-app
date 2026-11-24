@@ -127,51 +127,54 @@ export function HomeScreen() {
         >
           <Greeting />
 
-          <section aria-label="Budget this period" className="mr-[92px] flex flex-col gap-1">
-            <span className="text-[13px] font-medium text-[#BDBDBD]">
-              Remaining budget{period ? ` · ${period.name}` : ""}
-            </span>
-            {loading ? (
-              <span aria-hidden className="mt-1 block h-[46px] w-52 rounded-xl bg-nav-selected" />
-            ) : budgetTotal > 0 ? (
-              <>
-                <span className="mt-1 flex items-center gap-1">
-                  <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{money(head.remaining)}</span>
-                  <RevealButton tone="dark" />
-                </span>
-                <div
-                  role="progressbar"
-                  aria-label="Budget used"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={head.barPercent}
-                  className="mt-3.5 h-2 overflow-hidden rounded-full bg-nav-selected"
-                >
-                  <div className={`h-full rounded-full ${head.over ? "bg-ember" : "bg-lime"}`} style={{ width: `${head.barPercent}%` }} />
-                </div>
-                <div className="mt-1.5 flex justify-between text-xs text-[#BDBDBD]">
-                  <span>of {money(budgetTotal)} budget</span>
-                  <span>{head.percent}% spent</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <span className="mt-1 text-[22px] leading-[1.3] font-bold">No budget yet</span>
-                <span className="flex items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
-                  {money(spentTotal)} spent this period
-                  <RevealButton tone="dark" />
-                </span>
-                <Link
-                  href="/plan"
-                  className="mt-3 flex h-11 items-center self-start rounded-full bg-lime px-4 text-[13px] font-bold text-ink"
-                >
-                  Set budgets
-                </Link>
-              </>
-            )}
-          </section>
+          {/* The card stack sits beside the budget, its top level with it, reaching the right edge. */}
+          <div className="relative">
+            <section aria-label="Budget this period" className="mr-[92px] flex flex-col gap-1">
+              <span className="text-[13px] font-medium text-[#BDBDBD]">
+                Remaining budget{period ? ` · ${period.name}` : ""}
+              </span>
+              {loading ? (
+                <span aria-hidden className="mt-1 block h-[46px] w-52 rounded-xl bg-nav-selected" />
+              ) : budgetTotal > 0 ? (
+                <>
+                  <span className="mt-1 flex items-center gap-1">
+                    <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{money(head.remaining)}</span>
+                    <RevealButton tone="dark" />
+                  </span>
+                  <div
+                    role="progressbar"
+                    aria-label="Budget used"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={head.barPercent}
+                    className="mt-3.5 h-2 overflow-hidden rounded-full bg-nav-selected"
+                  >
+                    <div className={`h-full rounded-full ${head.over ? "bg-ember" : "bg-lime"}`} style={{ width: `${head.barPercent}%` }} />
+                  </div>
+                  <div className="mt-1.5 flex justify-between text-xs text-[#BDBDBD]">
+                    <span>of {money(budgetTotal)} budget</span>
+                    <span>{head.percent}% spent</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="mt-1 text-[22px] leading-[1.3] font-bold">No budget yet</span>
+                  <span className="flex items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
+                    {money(spentTotal)} spent this period
+                    <RevealButton tone="dark" />
+                  </span>
+                  <Link
+                    href="/plan"
+                    className="mt-3 flex h-11 items-center self-start rounded-full bg-lime px-4 text-[13px] font-bold text-ink"
+                  >
+                    Set budgets
+                  </Link>
+                </>
+              )}
+            </section>
 
-          <AccountStack accounts={stack} masked={hidden} stackRef={stackRef} />
+            <AccountStack accounts={stack} masked={hidden} stackRef={stackRef} />
+          </div>
         </div>
 
         <div className="flex flex-1 flex-col gap-6 rounded-t-[28px] bg-card px-5 pt-2.5 pb-36">

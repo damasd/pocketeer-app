@@ -12,7 +12,8 @@ const PEEK_WIDTH = 84;
 const STEP = 26;
 /** Real card height on Accounts; on Home the same card is shown smaller. */
 const CARD_H = 216;
-const SMALL_H = 160;
+// Matches the height of the Remaining budget block beside it (home-screen.tsx).
+const SMALL_H = 124;
 const SCALE = SMALL_H / CARD_H;
 /** Swipe distance that counts as "open Accounts". */
 const COMMIT_AT = 60;
@@ -312,7 +313,7 @@ export function AccountStack({
       <div
         ref={stackRef}
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-[100px] z-10 overflow-x-clip"
+        className="pointer-events-none absolute -inset-x-5 top-0 z-10 overflow-x-clip"
         style={{ height: SMALL_H }}
       >
         {accounts.map((a, i) => {
@@ -349,7 +350,7 @@ export function AccountStack({
       <Link
         href="/account"
         aria-label="Open accounts"
-        className="absolute top-[100px] right-0 z-10 block rounded-l-[18px]"
+        className="absolute top-0 -right-5 z-10 block rounded-l-[14px]"
         style={{ width: PEEK_WIDTH, height: SMALL_H }}
       />
     </>

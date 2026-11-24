@@ -132,10 +132,12 @@ export function NavBar() {
         {circle && (
           <span
             aria-hidden
-            className={`absolute top-2 left-0 z-0 size-12 rounded-full bg-nav-selected ${
-              circle.animate ? "transition-[translate,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" : ""
+            className={`absolute top-2 z-0 size-12 rounded-full bg-nav-selected ${
+              // Moved with left, not transform: Safari draws a transformed, animating element on its
+              // own layer above the icons whatever the stacking order.
+              circle.animate ? "transition-[left,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" : ""
             } ${activeHref ? "" : "opacity-0"}`}
-            style={{ translate: `${circle.x}px 0` }}
+            style={{ left: circle.x }}
           />
         )}
         {LEFT.map((tab) => (
