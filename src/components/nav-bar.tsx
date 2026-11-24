@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChartNoAxesColumn,
   House,
@@ -65,9 +65,40 @@ function TabLink({ tab, active, pathname }: { tab: Tab; active: boolean; pathnam
   );
 }
 
+/** Fields that bring up the on-screen keyboard (not buttons, checkboxes, sliders, …). */
+const NO_KEYBOARD = new Set(["button", "checkbox", "radio", "range", "color", "file", "submit", "reset", "image", "hidden"]);
+function bringsKeyboard(el: Element | null): boolean {
+  if (!el) return false;
+  if (el instanceof HTMLInputElement) return !NO_KEYBOARD.has(el.type);
+  return el instanceof HTMLTextAreaElement || (el instanceof HTMLElement && el.isContentEditable);
+}
+
+/** True while a text field has focus, i.e. the keyboard is up on the phone. */
+function useTyping(): boolean {
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    const check = () => setTyping(bringsKeyboard(document.activeElement));
+    // On blur, wait a moment: the keyboard's up/down arrows move focus straight to the next field.
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const onOut = () => {
+      clearTimeout(t);
+      t = setTimeout(check, 50);
+    };
+    document.addEventListener("focusin", check);
+    document.addEventListener("focusout", onOut);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("focusin", check);
+      document.removeEventListener("focusout", onOut);
+    };
+  }, []);
+  return typing;
+}
+
 export function NavBar() {
   const pathname = usePathname();
   const [logOpen, setLogOpen] = useState(false);
+  const typing = useTyping();
 
   if (pathname === "/login") return null;
 
@@ -75,7 +106,11 @@ export function NavBar() {
     <>
       <nav
         aria-label="Main"
-        className="fixed left-1/2 z-40 flex h-16 w-[336px] -translate-x-1/2 select-none items-center justify-between rounded-full bg-ink px-2 shadow-[0_10px_30px_rgba(17,17,17,0.28)]"
+        inert={typing}
+        className={`fixed left-1/2 z-40 flex h-16 w-[336px] -translate-x-1/2 select-none items-center justify-between rounded-full bg-ink px-2 shadow-[0_10px_30px_rgba(17,17,17,0.28)] transition-[translate,opacity] duration-200 ease-out motion-reduce:transition-none ${
+          // Out of the way while typing: the keyboard covers the bottom of the screen anyway.
+          typing ? "pointer-events-none translate-y-[calc(100%+48px)] opacity-0" : ""
+        }`}
         style={{ bottom: "max(16px, env(safe-area-inset-bottom))", viewTransitionName: "nav-bar" }}
       >
         {LEFT.map((tab) => (

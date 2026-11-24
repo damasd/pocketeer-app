@@ -29,7 +29,7 @@ export function Segmented<T extends string>({
       {/* Sliding pill: one option wide (the row minus its padding and gaps), moved by whole options. */}
       <span
         aria-hidden
-        className="absolute top-1 bottom-1 left-1 rounded-full bg-ink transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+        className="absolute top-1 bottom-1 left-1 rounded-full bg-ink transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
         style={{
           width: `calc((100% - 8px - ${(n - 1) * 4}px) / ${n})`,
           transform: `translateX(calc(${index} * (100% + 4px)))`,
@@ -43,7 +43,7 @@ export function Segmented<T extends string>({
             type="button"
             aria-pressed={on}
             onClick={() => onChange(o.value)}
-            className={`relative h-11 flex-1 rounded-full text-[13px] font-semibold transition-colors duration-300 motion-reduce:transition-none ${
+            className={`relative h-11 flex-1 rounded-full text-[13px] font-semibold transition-colors duration-500 motion-reduce:transition-none ${
               on ? "text-white" : "text-[#4A4A4A]"
             }`}
           >
