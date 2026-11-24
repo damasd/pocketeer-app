@@ -136,7 +136,7 @@ export function NavBar() {
             className={`absolute top-2 z-0 size-12 rounded-full bg-nav-selected ${
               // Moved with left, not transform: Safari draws a transformed, animating element on its
               // own layer above the icons whatever the stacking order.
-              circle.animate ? "transition-[left,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" : ""
+              circle.animate ? "transition-[left,opacity] duration-[420ms] ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none" : ""
             } ${activeHref ? "" : "opacity-0"}`}
             style={{ left: circle.x }}
           />

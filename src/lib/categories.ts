@@ -100,6 +100,34 @@ export function setCategoryArchived(id: string, archived: boolean) {
   return patchCategory(id, { archived });
 }
 
+const KIND_ORDER: Record<CategoryKind, number> = { expense: 0, income: 1, saving: 2 };
+
+/**
+ * Save a new order for the categories of one kind: `ids` in the order wanted (numbered 1, 2, 3…).
+ * The list updates at once; only rows whose number changed are written.
+ */
+export async function reorderCategories(ids: readonly string[]) {
+  const before = store.get() ?? [];
+  const pos = new Map(ids.map((id, i) => [id, i + 1]));
+  const changed = ids.filter((id) => before.find((c) => c.id === id)?.sortOrder !== pos.get(id));
+  store.update((list) =>
+    list
+      .map((c) => (pos.has(c.id) ? { ...c, sortOrder: pos.get(c.id)! } : c))
+      .sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.sortOrder - b.sortOrder),
+  );
+  try {
+    await Promise.all(
+      changed.map(async (id) => {
+        const { error } = await supabase().from("categories").update({ sort_order: pos.get(id) }).eq("id", id);
+        if (error) throw friendly(error);
+      }),
+    );
+  } catch (e) {
+    await store.refresh(); // put back what is really saved
+    throw e;
+  }
+}
+
 /** Delete a category you added. Its budgets and goal go with it; transactions block it. */
 export async function deleteCategory(id: string) {
   const { data, error } = await supabase().from("categories").delete().eq("id", id).select("id");

@@ -10,11 +10,11 @@ import { useLayoutEffect, useRef } from "react";
  * out). The labels are drawn twice: grey ones (the real buttons) and a white copy on top, cut to
  * the pill's shape, so a label is white exactly where the pill covers it, mid-move too.
  */
-const MS = 380;
+const MS = 280;
 /** Share of the time each edge moves in: the leading edge first, the trailing one overlapping it. */
-const LEAD_SPAN: [number, number] = [0, 0.75];
-const TRAIL_SPAN: [number, number] = [0.25, 1];
-const STEPS = 16;
+const LEAD_SPAN: [number, number] = [0, 0.8];
+const TRAIL_SPAN: [number, number] = [0.18, 1];
+const STEPS = 24;
 /** Ease in and out (cubic). */
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 /** How far an edge moving during `span` has got at time t (0–1). */

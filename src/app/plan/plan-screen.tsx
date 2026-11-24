@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "lucide-react";
+import { ArrangeButton, ArrangeList } from "@/components/arrange-list";
 import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { Wheel, WheelGroup } from "@/components/wheel-picker";
 import { Segmented } from "@/components/segmented";
@@ -108,6 +109,8 @@ function PlanBody({ today }: { today: string }) {
   // period is created if it doesn't exist yet.
   const [anchor, setAnchor] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // The list being put in order / tidied (Arrange), if any.
+  const [arranging, setArranging] = useState<Kind | null>(null);
   const [goalSheet, setGoalSheet] = useState<Category | "new" | null>(null);
   const [addKind, setAddKind] = useState<"expense" | "income" | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
@@ -135,6 +138,10 @@ function PlanBody({ today }: { today: string }) {
   }, [oldest]);
 
   const allCategories = useMemo(() => categories.data ?? [], [categories.data]);
+  const activeOf = (kind: Kind) => allCategories.filter((c) => c.kind === kind && !c.archived);
+  const arrangeButton = (kind: Kind, what: string) => (
+    <ArrangeButton on={arranging === kind} onToggle={() => setArranging((a) => (a === kind ? null : kind))} what={what} />
+  );
   const periodTxs = period ? txs.filter((t) => t.date >= period.start && t.date <= period.end) : [];
   const amountFor = (categoryId: string) =>
     (budgets.data ?? []).find((b) => b.periodId === period?.id && b.categoryId === categoryId)?.amount ?? 0;
@@ -209,7 +216,9 @@ function PlanBody({ today }: { today: string }) {
     Math.max(0, ...allCategories.filter((c) => c.kind === kind).map((c) => c.sortOrder)) + 1;
 
   const rowList = (kind: Kind, rows: PlanRow[], empty: string) =>
-    loading ? (
+    arranging === kind ? (
+      <ArrangeList items={activeOf(kind)} empty={empty} />
+    ) : loading ? (
       <ul aria-hidden className="rounded-3xl bg-card px-4 py-1">
         {[0, 1, 2].map((i) => (
           <li key={i} className="flex items-center justify-between py-3">
@@ -340,6 +349,8 @@ function PlanBody({ today }: { today: string }) {
             slides={[
               {
                 id: "expense",
+                action: arrangeButton("expense", "expense categories"),
+                arranging: arranging === "expense",
                 label: "Expense",
                 title: "Expense budget",
                 total: expenseBudget,
@@ -352,6 +363,8 @@ function PlanBody({ today }: { today: string }) {
               },
               {
                 id: "income",
+                action: arrangeButton("income", "income categories"),
+                arranging: arranging === "income",
                 label: "Income",
                 title: "Expected income",
                 total: expectedIncome,
@@ -364,6 +377,8 @@ function PlanBody({ today }: { today: string }) {
               },
               {
                 id: "saving",
+                action: arrangeButton("saving", "goals"),
+                arranging: arranging === "saving",
                 label: "Saving",
                 title: "Saving target",
                 total: savingTarget,
@@ -378,7 +393,13 @@ function PlanBody({ today }: { today: string }) {
           />
         </>
       ) : (
-        <GoalsTab rows={goalRows} onNew={() => setGoalSheet("new")} onOpen={(c) => setGoalSheet(c)} />
+        <GoalsTab
+          rows={goalRows}
+          onNew={() => setGoalSheet("new")}
+          onOpen={(c) => setGoalSheet(c)}
+          arrange={arrangeButton("saving", "goals")}
+          arranging={arranging === "saving" ? <ArrangeList items={activeOf("saving")} empty="No goals yet." /> : null}
+        />
       )}
 
       <Sheet open={pickerOpen} onClose={() => setPickerOpen(false)} title="Pick a month">
@@ -444,7 +465,7 @@ function SummaryLine({ label, value }: { label: string; value: number }) {
   );
 }
 
-type Slide = { id: string; label: string; title: string; total: number; body: ReactNode };
+type Slide = { id: string; label: string; title: string; total: number; body: ReactNode; action?: ReactNode; arranging?: boolean };
 
 /**
  * Expense budget, Expected income and Saving target behind a three-way switch (the same sliding
@@ -479,7 +500,12 @@ function PlanSlides({ slides }: { slides: Slide[] }) {
           </h2>
           <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(slide.total)}</span>
         </div>
-        <p className="-mt-1.5 text-[13px] text-muted">Tap an amount to change it</p>
+        <div className="-mt-1.5 flex items-center justify-between gap-2">
+          <p className="text-[13px] text-muted">
+            {slide.arranging ? "Move with the arrows, or archive" : "Tap an amount to change it"}
+          </p>
+          {slide.action}
+        </div>
         {slide.body}
       </div>
     </section>
@@ -628,7 +654,20 @@ type GoalRow = { category: Category; goal: Goal | null; saved: number };
  * Goals tab: the whole goal, not the month. Each saving category shows what's saved against its
  * target and the share saved so far; target amount and date are optional.
  */
-function GoalsTab({ rows, onNew, onOpen }: { rows: GoalRow[]; onNew: () => void; onOpen: (c: Category) => void }) {
+function GoalsTab({
+  rows,
+  onNew,
+  onOpen,
+  arrange,
+  arranging,
+}: {
+  rows: GoalRow[];
+  onNew: () => void;
+  onOpen: (c: Category) => void;
+  /** The Arrange / Done button, and the list to arrange while it is on. */
+  arrange: ReactNode;
+  arranging: ReactNode;
+}) {
   const targeted = rows.filter((r) => r.goal);
   const savedTotal = targeted.reduce((s, r) => s + Math.max(0, r.saved), 0);
   const targetTotal = targeted.reduce((s, r) => s + (r.goal?.target ?? 0), 0);
@@ -672,13 +711,21 @@ function GoalsTab({ rows, onNew, onOpen }: { rows: GoalRow[]; onNew: () => void;
         New goal
       </button>
 
-      {rows.length === 0 && (
+      {rows.length > 0 && (
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-[17px] font-semibold">Your goals</h2>
+          {arrange}
+        </div>
+      )}
+      {arranging}
+
+      {!arranging && rows.length === 0 && (
         <p className="rounded-3xl bg-card px-5 py-4 text-[13px] font-medium text-muted">
           No goals yet. Each goal is a saving category you can deposit into from the Log sheet.
         </p>
       )}
 
-      {rows.map(({ category, goal, saved }) => {
+      {!arranging && rows.map(({ category, goal, saved }) => {
         const percent = goal ? goalPercent(saved, goal.target) : 0;
         const toGo = goal ? Math.max(0, goal.target - saved) : 0;
         return (

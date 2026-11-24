@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { ArchivedSection } from "@/components/archived-section";
+import { ArrangeButton, ArrangeList } from "@/components/arrange-list";
 import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { Segmented } from "@/components/segmented";
 import { Sheet } from "@/components/sheet";
@@ -43,6 +44,9 @@ export function CategoriesScreen() {
   const state = useCategories();
   const [kind, setKind] = useState<CategoryKind>("expense");
   const [editing, setEditing] = useState<Category | "new" | null>(null);
+  // Arrange mode for the type on show (order and archive right in the list).
+  const [arrangingKind, setArrangingKind] = useState<CategoryKind | null>(null);
+  const arranging = arrangingKind === kind;
 
   const all = state.data ?? [];
   const ofKind = all.filter((c) => c.kind === kind);
@@ -75,21 +79,36 @@ export function CategoriesScreen() {
 
       {state.status === "error" && <ErrorNote>{state.message}</ErrorNote>}
 
-      <ul aria-label={`${KINDS.find((k) => k.value === kind)!.label} categories`} className="flex flex-col overflow-hidden rounded-3xl bg-card">
-        {loading &&
-          [0, 1, 2, 3].map((i) => (
-            <li key={i} aria-hidden className="flex items-center gap-3 border-b border-line px-5 py-3 last:border-0">
-              <span className="size-11 rounded-full bg-page" />
-              <span className="h-4 w-32 rounded bg-page" />
-            </li>
-          ))}
-        {active.map((c) => (
-          <CategoryRow key={c.id} category={c} onOpen={() => setEditing(c)} />
-        ))}
-        {!loading && active.length === 0 && (
-          <li className="px-5 py-4 text-[13px] font-medium text-muted">No {kindLabel} categories. Tap + to add one.</li>
+      <div className="-mb-3 flex items-center justify-between gap-2">
+        <p className="text-[13px] text-muted">{arranging ? "Move with the arrows, or archive" : "Tap a category to edit it"}</p>
+        {active.length > 0 && (
+          <ArrangeButton
+            on={arranging}
+            onToggle={() => setArrangingKind(arranging ? null : kind)}
+            what={`${kindLabel} categories`}
+          />
         )}
-      </ul>
+      </div>
+
+      {arranging ? (
+        <ArrangeList items={active} empty={`No ${kindLabel} categories.`} />
+      ) : (
+        <ul aria-label={`${KINDS.find((k) => k.value === kind)!.label} categories`} className="flex flex-col overflow-hidden rounded-3xl bg-card">
+          {loading &&
+            [0, 1, 2, 3].map((i) => (
+              <li key={i} aria-hidden className="flex items-center gap-3 border-b border-line px-5 py-3 last:border-0">
+                <span className="size-11 rounded-full bg-page" />
+                <span className="h-4 w-32 rounded bg-page" />
+              </li>
+            ))}
+          {active.map((c) => (
+            <CategoryRow key={c.id} category={c} onOpen={() => setEditing(c)} />
+          ))}
+          {!loading && active.length === 0 && (
+            <li className="px-5 py-4 text-[13px] font-medium text-muted">No {kindLabel} categories. Tap + to add one.</li>
+          )}
+        </ul>
+      )}
 
       <ArchivedSection key={kind} count={archived.length}>
         <ul aria-label={`Archived ${kindLabel} categories`} className="flex flex-col overflow-hidden rounded-3xl bg-card">
@@ -255,6 +274,7 @@ function CategoryForm({
         </Button>
       )}
       {category &&
+        !category.builtIn &&
         (confirmDelete ? (
           <DeleteCategoryConfirm category={category} onCancel={() => setConfirmDelete(false)} onDone={onDone} />
         ) : (
