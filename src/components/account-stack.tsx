@@ -19,8 +19,8 @@ const SCALE = SMALL_H / CARD_H;
 const COMMIT_AT = 60;
 /** Ease out: moves off at once, then slows to a long, soft stop. */
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const ARRANGE_MS = 1700;
-const SNAP_MS = 400;
+const ARRANGE_MS = 1500;
+const SNAP_MS = 500;
 /** Spring-back after a short pull: ease in (starts gently, picks up speed). */
 const SNAP_EASE = "cubic-bezier(0.32, 0, 0.67, 0)";
 /** Edge shadow that separates the cards in the resting stack; it fades as they come out. */
