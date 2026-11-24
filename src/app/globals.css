@@ -195,13 +195,13 @@ html.dark-top {
 }
 ::view-transition-group(.acct-card) {
   z-index: 50;
-  animation-duration: 100ms;
+  animation-duration: 50ms;
   animation-timing-function: linear;
 }
 ::view-transition-old(.acct-card),
 ::view-transition-new(.acct-card) {
   height: 100%;
-  animation-duration: 100ms;
+  animation-duration: 50ms;
   animation-timing-function: linear;
 }
 

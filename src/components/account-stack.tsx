@@ -20,14 +20,14 @@ const COMMIT_AT = 60;
 /** Ease out: moves off at once, then slows to a long, soft stop. */
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const ARRANGE_MS = 1700;
-const SNAP_MS = 900;
+const SNAP_MS = 400;
 /** Spring-back after a short pull: ease in (starts gently, picks up speed). */
 const SNAP_EASE = "cubic-bezier(0.32, 0, 0.67, 0)";
 /** Edge shadow that separates the cards in the resting stack; it fades as they come out. */
 const stackShadow = (strength: number, dark: boolean) =>
   `${dark ? `0 0 0 1.5px rgba(46,46,46,${strength.toFixed(3)}), ` : ""}-6px 0 14px rgba(0,0,0,${(0.28 * strength).toFixed(3)})`;
 /** How long the hand-over into Accounts takes (matches ::view-transition-group(.acct-card) in globals.css). */
-const ZOOM_MS = 100;
+const ZOOM_MS = 50;
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
