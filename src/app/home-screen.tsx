@@ -20,7 +20,7 @@ import { groupByDay } from "@/lib/history";
 import { recentFrom, remainingBudget, share, topTiles, type Tile } from "@/lib/home";
 import { periodFor } from "@/lib/periods";
 import { coverPeriodsFrom, periodOf, usePeriods } from "@/lib/periods-store";
-import { goalPlan } from "@/lib/plan";
+import { goalPlan, savingTargetFor } from "@/lib/plan";
 import { useTransactions, type Transaction } from "@/lib/transactions";
 import { useToday } from "@/lib/use-today";
 
@@ -80,18 +80,22 @@ export function HomeScreen() {
     const amount = spentBy(c.id);
     return { id: c.id, kind: "expense", amount, of, percent: of > 0 ? Math.round((amount / of) * 100) : 0 };
   });
+  // Saving tiles: the target typed on the Plan tab, else what the goal needs this period.
   const savingTiles: Tile[] = period
-    ? (goals.data ?? []).flatMap((g) => {
-        const c = allCategories.find((x) => x.id === g.categoryId && !x.archived);
-        if (!c) return [];
-        const plan = goalPlan({
-          target: g.target,
-          targetDate: g.targetDate,
-          period,
-          moves: txs.filter((t) => t.categoryId === g.categoryId),
-        });
-        return [{ id: c.id, kind: "saving" as const, amount: plan.thisPeriod, of: plan.neededThisPeriod, percent: share(plan.thisPeriod, plan.neededThisPeriod) }];
-      })
+    ? allCategories
+        .filter((c) => c.kind === "saving" && !c.archived)
+        .flatMap((c) => {
+          const g = (goals.data ?? []).find((x) => x.categoryId === c.id);
+          const plan = g
+            ? goalPlan({ target: g.target, targetDate: g.targetDate, period, moves: txs.filter((t) => t.categoryId === c.id) })
+            : null;
+          const of = savingTargetFor(budgetRows.find((b) => b.categoryId === c.id)?.amount ?? null, plan?.neededThisPeriod ?? null);
+          if (!of) return [];
+          const amount = periodTxs
+            .filter((t) => t.categoryId === c.id)
+            .reduce((n, t) => n + (t.type === "saving_deposit" ? t.amount : t.type === "saving_withdraw" ? -t.amount : 0), 0);
+          return [{ id: c.id, kind: "saving" as const, amount, of, percent: share(amount, of) }];
+        })
     : [];
   const tiles = topTiles([...expenseTiles, ...savingTiles]);
 

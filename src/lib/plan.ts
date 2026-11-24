@@ -76,7 +76,36 @@ export function goalPlan(input: {
   };
 }
 
-/** Income this period − expense budget − what the goals need this period (negative = planned too much). */
-export function leftToPlan(income: number, expenseBudget: number, goalsNeeded: number): number {
-  return income - expenseBudget - goalsNeeded;
+export type TargetLine = {
+  target: number;
+  actual: number;
+  /** Width of the bar, 0–100. */
+  barPercent: number;
+  /** Target reached (only when there is a target). */
+  reached: boolean;
+  /** Still to come, or how much beyond the target once reached. */
+  remaining: number;
+};
+
+/** Progress toward an amount you hope to reach (expected income, a saving target this period). */
+export function targetLine(target: number, actual: number): TargetLine {
+  const reached = target > 0 && actual >= target;
+  const barPercent = target > 0 ? Math.max(0, Math.min(100, Math.round((actual / target) * 100))) : 0;
+  return { target, actual, barPercent, reached, remaining: reached ? actual - target : Math.max(0, target - actual) };
+}
+
+/** Share of a goal saved so far, 0–100 (rounded down so 100 means really reached). */
+export function goalPercent(saved: number, target: number): number {
+  if (target <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.floor((saved / target) * 100)));
+}
+
+/** Expected income − expense budget − saving target (negative = planned more than you expect). */
+export function leftToPlan(expectedIncome: number, expenseBudget: number, savingTarget: number): number {
+  return expectedIncome - expenseBudget - savingTarget;
+}
+
+/** The saving target for one goal in a period: what you typed, else what the goal needs then. */
+export function savingTargetFor(typed: number | null, suggested: number | null): number | null {
+  return typed !== null && typed > 0 ? typed : suggested;
 }

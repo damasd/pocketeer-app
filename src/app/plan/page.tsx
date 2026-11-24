@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageTransition } from "@/components/page-transition";
 import { PlanScreen } from "./plan-screen";
 
-export const metadata: Metadata = { title: "Budget & goals" };
+export const metadata: Metadata = { title: "Target" };
 
 export default function PlanPage() {
   return (

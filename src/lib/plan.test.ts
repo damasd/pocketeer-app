@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { budgetLine, goalPlan, leftToPlan } from "./plan";
+import { budgetLine, goalPercent, goalPlan, leftToPlan, savingTargetFor, targetLine } from "./plan";
 
 describe("budgetLine", () => {
   it("shows what is left", () => {
@@ -79,5 +79,38 @@ describe("leftToPlan", () => {
   it("is income minus budgets minus goals", () => {
     expect(leftToPlan(8900000, 8500000, 2300000)).toBe(-1900000);
     expect(leftToPlan(10000000, 6000000, 2000000)).toBe(2000000);
+  });
+});
+
+describe("targetLine", () => {
+  it("shows what is still to come", () => {
+    expect(targetLine(2000000, 500000)).toMatchObject({ barPercent: 25, reached: false, remaining: 1500000 });
+  });
+  it("is reached at or past the target, and says by how much", () => {
+    expect(targetLine(2000000, 2000000)).toMatchObject({ barPercent: 100, reached: true, remaining: 0 });
+    expect(targetLine(2000000, 2600000)).toMatchObject({ barPercent: 100, reached: true, remaining: 600000 });
+  });
+  it("has no progress without a target, and none below zero", () => {
+    expect(targetLine(0, 300000)).toMatchObject({ barPercent: 0, reached: false, remaining: 0 });
+    expect(targetLine(1000000, -200000)).toMatchObject({ barPercent: 0, remaining: 1200000 });
+  });
+});
+
+describe("goalPercent", () => {
+  it("rounds down so 100 only shows once the goal is reached", () => {
+    expect(goalPercent(9990000, 10000000)).toBe(99);
+    expect(goalPercent(10000000, 10000000)).toBe(100);
+    expect(goalPercent(12000000, 10000000)).toBe(100);
+    expect(goalPercent(-5, 100)).toBe(0);
+    expect(goalPercent(5, 0)).toBe(0);
+  });
+});
+
+describe("savingTargetFor", () => {
+  it("uses the typed amount, else the goal's suggestion", () => {
+    expect(savingTargetFor(500000, 800000)).toBe(500000);
+    expect(savingTargetFor(null, 800000)).toBe(800000);
+    expect(savingTargetFor(0, 800000)).toBe(800000);
+    expect(savingTargetFor(null, null)).toBeNull();
   });
 });

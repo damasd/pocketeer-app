@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "lucide-react";
 import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { Segmented } from "@/components/segmented";
@@ -15,12 +15,13 @@ import { useGoals, type Goal } from "@/lib/goals";
 import { formatRupiah, groupThousands, parseRupiahInput } from "@/lib/money";
 import { periodRangeLabel } from "@/lib/periods";
 import { coverPeriodsFrom, periodOf, usePeriods, type StoredPeriod } from "@/lib/periods-store";
-import { budgetLine, goalPlan, leftToPlan } from "@/lib/plan";
+import { budgetLine, goalPercent, goalPlan, leftToPlan, targetLine } from "@/lib/plan";
 import { useTransactions, type Transaction } from "@/lib/transactions";
 import { useToday } from "@/lib/use-today";
 import { GoalForm } from "./goal-form";
 
-type Tab = "budget" | "goals";
+type Tab = "plan" | "goals";
+type Kind = Category["kind"];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const byDate = (iso: string) => {
@@ -36,18 +37,25 @@ function daysLeft(p: StoredPeriod, today: string): number | null {
   return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000) + 1;
 }
 
-/** Plan tab: Budget & goals (mockup Budgets.dc.html). Waits for the browser to know today's date. */
+const TITLE = "Target";
+
+/** Target tab: Plan (expense budget, expected income, saving target) and Goals. Waits for today's date. */
 export function PlanScreen() {
   const today = useToday();
   if (!today) {
     return (
       <header className="pt-3">
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Budget &amp; goals</h1>
+        <h1 className="text-2xl font-bold tracking-[-0.02em]">{TITLE}</h1>
       </header>
     );
   }
   return <PlanBody today={today} />;
 }
+
+/** One row of a Plan slide: the amount typed for this period and what actually happened. */
+type PlanRow = { category: Category; amount: number; actual: number; hint?: string };
+
+const deposit = (t: Transaction) => (t.type === "saving_deposit" ? t.amount : t.type === "saving_withdraw" ? -t.amount : 0);
 
 function PlanBody({ today }: { today: string }) {
   const periods = usePeriods();
@@ -56,10 +64,10 @@ function PlanBody({ today }: { today: string }) {
   const categories = useCategories();
   const transactions = useTransactions();
 
-  const [tab, setTab] = useState<Tab>("budget");
+  const [tab, setTab] = useState<Tab>("plan");
   const [periodId, setPeriodId] = useState<string | null>(null);
   const [goalSheet, setGoalSheet] = useState<Category | "new" | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
+  const [addKind, setAddKind] = useState<"expense" | "income" | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
 
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
@@ -77,46 +85,48 @@ function PlanBody({ today }: { today: string }) {
   }, [oldest]);
 
   const allCategories = useMemo(() => categories.data ?? [], [categories.data]);
-  const inPeriod = (t: Transaction) => period !== null && t.date >= period.start && t.date <= period.end;
-  const periodTxs = txs.filter(inPeriod);
-
-  const income = periodTxs.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
-  const spentBy = (categoryId: string) =>
-    periodTxs.filter((t) => t.type === "expense" && t.categoryId === categoryId).reduce((s, t) => s + t.amount, 0);
-  const budgetFor = (categoryId: string) =>
+  const periodTxs = period ? txs.filter((t) => t.date >= period.start && t.date <= period.end) : [];
+  const amountFor = (categoryId: string) =>
     (budgets.data ?? []).find((b) => b.periodId === period?.id && b.categoryId === categoryId)?.amount ?? 0;
+  const actualFor = (c: Category) =>
+    periodTxs
+      .filter((t) => t.categoryId === c.id)
+      .reduce((s, t) => s + (c.kind === "saving" ? deposit(t) : t.type === c.kind ? t.amount : 0), 0);
 
-  // Every expense category is in the budget (the setup list plus any you add), in category order.
-  // Archived ones stay only for periods where they have an amount or spending.
-  const expenseCategories = allCategories.filter((c) => c.kind === "expense");
-  const expenseRows = expenseCategories.filter((c) => !c.archived || budgetFor(c.id) > 0 || spentBy(c.id) > 0);
-  const expenseBudget = expenseRows.reduce((s, c) => s + budgetFor(c.id), 0);
+  // Each slide lists one kind of category, in category order. Archived ones stay only for
+  // periods where they have an amount or money moved.
+  const rowsOf = (kind: Kind): PlanRow[] =>
+    allCategories
+      .filter((c) => c.kind === kind)
+      .map((category) => ({ category, amount: amountFor(category.id), actual: actualFor(category) }))
+      .filter((r) => !r.category.archived || r.amount > 0 || r.actual !== 0);
+  const expenseRows = rowsOf("expense");
+  const incomeRows = rowsOf("income");
+  const savingRows = rowsOf("saving").map((r) => {
+    const goal = (goals.data ?? []).find((g) => g.categoryId === r.category.id);
+    if (!goal || !period) return r;
+    const plan = goalPlan({
+      target: goal.target,
+      targetDate: goal.targetDate,
+      period,
+      moves: txs.filter((t) => t.categoryId === r.category.id),
+    });
+    return plan.neededThisPeriod > 0 ? { ...r, hint: `Goal needs ${formatRupiah(plan.neededThisPeriod)} this period` } : r;
+  });
+  const total = (rows: PlanRow[]) => rows.reduce((s, r) => s + r.amount, 0);
+  const expenseBudget = total(expenseRows);
+  const expectedIncome = total(incomeRows);
+  const savingTarget = total(savingRows);
+  const left = leftToPlan(expectedIncome, expenseBudget, savingTarget);
 
-  // Saving categories are the goals: every active one is a card; target and date are optional.
-  const savingRows = allCategories
+  // Goals tab: every active saving category, with what's saved in it so far (all time).
+  const goalRows: GoalRow[] = allCategories
     .filter((c) => c.kind === "saving" && !c.archived)
     .map((category) => ({
       category,
       goal: (goals.data ?? []).find((g) => g.categoryId === category.id) ?? null,
-      moves: txs.filter((t) => t.categoryId === category.id),
+      saved: savingBalance(category.id, txs),
     }));
-  // Planned against the selected period on the Budget tab, and against today on the Goals tab.
-  const plansFor = (p: StoredPeriod | null): SavingRow[] =>
-    savingRows.map((r) => ({
-      ...r,
-      plan:
-        p && r.goal
-          ? goalPlan({ target: r.goal.target, targetDate: r.goal.targetDate, period: p, moves: r.moves })
-          : null,
-      saved: savingBalance(r.category.id, r.moves),
-      thisPeriod: p
-        ? r.moves
-            .filter((t) => t.date >= p.start && t.date <= p.end)
-            .reduce((s, t) => s + (t.type === "saving_deposit" ? t.amount : t.type === "saving_withdraw" ? -t.amount : 0), 0)
-        : 0,
-    }));
-  const goalsNeeded = plansFor(period).reduce((s, r) => s + (r.plan?.neededThisPeriod ?? 0), 0);
-  const left = leftToPlan(income, expenseBudget, goalsNeeded);
 
   const loadError = [periods, budgets, goals, categories, transactions].find((s) => s.status === "error");
   const loading = !period && periods.status === "loading";
@@ -145,18 +155,59 @@ function PlanBody({ today }: { today: string }) {
   }
 
   const olderHasBudgets = Boolean(older && (budgets.data ?? []).some((b) => b.periodId === older.id && b.amount > 0));
+  const nextSortOrder = (kind: Kind) =>
+    Math.max(0, ...allCategories.filter((c) => c.kind === kind).map((c) => c.sortOrder)) + 1;
+
+  const rowList = (kind: Kind, rows: PlanRow[], empty: string) =>
+    loading ? (
+      <ul aria-hidden className="rounded-3xl bg-card px-4 py-1">
+        {[0, 1, 2].map((i) => (
+          <li key={i} className="flex items-center justify-between py-3">
+            <span className="h-4 w-28 rounded bg-page" />
+            <span className="h-11 w-36 rounded-full bg-page" />
+          </li>
+        ))}
+      </ul>
+    ) : rows.length > 0 && period ? (
+      <ul className="rounded-3xl bg-card px-4 py-1">
+        {rows.map((r, i) => (
+          <AmountRow
+            key={`${period.id}-${r.category.id}`}
+            kind={kind}
+            row={r}
+            periodId={period.id}
+            first={i === 0}
+            onDelete={kind === "saving" || r.category.builtIn ? undefined : () => setDeleting(r.category)}
+          />
+        ))}
+      </ul>
+    ) : (
+      <p className="rounded-3xl bg-card px-5 py-4 text-[13px] font-medium text-muted">{empty}</p>
+    );
+
+  const addButton = (label: string, onClick: () => void) =>
+    period && (
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex h-12 items-center justify-center gap-2 rounded-full border border-dashed border-[#BDBDBD] text-sm font-semibold"
+      >
+        <Plus aria-hidden size={16} strokeWidth={2.5} />
+        {label}
+      </button>
+    );
 
   return (
     <div className="flex flex-col gap-4">
       <header className="pt-3">
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Budget &amp; goals</h1>
+        <h1 className="text-2xl font-bold tracking-[-0.02em]">{TITLE}</h1>
       </header>
 
       <Segmented
         label="Show"
         surface="card"
         options={[
-          { value: "budget", label: "Budget" },
+          { value: "plan", label: "Plan" },
           { value: "goals", label: "Goals" },
         ]}
         value={tab}
@@ -165,7 +216,7 @@ function PlanBody({ today }: { today: string }) {
 
       {loadError && loadError.status === "error" && <ErrorNote>{loadError.message}</ErrorNote>}
 
-      {tab === "budget" ? (
+      {tab === "plan" ? (
         <>
           <div className="flex h-14 items-center justify-between rounded-full bg-card px-1.5">
             <button
@@ -198,12 +249,12 @@ function PlanBody({ today }: { today: string }) {
           </div>
 
           <section aria-label="Plan for this period" className="flex flex-col gap-2.5 rounded-3xl bg-ink p-5 text-white">
-            <SummaryLine label="Income this period" value={income} />
+            <SummaryLine label="Expected income" value={expectedIncome} />
             <SummaryLine label="Expense budget" value={expenseBudget} />
-            <SummaryLine label="Saving goals this period" value={goalsNeeded} />
+            <SummaryLine label="Saving target" value={savingTarget} />
             <div aria-hidden className="my-1 h-px bg-nav-selected" />
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[13px] text-[#BDBDBD]">{left >= 0 ? "Left to plan" : "Planned more than income"}</span>
+              <span className="text-[13px] text-[#BDBDBD]">{left >= 0 ? "Left to plan" : "Planned more than you expect"}</span>
               <span
                 className={`rounded-full px-3 py-1 text-[17px] font-bold ${left >= 0 ? "bg-lime text-ink" : "bg-ember text-white"}`}
               >
@@ -224,50 +275,46 @@ function PlanBody({ today }: { today: string }) {
             </button>
           )}
 
-          <section aria-labelledby="expense-budget" className="flex flex-col gap-3">
-            <div className="flex items-baseline justify-between">
-              <h2 id="expense-budget" className="text-[17px] font-semibold">
-                Expense budget
-              </h2>
-              {expenseRows.length > 0 && <span className="text-[13px] text-muted">Tap an amount to change it</span>}
-            </div>
-            {(loading || expenseRows.length > 0) && (
-              <ul className="rounded-3xl bg-card px-4 py-1">
-                {loading &&
-                  [0, 1, 2].map((i) => (
-                    <li key={i} aria-hidden className="flex items-center justify-between py-3">
-                      <span className="h-4 w-28 rounded bg-page" />
-                      <span className="h-11 w-36 rounded-full bg-page" />
-                    </li>
-                  ))}
-                {period &&
-                  expenseRows.map((c, i) => (
-                    <BudgetRow
-                      key={`${period.id}-${c.id}`}
-                      category={c}
-                      periodId={period.id}
-                      budget={budgetFor(c.id)}
-                      spent={spentBy(c.id)}
-                      first={i === 0}
-                      onDelete={c.builtIn ? undefined : () => setDeleting(c)}
-                    />
-                  ))}
-              </ul>
-            )}
-            {period && (
-              <button
-                type="button"
-                onClick={() => setAddOpen(true)}
-                className="flex h-12 items-center justify-center gap-2 rounded-full border border-dashed border-[#BDBDBD] text-sm font-semibold"
-              >
-                <Plus aria-hidden size={16} strokeWidth={2.5} />
-                New expense category
-              </button>
-            )}
-          </section>
+          <PlanSlides
+            slides={[
+              {
+                id: "expense",
+                title: "Expense budget",
+                total: expenseBudget,
+                body: (
+                  <>
+                    {rowList("expense", expenseRows, "No expense categories yet.")}
+                    {addButton("New expense category", () => setAddKind("expense"))}
+                  </>
+                ),
+              },
+              {
+                id: "income",
+                title: "Expected income",
+                total: expectedIncome,
+                body: (
+                  <>
+                    {rowList("income", incomeRows, "No income categories yet.")}
+                    {addButton("New income category", () => setAddKind("income"))}
+                  </>
+                ),
+              },
+              {
+                id: "saving",
+                title: "Saving target",
+                total: savingTarget,
+                body: (
+                  <>
+                    {rowList("saving", savingRows, "No goals yet. Each goal is a saving category you can deposit into.")}
+                    {addButton("New goal", () => setGoalSheet("new"))}
+                  </>
+                ),
+              },
+            ]}
+          />
         </>
       ) : (
-        <GoalsTab rows={plansFor(current ?? period)} onNew={() => setGoalSheet("new")} onOpen={(c) => setGoalSheet(c)} />
+        <GoalsTab rows={goalRows} onNew={() => setGoalSheet("new")} onOpen={(c) => setGoalSheet(c)} />
       )}
 
       <Sheet open={deleting !== null} onClose={() => setDeleting(null)} title="Delete category">
@@ -281,12 +328,18 @@ function PlanBody({ today }: { today: string }) {
         )}
       </Sheet>
 
-      <Sheet open={addOpen} onClose={() => setAddOpen(false)} title="New expense category">
-        {period && (
-          <NewExpenseCategory
+      <Sheet
+        open={addKind !== null}
+        onClose={() => setAddKind(null)}
+        title={addKind === "income" ? "New income category" : "New expense category"}
+      >
+        {period && addKind && (
+          <NewCategory
+            key={addKind}
+            kind={addKind}
             periodId={period.id}
-            nextSortOrder={Math.max(0, ...expenseCategories.map((c) => c.sortOrder)) + 1}
-            onDone={() => setAddOpen(false)}
+            nextSortOrder={nextSortOrder(addKind)}
+            onDone={() => setAddKind(null)}
           />
         )}
       </Sheet>
@@ -296,7 +349,7 @@ function PlanBody({ today }: { today: string }) {
           key={goalSheet === "new" ? "new" : goalSheet?.id}
           category={goalSheet === "new" ? null : goalSheet}
           goal={goalSheet === "new" ? null : ((goals.data ?? []).find((g) => g.categoryId === goalSheet?.id) ?? null)}
-          nextSortOrder={Math.max(0, ...allCategories.filter((c) => c.kind === "saving").map((c) => c.sortOrder)) + 1}
+          nextSortOrder={nextSortOrder("saving")}
           balance={goalSheet && goalSheet !== "new" ? savingBalance(goalSheet.id, txs) : 0}
           onDone={() => setGoalSheet(null)}
         />
@@ -314,54 +367,181 @@ function SummaryLine({ label, value }: { label: string; value: number }) {
   );
 }
 
-/** One expense category: editable amount, bar, spent and what's left (ember when over). */
-function BudgetRow({
-  category,
+type Slide = { id: string; title: string; total: number; body: ReactNode };
+
+/**
+ * Expense budget → Expected income → Saving target, side by side. Swipe left or right (the
+ * browser's own scroll snapping) or tap a dot. The box takes the height of the slide in view.
+ */
+function PlanSlides({ slides }: { slides: Slide[] }) {
+  const scroller = useRef<HTMLDivElement>(null);
+  const panels = useRef<(HTMLElement | null)[]>([]);
+  const [active, setActive] = useState(0);
+  const [height, setHeight] = useState<number | null>(null);
+
+  // Follow the slide in view, also mid-swipe, so its rows are ready to tap as it lands.
+  function onScroll() {
+    const el = scroller.current;
+    if (!el || !el.clientWidth) return;
+    const i = Math.max(0, Math.min(slides.length - 1, Math.round(el.scrollLeft / el.clientWidth)));
+    if (i !== active) setActive(i);
+  }
+
+  // Match the box to the slide in view, and keep matching as its rows change.
+  useLayoutEffect(() => {
+    const panel = panels.current[active];
+    if (!panel) return;
+    const measure = () => setHeight(panel.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(panel);
+    return () => ro.disconnect();
+  }, [active]);
+
+  function go(i: number) {
+    const el = scroller.current;
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollTo({ left: i * el.clientWidth, behavior: reduce ? "auto" : "smooth" });
+  }
+
+  return (
+    <section aria-roledescription="carousel" aria-label="Plan amounts" className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <div role="group" aria-label="Choose a list" className="-ml-3.5 flex">
+          {slides.map((s, i) => (
+            <button
+              key={s.id}
+              type="button"
+              aria-label={s.title}
+              aria-current={i === active}
+              onClick={() => go(i)}
+              className="flex size-11 items-center justify-center"
+            >
+              <span
+                aria-hidden
+                className={`block h-2 rounded-full transition-all duration-300 motion-reduce:transition-none ${
+                  i === active ? "w-5 bg-ink" : "w-2 bg-[#BDBDBD]"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+        <span className="text-[13px] text-muted">Tap an amount to change it</span>
+      </div>
+
+      <div
+        ref={scroller}
+        onScroll={onScroll}
+        className="-mx-5 flex snap-x snap-mandatory items-start overflow-x-auto overscroll-x-contain transition-[height] duration-300 ease-out [scrollbar-width:none] motion-reduce:transition-none [&::-webkit-scrollbar]:hidden"
+        style={height !== null ? { height } : undefined}
+      >
+        {slides.map((s, i) => (
+          <section
+            key={s.id}
+            ref={(el) => {
+              panels.current[i] = el;
+            }}
+            aria-roledescription="slide"
+            aria-labelledby={`slide-${s.id}`}
+            inert={i !== active}
+            className="flex w-full flex-none snap-start snap-always flex-col gap-3 px-5"
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 id={`slide-${s.id}`} className="text-[17px] font-semibold">
+                {s.title}
+              </h2>
+              <span className="text-[15px] font-bold">{formatRupiah(s.total)}</span>
+            </div>
+            {s.body}
+          </section>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * One category on a Plan slide: the amount you type, a bar, and how it's going.
+ * Expense: spent against the budget (ember when over). Income: received against what you expect.
+ * Saving: put into the goal this period against the target.
+ */
+function AmountRow({
+  kind,
+  row,
   periodId,
-  budget,
-  spent,
   first,
   onDelete,
 }: {
-  category: Category;
+  kind: Kind;
+  row: PlanRow;
   periodId: string;
-  budget: number;
-  spent: number;
   first: boolean;
   /** Only for categories you added; built-in ones cannot be deleted. */
   onDelete?: () => void;
 }) {
-  const [text, setText] = useState(groupThousands(budget));
+  const { category, amount, actual, hint } = row;
+  const [text, setText] = useState(groupThousands(amount));
   const [saving, setSaving] = useState(false);
-  const line = budgetLine(budget, spent);
+  const noun = kind === "expense" ? "budget" : kind === "income" ? "expected income" : "saving target";
 
   // Show the saved amount again if it changes elsewhere (copy, undo).
-  const [shown, setShown] = useState(budget);
-  if (shown !== budget) {
-    setShown(budget);
-    setText(groupThousands(budget));
+  const [shown, setShown] = useState(amount);
+  if (shown !== amount) {
+    setShown(amount);
+    setText(groupThousands(amount));
   }
 
   async function commit() {
-    const amount = parseRupiahInput(text);
-    setText(groupThousands(amount));
-    if (amount === budget) return;
+    const next = parseRupiahInput(text);
+    setText(groupThousands(next));
+    if (next === amount) return;
     setSaving(true);
     try {
-      await setBudget(periodId, category.id, amount);
+      await setBudget(periodId, category.id, next);
     } catch (e) {
-      setText(groupThousands(budget));
-      showToast({ message: errorMessage(e, "Could not save the budget"), tone: "error" });
+      setText(groupThousands(amount));
+      showToast({ message: errorMessage(e, `Could not save the ${noun}`), tone: "error" });
     } finally {
       setSaving(false);
     }
   }
 
+  let bar: number;
+  let barColour = "bg-ink";
+  let status: ReactNode;
+  if (kind === "expense") {
+    const line = budgetLine(amount, actual);
+    bar = line.barPercent;
+    if (line.over) barColour = "bg-ember";
+    status = line.over ? (
+      <span className="rounded-full bg-ember px-2 py-0.5 font-semibold text-white">{formatRupiah(line.remaining)} over</span>
+    ) : (
+      <span className="font-semibold">{formatRupiah(line.remaining)} left</span>
+    );
+  } else {
+    const line = targetLine(amount, actual);
+    bar = line.barPercent;
+    const reachedLabel =
+      kind === "income" ? (line.remaining > 0 ? `${formatRupiah(line.remaining)} extra` : "All received") : "Target met";
+    status =
+      amount === 0 ? (
+        <span className="text-muted">No amount set</span>
+      ) : line.reached ? (
+        <span className="rounded-full bg-lime px-2 py-0.5 font-semibold text-ink">{reachedLabel}</span>
+      ) : (
+        <span className="font-semibold">
+          {formatRupiah(line.remaining)} {kind === "income" ? "to come" : "to go"}
+        </span>
+      );
+  }
+  const actualLabel = kind === "expense" ? "spent" : kind === "income" ? "received" : "saved";
+
   return (
     <li className={`flex flex-col gap-2 py-3 ${first ? "" : "border-t border-page"}`}>
       <div className="flex items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-0.5">
-          <label htmlFor={`budget-${category.id}`} className="min-w-0 truncate text-[15px] font-semibold">
+          <label htmlFor={`amount-${category.id}`} className="min-w-0 truncate text-[15px] font-semibold">
             {category.name}
           </label>
           {onDelete && (
@@ -380,10 +560,10 @@ function BudgetRow({
             Rp
           </span>
           <input
-            id={`budget-${category.id}`}
+            id={`amount-${category.id}`}
             inputMode="numeric"
             autoComplete="off"
-            aria-label={`${category.name} budget in rupiah`}
+            aria-label={`${category.name} ${noun} in rupiah`}
             aria-busy={saving}
             value={text}
             onFocus={(e) => e.currentTarget.select()}
@@ -398,49 +578,47 @@ function BudgetRow({
       </div>
       <div
         role="progressbar"
-        aria-label={`${category.name} spent`}
+        aria-label={`${category.name} ${actualLabel}`}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={line.barPercent}
+        aria-valuenow={bar}
         className="h-1.5 overflow-hidden rounded-full bg-page"
       >
-        <div className={`h-full rounded-full ${line.over ? "bg-ember" : "bg-ink"}`} style={{ width: `${line.barPercent}%` }} />
+        <div className={`h-full rounded-full ${barColour}`} style={{ width: `${bar}%` }} />
       </div>
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="text-muted">{formatRupiah(spent)} spent</span>
-        {line.over ? (
-          <span className="rounded-full bg-ember px-2 py-0.5 font-semibold text-white">{formatRupiah(line.remaining)} over</span>
-        ) : (
-          <span className="font-semibold">{formatRupiah(line.remaining)} left</span>
-        )}
+        <span className="text-muted">
+          {formatRupiah(kind === "saving" ? Math.max(0, actual) : actual)} {actualLabel}
+        </span>
+        {status}
       </div>
+      {hint && <span className="text-xs text-muted">{hint}</span>}
     </li>
   );
 }
 
-type SavingRow = {
-  category: Category;
-  goal: Goal | null;
-  moves: Transaction[];
-  plan: ReturnType<typeof goalPlan> | null;
-  saved: number;
-  thisPeriod: number;
-};
+type GoalRow = { category: Category; goal: Goal | null; saved: number };
 
-/** Goals tab: every saving category is a goal; target amount and date are optional. */
-function GoalsTab({ rows, onNew, onOpen }: { rows: SavingRow[]; onNew: () => void; onOpen: (c: Category) => void }) {
-  const targeted = rows.filter((r) => r.goal && r.plan);
+/**
+ * Goals tab: the whole goal, not the month. Each saving category shows what's saved against its
+ * target and the share saved so far; target amount and date are optional.
+ */
+function GoalsTab({ rows, onNew, onOpen }: { rows: GoalRow[]; onNew: () => void; onOpen: (c: Category) => void }) {
+  const targeted = rows.filter((r) => r.goal);
   const savedTotal = targeted.reduce((s, r) => s + Math.max(0, r.saved), 0);
   const targetTotal = targeted.reduce((s, r) => s + (r.goal?.target ?? 0), 0);
-  const thisPeriod = targeted.reduce((s, r) => s + Math.max(0, r.thisPeriod), 0);
-  const needed = targeted.reduce((s, r) => s + (r.plan?.neededThisPeriod ?? 0), 0);
-  const pct = targetTotal > 0 ? Math.min(100, Math.round((savedTotal / targetTotal) * 100)) : 0;
+  const pct = goalPercent(savedTotal, targetTotal);
 
   return (
     <>
       <section aria-label="All goals" className="flex flex-col gap-1 rounded-3xl bg-ink p-5 text-white">
         <span className="text-[13px] text-[#BDBDBD]">Saved toward goals</span>
-        <span className="text-[32px] leading-[1.25] font-bold tracking-[-0.03em]">{formatRupiah(savedTotal)}</span>
+        <span className="flex items-center justify-between gap-2">
+          <span className="text-[32px] leading-[1.25] font-bold tracking-[-0.03em]">{formatRupiah(savedTotal)}</span>
+          {targeted.length > 0 && (
+            <span className="rounded-full bg-lime px-3 py-1 text-[15px] font-bold text-ink">{pct}%</span>
+          )}
+        </span>
         <span className="text-[13px] text-[#BDBDBD]">
           {targeted.length
             ? `of ${formatRupiah(targetTotal)} across ${targeted.length} ${targeted.length === 1 ? "goal" : "goals"} with a target`
@@ -456,9 +634,6 @@ function GoalsTab({ rows, onNew, onOpen }: { rows: SavingRow[]; onNew: () => voi
         >
           <div className="h-full rounded-full bg-lime" style={{ width: `${pct}%` }} />
         </div>
-        <span className="mt-1.5 text-xs text-[#BDBDBD]">
-          This period: {formatRupiah(thisPeriod)} of {formatRupiah(needed)} set aside
-        </span>
       </section>
 
       <button
@@ -476,59 +651,60 @@ function GoalsTab({ rows, onNew, onOpen }: { rows: SavingRow[]; onNew: () => voi
         </p>
       )}
 
-      {rows.map(({ category, goal, plan, saved, thisPeriod: setAside }) => (
-        <button
-          key={category.id}
-          type="button"
-          onClick={() => onOpen(category)}
-          aria-label={`${category.name}, saved ${formatRupiah(saved)}${goal ? ` of ${formatRupiah(goal.target)}` : ""}. Edit`}
-          className="flex flex-col gap-2 rounded-3xl bg-card p-4 text-left"
-        >
-          <span className="flex w-full items-baseline justify-between gap-2">
-            <span className="text-[17px] font-bold">{category.name}</span>
-            {goal && <span className="text-xs text-muted">{byDate(goal.targetDate)}</span>}
-          </span>
-          <span className="flex w-full items-baseline justify-between gap-2">
-            <span className="text-xl font-bold">{formatRupiah(saved)}</span>
-            {goal && <span className="text-[13px] text-muted">of {formatRupiah(goal.target)}</span>}
-          </span>
-          {goal && plan ? (
-            <>
-              <span aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-page">
-                <span className="block h-full rounded-full bg-ink" style={{ width: `${plan.percent}%` }} />
-              </span>
-              <span className="mt-0.5 flex w-full items-center justify-between gap-2 text-xs">
-                <span className="text-muted">
-                  {plan.neededThisPeriod > 0
-                    ? `${formatRupiah(plan.neededThisPeriod)} a month to get there`
-                    : "Target reached"}
-                </span>
-                <span className={`rounded-full px-2 py-0.5 font-semibold ${plan.done ? "bg-lime" : "bg-page"}`}>
-                  {plan.done ? "Done this month" : `${formatRupiah(Math.max(0, plan.thisPeriod))} this month`}
-                </span>
-              </span>
-            </>
-          ) : (
-            <span className="flex w-full items-center justify-between gap-2 text-xs">
-              <span className="text-muted">{formatRupiah(Math.max(0, setAside))} this month</span>
-              <span className="rounded-full bg-page px-2 py-0.5 font-semibold">Set a target</span>
+      {rows.map(({ category, goal, saved }) => {
+        const percent = goal ? goalPercent(saved, goal.target) : 0;
+        const toGo = goal ? Math.max(0, goal.target - saved) : 0;
+        return (
+          <button
+            key={category.id}
+            type="button"
+            onClick={() => onOpen(category)}
+            aria-label={`${category.name}, saved ${formatRupiah(saved)}${goal ? ` of ${formatRupiah(goal.target)}, ${percent}%` : ""}. Edit`}
+            className="flex flex-col gap-2 rounded-3xl bg-card p-4 text-left"
+          >
+            <span className="flex w-full items-baseline justify-between gap-2">
+              <span className="text-[17px] font-bold">{category.name}</span>
+              {goal && <span className="text-xs text-muted">{byDate(goal.targetDate)}</span>}
             </span>
-          )}
-        </button>
-      ))}
+            <span className="flex w-full items-baseline justify-between gap-2">
+              <span className="text-xl font-bold">{formatRupiah(saved)}</span>
+              {goal && <span className="text-[13px] text-muted">of {formatRupiah(goal.target)}</span>}
+            </span>
+            {goal ? (
+              <>
+                <span aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-page">
+                  <span className="block h-full rounded-full bg-ink" style={{ width: `${percent}%` }} />
+                </span>
+                <span className="mt-0.5 flex w-full items-center justify-between gap-2 text-xs">
+                  <span className="text-muted">{toGo > 0 ? `${formatRupiah(toGo)} to go` : "Goal reached"}</span>
+                  <span className={`rounded-full px-2 py-0.5 font-semibold ${percent >= 100 ? "bg-lime text-ink" : "bg-page"}`}>
+                    {percent}% saved
+                  </span>
+                </span>
+              </>
+            ) : (
+              <span className="flex w-full items-center justify-end text-xs">
+                <span className="rounded-full bg-page px-2 py-0.5 font-semibold">Set a target</span>
+              </span>
+            )}
+          </button>
+        );
+      })}
     </>
   );
 }
 
 /**
- * Create a new expense category from the Budget tab. It joins the budget list and the
- * Log sheet's Expense chips straight away; an optional amount sets its budget for this period.
+ * Create a new expense or income category from a Plan slide. It joins that slide and the Log
+ * sheet's chips straight away; an optional amount sets it for this period.
  */
-function NewExpenseCategory({
+function NewCategory({
+  kind,
   periodId,
   nextSortOrder,
   onDone,
 }: {
+  kind: "expense" | "income";
   periodId: string;
   nextSortOrder: number;
   onDone: () => void;
@@ -545,7 +721,7 @@ function NewExpenseCategory({
     setBusy(true);
     setError(null);
     try {
-      const c = await createCategory("expense", { name: trimmed, icon: "ellipsis", note: null }, nextSortOrder);
+      const c = await createCategory(kind, { name: trimmed, icon: "ellipsis", note: null }, nextSortOrder);
       if (amount > 0) await setBudget(periodId, c.id, amount);
       onDone();
       showToast({ message: `${c.name} added` });
@@ -558,26 +734,26 @@ function NewExpenseCategory({
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="new-expense-category">Name</Label>
+        <Label htmlFor={`new-${kind}-category`}>Name</Label>
         <Input
-          id="new-expense-category"
-          placeholder="e.g. Groceries"
+          id={`new-${kind}-category`}
+          placeholder={kind === "income" ? "e.g. Freelance" : "e.g. Groceries"}
           maxLength={CATEGORY_NAME_MAX}
           autoComplete="off"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="bg-page"
         />
-        <p className="text-xs text-muted">It also appears in the Log sheet under Expense. Change its icon in Settings › Categories.</p>
+        <p className="text-xs text-muted">It also appears in the Log sheet under {kind === "income" ? "Income" : "Expense"}. Change its icon in Settings › Categories.</p>
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="new-expense-budget">Budget this period (optional)</Label>
+        <Label htmlFor={`new-${kind}-amount`}>{kind === "income" ? "Expected this period" : "Budget this period"} (optional)</Label>
         <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
           <span aria-hidden className="text-[15px] font-semibold text-muted">
             Rp
           </span>
           <input
-            id="new-expense-budget"
+            id={`new-${kind}-amount`}
             inputMode="numeric"
             autoComplete="off"
             value={groupThousands(amount)}

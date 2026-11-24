@@ -18,7 +18,7 @@ import { useCategories } from "@/lib/categories";
 import { useGoals } from "@/lib/goals";
 import { formatRupiah } from "@/lib/money";
 import { coverPeriodsFrom, usePeriods } from "@/lib/periods-store";
-import { budgetLine, goalPlan } from "@/lib/plan";
+import { budgetLine, goalPlan, savingTargetFor } from "@/lib/plan";
 import { useTransactions } from "@/lib/transactions";
 import { useToday } from "@/lib/use-today";
 
@@ -87,20 +87,18 @@ function AnalyticsBody({ today }: { today: string }) {
     range === "month" || range === "all" ? (periods.data ?? []).find((p) => p.start === selected.start) ?? null : null;
   const planFor = (categoryId: string): number | null => {
     if (!storedPeriod) return null;
-    if (type === "expense") {
-      return (budgets.data ?? []).find((b) => b.periodId === storedPeriod.id && b.categoryId === categoryId)?.amount ?? null;
-    }
-    if (type === "saving") {
-      const g = (goals.data ?? []).find((x) => x.categoryId === categoryId);
-      if (!g) return null;
-      return goalPlan({
-        target: g.target,
-        targetDate: g.targetDate,
-        period: storedPeriod,
-        moves: txs.filter((t) => t.categoryId === categoryId),
-      }).neededThisPeriod;
-    }
-    return null;
+    const typed = (budgets.data ?? []).find((b) => b.periodId === storedPeriod.id && b.categoryId === categoryId)?.amount ?? null;
+    if (type !== "saving") return typed;
+    const g = (goals.data ?? []).find((x) => x.categoryId === categoryId);
+    const suggested = g
+      ? goalPlan({
+          target: g.target,
+          targetDate: g.targetDate,
+          period: storedPeriod,
+          moves: txs.filter((t) => t.categoryId === categoryId),
+        }).neededThisPeriod
+      : null;
+    return savingTargetFor(typed, suggested);
   };
 
   const loadError = [transactions, categories].find((s) => s.status === "error");
@@ -194,7 +192,7 @@ function AnalyticsBody({ today }: { today: string }) {
                       </span>
                     ) : line ? (
                       <span className="text-muted">
-                        {line.percent}% of {type === "saving" ? "target" : "budget"}
+                        {line.percent}% of {type === "saving" ? "target" : type === "income" ? "expected" : "budget"}
                       </span>
                     ) : (
                       <span />

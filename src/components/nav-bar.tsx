@@ -22,7 +22,7 @@ const LEFT: Tab[] = [
 ];
 const RIGHT: Tab[] = [
   { href: "/analytics", label: "Analytics", Icon: ChartNoAxesColumn },
-  { href: "/plan", label: "Plan: budget and goals", Icon: Target },
+  { href: "/plan", label: "Target: plan and goals", Icon: Target },
 ];
 
 function isActive(pathname: string, href: string) {
