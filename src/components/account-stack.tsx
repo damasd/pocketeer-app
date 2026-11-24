@@ -16,7 +16,7 @@ const CARD_H = 216;
 const SMALL_H = 124;
 const SCALE = SMALL_H / CARD_H;
 /** Swipe distance that counts as "open Accounts". */
-const COMMIT_AT = 60;
+const COMMIT_AT = 30;
 /** Ease out: moves off at once, then slows to a long, soft stop. */
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const ARRANGE_MS = 1500;
