@@ -637,18 +637,8 @@ function GoalsTab({ rows, onNew, onOpen }: { rows: GoalRow[]; onNew: () => void;
   return (
     <>
       <section aria-label="All goals" className="flex flex-col gap-1 rounded-3xl bg-ink p-5 text-white">
-        <span className="text-[13px] text-[#BDBDBD]">Saved toward goals</span>
-        <span className="flex items-center justify-between gap-2">
-          <span className="text-[32px] leading-[1.25] font-bold tracking-[-0.03em]">{formatRupiah(savedTotal)}</span>
-          {targeted.length > 0 && (
-            <span className="rounded-full bg-lime px-3 py-1 text-[15px] font-bold text-ink">{pct}%</span>
-          )}
-        </span>
-        <span className="text-[13px] text-[#BDBDBD]">
-          {targeted.length
-            ? `of ${formatRupiah(targetTotal)} across ${targeted.length} ${targeted.length === 1 ? "goal" : "goals"} with a target`
-            : "Set a target on a goal to track progress"}
-        </span>
+        <span className="text-[13px] text-[#BDBDBD]">Total saved</span>
+        <span className="text-[32px] leading-[1.25] font-bold tracking-[-0.03em]">{formatRupiah(savedTotal)}</span>
         <div
           role="progressbar"
           aria-label="Saved toward all goals"
@@ -659,6 +649,18 @@ function GoalsTab({ rows, onNew, onOpen }: { rows: GoalRow[]; onNew: () => void;
         >
           <div className="h-full rounded-full bg-lime" style={{ width: `${pct}%` }} />
         </div>
+        <span className="mt-1.5 flex items-baseline justify-between gap-2 text-[13px] text-[#BDBDBD]">
+          {targeted.length ? (
+            <>
+              <span>
+                <b className="font-bold text-white">{formatRupiah(Math.max(0, targetTotal - savedTotal))}</b> to go
+              </span>
+              <span className="font-bold text-white">{pct}%</span>
+            </>
+          ) : (
+            <span>Set a target on a goal to track progress</span>
+          )}
+        </span>
       </section>
 
       <button
@@ -688,10 +690,10 @@ function GoalsTab({ rows, onNew, onOpen }: { rows: GoalRow[]; onNew: () => void;
             className="flex flex-col gap-2 rounded-3xl bg-card p-4 text-left"
           >
             <span className="flex w-full items-baseline justify-between gap-2">
-              <span className="text-[17px] font-bold">{category.name}</span>
+              <span className="text-[15px] font-semibold">{category.name}</span>
               {goal?.targetDate && <span className="text-xs text-muted">{byDate(goal.targetDate)}</span>}
             </span>
-            <span className="text-xl font-bold">{formatRupiah(saved)}</span>
+            <span className="text-2xl leading-[1.25] font-bold tracking-[-0.02em]">{formatRupiah(saved)}</span>
             {goal ? (
               <>
                 <span aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-page">

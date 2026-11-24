@@ -26,10 +26,18 @@ export function Wheel<T extends string | number>({
   const index = Math.max(0, options.findIndex((o) => o.value === value));
   const settle = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Start on the current value (and follow it if it changes from outside).
+  // Start on the current value (and follow it if it changes from outside). The sheet may still be
+  // closed on first render (no height yet, so no scrolling): place it again once it has a size.
   useLayoutEffect(() => {
     const el = ref.current;
-    if (el && Math.round(el.scrollTop / ROW) !== index) el.scrollTop = index * ROW;
+    if (!el) return;
+    const place = () => {
+      if (el.clientHeight && Math.round(el.scrollTop / ROW) !== index) el.scrollTop = index * ROW;
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [index]);
   useLayoutEffect(() => () => clearTimeout(settle.current), []);
 

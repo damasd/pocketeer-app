@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OTHER_COLOUR, buckets, byCategory, segments, totalIn } from "./analytics";
+import { OTHER_COLOUR, buckets, byCategory, plannedIn, segments, totalIn } from "./analytics";
 
 const stored = [
   { start: "2026-10-26", end: "2026-11-24", name: "November" },
@@ -7,11 +7,14 @@ const stored = [
 ];
 
 describe("buckets", () => {
-  it("gives the last 8 weeks, Monday to Sunday, ending with this week", () => {
-    const b = buckets("week", "2026-12-07", stored, "2026-01-01"); // Monday 7 Dec 2026
+  it("gives the last 8 quarters of three pay periods, named by their months", () => {
+    const b = buckets("quarter", "2026-12-07", stored, "2026-01-01"); // in the December period
     expect(b).toHaveLength(8);
-    expect(b[7]).toMatchObject({ start: "2026-12-07", end: "2026-12-13", label: "7/12", name: "Week of 7 Dec" });
-    expect(b[0].start).toBe("2026-10-19");
+    // Q4 2026 = October, November, December periods: from 25 Sep (rule) to the stored December end.
+    expect(b[7]).toMatchObject({ key: "2026-Q4", start: "2026-09-25", end: "2026-12-24", label: "Q4 '26", name: "Q4 2026" });
+    expect(b[0].name).toBe("Q1 2025");
+    // Quarters follow on from each other with no gap.
+    expect(b[6].end < b[7].start).toBe(true);
   });
 
   it("gives 12 pay periods, filling older ones by the 25th rule", () => {
@@ -78,5 +81,19 @@ describe("segments", () => {
 
   it("has no Other when there are five or fewer", () => {
     expect(segments([{ categoryId: "a", amount: 1 }])).toHaveLength(1);
+  });
+});
+
+describe("plannedIn", () => {
+  it("adds up the plans of the stored periods starting inside the bucket", () => {
+    const periods = [
+      { id: "oct", start: "2026-09-25" },
+      { id: "nov", start: "2026-10-26" },
+      { id: "dec", start: "2026-11-25" },
+    ];
+    const plan = { oct: 100, nov: 200, dec: 400 } as Record<string, number>;
+    expect(plannedIn({ start: "2026-09-25", end: "2026-12-24" }, periods, (id) => plan[id])).toBe(700);
+    expect(plannedIn({ start: "2026-11-25", end: "2026-12-24" }, periods, (id) => plan[id])).toBe(400);
+    expect(plannedIn({ start: "2027-01-01", end: "2027-12-31" }, periods, (id) => plan[id])).toBe(0);
   });
 });

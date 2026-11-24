@@ -7,6 +7,7 @@ import { ErrorNote } from "@/components/ui";
 import {
   buckets,
   byCategory,
+  plannedIn,
   segments,
   totalIn,
   type AnalyticsType,
@@ -19,7 +20,7 @@ import { useCategories } from "@/lib/categories";
 import { useGoals } from "@/lib/goals";
 import { formatRupiah } from "@/lib/money";
 import { coverPeriodsFrom, usePeriods } from "@/lib/periods-store";
-import { budgetLine, goalPlan, savingTargetFor } from "@/lib/plan";
+import { goalPlan, savingTargetFor } from "@/lib/plan";
 import { useTransactions } from "@/lib/transactions";
 import { useToday } from "@/lib/use-today";
 
@@ -29,23 +30,19 @@ const TYPES: { value: AnalyticsType; label: string }[] = [
   { value: "saving", label: "Saving" },
 ];
 const RANGES: { value: Range; label: string }[] = [
-  { value: "week", label: "Week" },
   { value: "month", label: "Month" },
+  { value: "quarter", label: "Quarter" },
   { value: "year", label: "Year" },
   { value: "all", label: "All time" },
 ];
+/** Legend words: what was planned, and what really happened. */
+const PLAN_WORD: Record<AnalyticsType, string> = { expense: "Budget", income: "Expected", saving: "Target" };
+
 const VERB: Record<AnalyticsType, { label: string; sub: string }> = {
   expense: { label: "Spent", sub: "spent" },
   income: { label: "Earned", sub: "earned" },
   saving: { label: "Saved", sub: "saved" },
 };
-const RANGE_NOTE: Record<Range, string> = {
-  week: "One bar per week, Monday to Sunday",
-  month: "One bar per pay period, 25th to 24th",
-  year: "One bar per year",
-  all: "One bar per pay period since you started",
-};
-
 /** Analytics tab (mockup Analytics.dc.html). */
 export function AnalyticsScreen() {
   const today = useToday();
@@ -87,30 +84,29 @@ function AnalyticsBody({ today }: { today: string }) {
   // when you switch type or range. The split (donut, list) also replays for another bar.
   const chartKey = `${type}|${range}|${transactions.data ? "ready" : "loading"}`;
   const splitKey = `${chartKey}|${selected.key}`;
-  const listRef = useEntrance<HTMLUListElement>("[data-fill]", [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], {
-    replay: splitKey,
-    duration: 800,
-    stagger: 60,
-  });
 
-  // Budget / target for the selected bucket: only when it is a stored pay period.
-  const storedPeriod =
-    range === "month" || range === "all" ? (periods.data ?? []).find((p) => p.start === selected.start) ?? null : null;
-  const planFor = (categoryId: string): number | null => {
-    if (!storedPeriod) return null;
-    const typed = (budgets.data ?? []).find((b) => b.periodId === storedPeriod.id && b.categoryId === categoryId)?.amount ?? null;
-    if (type !== "saving") return typed;
-    const g = (goals.data ?? []).find((x) => x.categoryId === categoryId);
-    const suggested = g?.targetDate
-      ? goalPlan({
-          target: g.target,
-          targetDate: g.targetDate,
-          period: storedPeriod,
-          moves: txs.filter((t) => t.categoryId === categoryId),
-        }).neededThisPeriod
-      : null;
-    return savingTargetFor(typed, suggested);
+  // What was planned for each bar: budgets, expected income or saving targets of the pay periods
+  // inside it (a saving goal with no typed target counts what it needs that period).
+  const typedFor = (periodId: string, categoryId: string) =>
+    (budgets.data ?? []).find((b) => b.periodId === periodId && b.categoryId === categoryId)?.amount ?? null;
+  const planOf = (periodId: string): number => {
+    const p = (periods.data ?? []).find((x) => x.id === periodId);
+    if (!p) return 0;
+    return (categories.data ?? [])
+      .filter((c) => c.kind === type)
+      .reduce((sum, c) => {
+        const typed = typedFor(periodId, c.id);
+        if (type !== "saving") return sum + (typed ?? 0);
+        const g = (goals.data ?? []).find((x) => x.categoryId === c.id);
+        const suggested = g?.targetDate
+          ? goalPlan({ target: g.target, targetDate: g.targetDate, period: p, moves: txs.filter((t) => t.categoryId === c.id) })
+              .neededThisPeriod
+          : null;
+        return sum + (savingTargetFor(typed, suggested) ?? 0);
+      }, 0);
   };
+  const plans = list.map((b) => plannedIn(b, periods.data ?? [], planOf));
+  const plan = plans[list.indexOf(selected)] ?? 0;
 
   const loadError = [transactions, categories].find((s) => s.status === "error");
 
@@ -158,12 +154,25 @@ function AnalyticsBody({ today }: { today: string }) {
         <Bars
           list={list}
           totals={totals}
+          plans={plans}
           selected={selected}
           onSelect={(b) => setSelectedKey(b.key)}
           verb={VERB[type].label}
           replay={chartKey}
         />
-        <span className="mt-2 text-xs text-muted">{RANGE_NOTE[range]}. Tap a bar to see its split.</span>
+        {/* Legend for the bar picked: the light part is the plan, the dark part what really happened. */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs">
+          <span className="flex items-center gap-1.5">
+            <span aria-hidden className="size-2.5 rounded-[3px] bg-lime-soft" />
+            <span className="text-muted">{PLAN_WORD[type]}</span>
+            <span className="font-bold tabular-nums">{formatRupiah(plan)}</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span aria-hidden className="size-2.5 rounded-[3px] bg-lime" />
+            <span className="text-muted">{VERB[type].label}</span>
+            <span className="font-bold tabular-nums">{formatRupiah(total)}</span>
+          </span>
+        </div>
       </section>
 
       <section aria-labelledby="split-title" className="flex flex-col gap-4 rounded-3xl bg-card p-5">
@@ -171,7 +180,7 @@ function AnalyticsBody({ today }: { today: string }) {
           <h2 id="split-title" className="text-[17px] font-semibold">
             {type === "income" ? "Income by category" : type === "saving" ? "Savings by category" : "Spending by category"}
           </h2>
-          <span className="text-[13px] text-muted">{selected.name} · top categories</span>
+          <span className="text-[13px] text-muted">{selected.name}</span>
         </div>
         {split.length ? (
           <Donut
@@ -191,60 +200,26 @@ function AnalyticsBody({ today }: { today: string }) {
           <h2 id="split-list-title" className="sr-only">
             Categories in {selected.name}
           </h2>
-          <ul ref={listRef}>
-            {split.map((s, i) => {
-              const isOther = s.key === "other";
-              const plan = isOther ? null : planFor(s.key);
-              const line = plan !== null && plan > 0 ? budgetLine(plan, s.amount) : null;
-              const over = line !== null && line.over && type === "expense";
-              return (
-                <li key={s.key} className={`flex flex-col gap-1.5 py-3.5 ${i ? "border-t border-page" : ""}`}>
-                  <span className="flex items-center gap-2.5">
-                    <span
-                      aria-hidden
-                      className="size-2.5 flex-none rounded-full shadow-[inset_0_0_0_1px_rgba(17,17,17,0.15)]"
-                      style={{ background: s.colour }}
-                    />
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
-                      {isOther ? "Other" : categoryName(s.key)}
-                    </span>
-                    <CountUp
-                      value={s.amount}
-                      format={formatRupiah}
-                      replay={splitKey}
-                      className="text-[15px] font-bold whitespace-nowrap tabular-nums"
-                    />
-                  </span>
-                  <span className="flex items-center justify-between gap-2 pl-5 text-xs">
-                    {isOther ? (
-                      <span className="text-muted">
-                        {s.categoryIds.length} more {s.categoryIds.length === 1 ? "category" : "categories"}
-                      </span>
-                    ) : over ? (
-                      <span className="rounded-full bg-ember px-2 py-0.5 font-semibold text-white">
-                        {formatRupiah(line!.remaining)} over budget
-                      </span>
-                    ) : line ? (
-                      <span className="text-muted">
-                        {line.percent}% of {type === "saving" ? "target" : type === "income" ? "expected" : "budget"}
-                      </span>
-                    ) : (
-                      <span />
-                    )}
-                    <span className="font-semibold text-muted">{s.share}% of total</span>
-                  </span>
-                  {line && (
-                    <span aria-hidden className="ml-5 h-1 overflow-hidden rounded-full bg-page">
-                      <span
-                        data-fill
-                        className={`block h-full origin-left rounded-full ${over ? "bg-ember" : "bg-ink"}`}
-                        style={{ width: `${line.barPercent}%` }}
-                      />
-                    </span>
-                  )}
-                </li>
-              );
-            })}
+          <ul>
+            {split.map((s, i) => (
+              <li key={s.key} className={`flex items-center gap-2.5 py-3.5 ${i ? "border-t border-page" : ""}`}>
+                <span
+                  aria-hidden
+                  className="size-2.5 flex-none rounded-full shadow-[inset_0_0_0_1px_rgba(17,17,17,0.15)]"
+                  style={{ background: s.colour }}
+                />
+                <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
+                  {s.key === "other" ? `Other (${s.categoryIds.length})` : categoryName(s.key)}
+                </span>
+                <CountUp
+                  value={s.amount}
+                  format={formatRupiah}
+                  replay={splitKey}
+                  className="text-[15px] font-bold whitespace-nowrap tabular-nums"
+                />
+                <span className="w-10 flex-none text-right text-xs font-semibold text-muted tabular-nums">{s.share}%</span>
+              </li>
+            ))}
           </ul>
         </section>
       )}
@@ -256,6 +231,7 @@ function AnalyticsBody({ today }: { today: string }) {
 function Bars({
   list,
   totals,
+  plans,
   selected,
   onSelect,
   verb,
@@ -263,6 +239,7 @@ function Bars({
 }: {
   list: Bucket[];
   totals: number[];
+  plans: number[];
   selected: Bucket;
   onSelect: (b: Bucket) => void;
   verb: string;
@@ -274,30 +251,36 @@ function Bars({
     stagger: 45,
     maxStagger: 450,
   });
-  const max = Math.max(1, ...totals.map((t) => Math.max(0, t)));
+  const max = Math.max(1, ...totals.map((t) => Math.max(0, t)), ...plans);
+  const px = (v: number) => (v > 0 ? Math.max(6, Math.round((v / max) * 130)) : 0);
   const many = list.length > 12;
   return (
     <div className={`mt-4 ${many ? "no-scrollbar -mx-5 overflow-x-auto px-5" : ""}`}>
       <ul ref={ref} aria-label={`${verb} per ${list.length > 1 ? "bar" : "period"}`} className="flex h-[170px] items-end gap-1.5">
         {list.map((b, i) => {
           const on = b.key === selected.key;
-          const v = Math.max(0, totals[i]);
-          const h = v > 0 ? Math.max(6, Math.round((v / max) * 130)) : 4;
+          const done = px(Math.max(0, totals[i]));
+          const planned = px(plans[i]);
+          const h = Math.max(done, planned, 4); // an empty bar keeps a small stub
           return (
             <li key={b.key} className={`flex h-full flex-col items-center justify-end ${many ? "w-7 flex-none" : "flex-1"}`}>
               <button
                 type="button"
                 aria-pressed={on}
-                aria-label={`${b.name}: ${formatRupiah(totals[i])}`}
+                aria-label={`${b.name}: ${formatRupiah(totals[i])}${plans[i] > 0 ? ` of ${formatRupiah(plans[i])} planned` : ""}`}
                 onClick={() => onSelect(b)}
                 className="flex h-full w-full flex-col items-center justify-end gap-1.5"
               >
-                <span
-                  aria-hidden
-                  data-bar
-                  className={`block w-full origin-bottom rounded-md transition-colors duration-150 ${on ? "bg-lime" : "bg-line"}`}
-                  style={{ height: h }}
-                />
+                <span aria-hidden data-bar className="relative block w-full origin-bottom" style={{ height: h }}>
+                  <span
+                    className={`absolute inset-x-0 bottom-0 rounded-md transition-colors duration-150 ${on ? "bg-lime-soft" : "bg-[#EDEDED]"}`}
+                    style={{ height: planned }}
+                  />
+                  <span
+                    className={`absolute inset-x-0 bottom-0 rounded-md transition-colors duration-150 ${on ? "bg-lime" : "bg-[#C9C9C9]"}`}
+                    style={{ height: done || (planned ? 0 : 4) }}
+                  />
+                </span>
                 <span aria-hidden className={`text-[11px] ${on ? "font-bold text-ink" : "font-medium text-muted"}`}>
                   {b.label}
                 </span>

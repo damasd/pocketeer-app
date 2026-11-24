@@ -8,6 +8,7 @@
   --color-muted: #6b6b6b;
   --color-line: #e4e4e4;
   --color-lime: #d1fc00;
+  --color-lime-soft: #edfe99; /* lime at 40% on white: planned amounts in Analytics */
   --color-ember: #d63f22;
 
   /* Nav bar only */

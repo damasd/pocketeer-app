@@ -1,24 +1,23 @@
 // Analytics maths (brief: Screens > Analytics; confirmed decisions on time ranges).
-// Week = one bar per week (last 8), Month = one bar per pay period (last 12),
+// Month = one bar per pay period (last 12), Quarter = three pay periods (last 8),
 // Year = one bar per year, All time = one bar per pay period since the start.
 
 import type { TransactionType } from "@/lib/balances";
 import { periodFor, type Period } from "@/lib/periods";
 
 export type AnalyticsType = "expense" | "income" | "saving";
-export type Range = "week" | "month" | "year" | "all";
+export type Range = "month" | "quarter" | "year" | "all";
 
 export type Bucket = {
   key: string;
   start: string;
   end: string;
-  /** Short label under the bar, e.g. "D", "17/11", "2026". */
+  /** Short label under the bar, e.g. "D", "Q4 '26", "2026". */
   label: string;
-  /** Name for headings, e.g. "December", "Week of 17 Nov", "2026". */
+  /** Name for headings, e.g. "December", "Q4 2026", "2026". */
   name: string;
 };
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const iso = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -45,18 +44,24 @@ const periodBucket = (p: Pick<Period, "start" | "end" | "name">): Bucket => ({
  * `periods` are the stored pay periods (any order); older months are filled in by the 25th rule.
  */
 export function buckets(range: Range, today: string, periods: readonly Pick<Period, "start" | "end" | "name">[], oldest: string): Bucket[] {
-  if (range === "week") {
-    const t = parse(today);
-    const monday = addDays(today, -((t.getDay() + 6) % 7));
+  if (range === "quarter") {
+    // Three pay periods, by the month each is named after: Jan–Mar is Q1. The last 8 quarters.
+    const named = (y: number, m0: number) => {
+      const date = `${y}-${String(m0 + 1).padStart(2, "0")}-15`; // always inside the period named after that month
+      return periods.find((p) => p.start <= date && date <= p.end) ?? periodFor(date);
+    };
+    const now = periodFor(today);
+    const nowQ = Number(now.end.slice(0, 4)) * 4 + Math.floor((Number(now.end.slice(5, 7)) - 1) / 3);
     return Array.from({ length: 8 }, (_, i) => {
-      const start = addDays(monday, -7 * (7 - i));
-      const d = parse(start);
+      const k = nowQ - (7 - i);
+      const y = Math.floor(k / 4);
+      const q = k % 4;
       return {
-        key: start,
-        start,
-        end: addDays(start, 6),
-        label: `${d.getDate()}/${d.getMonth() + 1}`,
-        name: `Week of ${d.getDate()} ${MONTHS[d.getMonth()]}`,
+        key: `${y}-Q${q + 1}`,
+        start: named(y, q * 3).start,
+        end: named(y, q * 3 + 2).end,
+        label: `Q${q + 1} '${String(y).slice(2)}`,
+        name: `Q${q + 1} ${y}`,
       };
     });
   }
@@ -135,4 +140,16 @@ export function segments(items: readonly { categoryId: string; amount: number }[
   if (!rest.length) return head;
   const amount = rest.reduce((s, i) => s + i.amount, 0);
   return [...head, { key: "other", categoryIds: rest.map((i) => i.categoryId), amount, colour: OTHER_COLOUR, share: pct(amount) }];
+}
+
+/**
+ * What was planned for a bucket: the plan of every stored pay period that starts inside it
+ * (budgets for expenses, expected income, saving targets), added up.
+ */
+export function plannedIn(
+  bucket: Pick<Bucket, "start" | "end">,
+  periods: readonly { id: string; start: string }[],
+  planOf: (periodId: string) => number,
+): number {
+  return periods.filter((p) => p.start >= bucket.start && p.start <= bucket.end).reduce((s, p) => s + planOf(p.id), 0);
 }
