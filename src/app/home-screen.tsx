@@ -64,15 +64,6 @@ export function HomeScreen() {
     .reduce((s, b) => s + b.amount, 0);
   const spentTotal = periodTxs.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
   const head = remainingBudget(budgetTotal, spentTotal);
-  const daysLeft =
-    period && today
-      ? Math.round(
-          (Date.UTC(+period.end.slice(0, 4), +period.end.slice(5, 7) - 1, +period.end.slice(8, 10)) -
-            Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10))) /
-            86400000,
-        ) + 1
-      : null;
-
   // Tiles: expense budgets and saving goals, the six with the highest share used.
   const spentBy = (id: string) => periodTxs.filter((t) => t.type === "expense" && t.categoryId === id).reduce((s, t) => s + t.amount, 0);
   const expenseTiles: Tile[] = expenseCategories.map((c) => {
@@ -137,16 +128,17 @@ export function HomeScreen() {
           <Greeting />
 
           <section aria-label="Budget this period" className="mr-[92px] flex flex-col gap-1">
-            <span className="flex items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
+            <span className="text-[13px] font-medium text-[#BDBDBD]">
               Remaining budget{period ? ` · ${period.name}` : ""}
-              <RevealButton tone="dark" />
             </span>
             {loading ? (
               <span aria-hidden className="mt-1 block h-[46px] w-52 rounded-xl bg-nav-selected" />
             ) : budgetTotal > 0 ? (
               <>
-                <span className="mt-1 text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{money(head.remaining)}</span>
-                <span className="text-[13px] font-medium text-[#BDBDBD]">of {money(budgetTotal)} budget</span>
+                <span className="mt-1 flex items-center gap-1">
+                  <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{money(head.remaining)}</span>
+                  <RevealButton tone="dark" />
+                </span>
                 <div
                   role="progressbar"
                   aria-label="Budget used"
@@ -158,16 +150,17 @@ export function HomeScreen() {
                   <div className={`h-full rounded-full ${head.over ? "bg-ember" : "bg-lime"}`} style={{ width: `${head.barPercent}%` }} />
                 </div>
                 <div className="mt-1.5 flex justify-between text-xs text-[#BDBDBD]">
-                  <span>{money(spentTotal)} spent</span>
-                  <span>
-                    {head.percent}%{daysLeft !== null ? ` · ${daysLeft} days left` : ""}
-                  </span>
+                  <span>of {money(budgetTotal)} budget</span>
+                  <span>{head.percent}% spent</span>
                 </div>
               </>
             ) : (
               <>
                 <span className="mt-1 text-[22px] leading-[1.3] font-bold">No budget yet</span>
-                <span className="text-[13px] font-medium text-[#BDBDBD]">{money(spentTotal)} spent this period</span>
+                <span className="flex items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
+                  {money(spentTotal)} spent this period
+                  <RevealButton tone="dark" />
+                </span>
                 <Link
                   href="/plan"
                   className="mt-3 flex h-11 items-center self-start rounded-full bg-lime px-4 text-[13px] font-bold text-ink"

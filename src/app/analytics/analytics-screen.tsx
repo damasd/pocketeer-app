@@ -50,7 +50,7 @@ export function AnalyticsScreen() {
   const today = useToday();
   if (!today) {
     return (
-      <header className="pt-3">
+      <header className="flex h-14 items-center pt-3">
         <h1 className="text-2xl font-bold tracking-[-0.02em]">Analytics</h1>
       </header>
     );
@@ -105,7 +105,7 @@ function AnalyticsBody({ today }: { today: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="pt-3">
+      <header className="flex h-14 items-center pt-3">
         <h1 className="text-2xl font-bold tracking-[-0.02em]">Analytics</h1>
       </header>
 

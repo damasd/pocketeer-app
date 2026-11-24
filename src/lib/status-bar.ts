@@ -26,6 +26,29 @@ export function setStatusBarColour(colour: string | null) {
   }
 }
 
+/** Band colour for a route: Home's header is black, every other page light grey. */
+export const pageStatusBarColour = (pathname: string) => (pathname === "/" ? STATUS_BAR.dark : STATUS_BAR.light);
+
+/**
+ * Set the page's own colour. Next sets it from each page's viewport too, but a page kept alive
+ * in the background (going back to Home) doesn't always put it back, which left Home's band light.
+ * While an override is showing (lock screen, card pull) only the colour to return to changes.
+ */
+export function setPageStatusBarColour(colour: string) {
+  const metas = document.querySelectorAll<HTMLMetaElement>(SELECTOR);
+  if (!metas.length) {
+    const meta = document.createElement("meta");
+    meta.name = "theme-color";
+    meta.content = colour;
+    document.head.appendChild(meta);
+    return;
+  }
+  metas.forEach((meta) => {
+    if (meta.dataset.base !== undefined) meta.dataset.base = colour;
+    else meta.content = colour;
+  });
+}
+
 /**
  * Keep the current colour and drop the saved one: used when leaving the page, since the next
  * page sets its own colour and putting the old page's colour back would be wrong.

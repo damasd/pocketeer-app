@@ -7,7 +7,7 @@ import { PinPad } from "@/components/pin-pad";
 import { COVER_ATTR, clearLock, nextTryAt, unlockWithBiometric, unlockWithPin, useAppLock } from "@/lib/app-lock";
 import { biometricName } from "@/lib/biometric";
 import { signOut } from "@/lib/profile";
-import { STATUS_BAR, setStatusBarColour } from "@/lib/status-bar";
+import { STATUS_BAR, pageStatusBarColour, setPageStatusBarColour, setStatusBarColour } from "@/lib/status-bar";
 
 /**
  * The PIN / Face ID screen shown over the whole app while it is locked. Not shown on the
@@ -29,6 +29,22 @@ export function LockScreen() {
   useEffect(() => {
     if (onLogin) document.documentElement.removeAttribute(COVER_ATTR);
   }, [onLogin]);
+
+  // Each page's own band colour behind the iPhone status bar (black on Home).
+  useEffect(() => {
+    setPageStatusBarColour(pageStatusBarColour(pathname));
+  }, [pathname]);
+
+  // Locking always lands back on Home, so unlocking starts from there. If the app opened already
+  // locked on another page, reload at Home instead (hidden behind the lock screen): moving within
+  // the app while it is still starting up hides the nav bar and other parts for good.
+  const lockedSinceLoad = useRef(true);
+  useEffect(() => {
+    if (lock.ready && !show) lockedSinceLoad.current = false;
+    if (!show || pathname === "/") return;
+    if (lockedSinceLoad.current) window.location.replace("/");
+    else router.replace("/");
+  }, [show, lock.ready, pathname, router]);
 
   // Black band behind the iPhone status bar while locked; the page's own colour once unlocked.
   useEffect(() => {

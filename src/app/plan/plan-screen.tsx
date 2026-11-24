@@ -44,7 +44,7 @@ export function PlanScreen() {
   const today = useToday();
   if (!today) {
     return (
-      <header className="pt-3">
+      <header className="flex h-14 items-center pt-3">
         <h1 className="text-2xl font-bold tracking-[-0.02em]">{TITLE}</h1>
       </header>
     );
@@ -199,7 +199,7 @@ function PlanBody({ today }: { today: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="pt-3">
+      <header className="flex h-14 items-center pt-3">
         <h1 className="text-2xl font-bold tracking-[-0.02em]">{TITLE}</h1>
       </header>
 

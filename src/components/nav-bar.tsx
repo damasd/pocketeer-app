@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type Ref } from "react";
 import {
   ChartNoAxesColumn,
   House,
@@ -45,19 +45,19 @@ function directionTo(pathname: string, href: string): string[] | undefined {
   return [to > from ? "nav-forward" : "nav-back"];
 }
 
-function TabLink({ tab, active, pathname }: { tab: Tab; active: boolean; pathname: string }) {
+function TabLink({ tab, active, pathname, linkRef }: { tab: Tab; active: boolean; pathname: string; linkRef: Ref<HTMLAnchorElement> }) {
   const { href, label, Icon } = tab;
   return (
     <Link
+      ref={linkRef}
       href={href}
       transitionTypes={directionTo(pathname, href)}
       aria-label={label}
       aria-current={active ? "page" : undefined}
       className={[
-        "flex size-12 items-center justify-center rounded-full transition-colors duration-150",
-        active
-          ? "bg-nav-selected text-white"
-          : "text-nav-idle hover:text-white",
+        // The grey circle behind the selected icon is the sliding one in NavBar.
+        "relative flex size-12 items-center justify-center rounded-full transition-colors duration-300",
+        active ? "text-white" : "text-nav-idle hover:text-white",
       ].join(" ")}
     >
       <Icon aria-hidden size={24} strokeWidth={active ? 2.25 : 2} />
@@ -100,6 +100,22 @@ export function NavBar() {
   const [logOpen, setLogOpen] = useState(false);
   const typing = useTyping();
 
+  // The selected tab's grey circle slides to the tab you open. It jumps into place on first
+  // show, and fades out on pages that aren't a tab (Settings, …).
+  const links = useRef(new Map<string, HTMLAnchorElement>());
+  const [circle, setCircle] = useState<{ x: number; animate: boolean } | null>(null);
+  const activeHref = ORDER.find((h) => isActive(pathname, h)) ?? null;
+  useLayoutEffect(() => {
+    const el = activeHref ? links.current.get(activeHref) : undefined;
+    if (!el) return setCircle((c) => (c ? { ...c, animate: true } : c));
+    const x = el.offsetLeft;
+    setCircle((c) => ({ x, animate: c !== null }));
+  }, [activeHref]);
+  const linkRef = (href: string) => (el: HTMLAnchorElement | null) => {
+    if (el) links.current.set(href, el);
+    else links.current.delete(href);
+  };
+
   if (pathname === "/login") return null;
 
   return (
@@ -113,20 +129,29 @@ export function NavBar() {
         }`}
         style={{ bottom: "max(16px, env(safe-area-inset-bottom))", viewTransitionName: "nav-bar" }}
       >
+        {circle && (
+          <span
+            aria-hidden
+            className={`absolute top-2 left-0 size-12 rounded-full bg-nav-selected ${
+              circle.animate ? "transition-[translate,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" : ""
+            } ${activeHref ? "" : "opacity-0"}`}
+            style={{ translate: `${circle.x}px 0` }}
+          />
+        )}
         {LEFT.map((tab) => (
-          <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} />
+          <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} linkRef={linkRef(tab.href)} />
         ))}
         <button
           type="button"
           aria-label="Log transaction"
           aria-haspopup="dialog"
           onClick={() => setLogOpen(true)}
-          className="flex size-[68px] flex-none items-center justify-center rounded-full bg-lime text-ink shadow-[0_6px_16px_rgba(17,17,17,0.25)] transition-transform duration-150 ease-out active:scale-[0.96]"
+          className="relative flex size-[68px] flex-none items-center justify-center rounded-full bg-lime text-ink shadow-[0_6px_16px_rgba(17,17,17,0.25)] transition-transform duration-150 ease-out active:scale-[0.96]"
         >
           <Plus aria-hidden size={30} strokeWidth={2.5} />
         </button>
         {RIGHT.map((tab) => (
-          <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} />
+          <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} linkRef={linkRef(tab.href)} />
         ))}
       </nav>
       <Sheet open={logOpen} onClose={() => setLogOpen(false)} title="Log transaction" tall>
