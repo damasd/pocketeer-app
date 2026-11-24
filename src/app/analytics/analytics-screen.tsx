@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { CountUp, useEntrance } from "@/components/animated";
 import { Segmented } from "@/components/segmented";
 import { ErrorNote } from "@/components/ui";
 import {
@@ -82,6 +83,16 @@ function AnalyticsBody({ today }: { today: string }) {
   const split = segments(byCategory(type, txs, selected));
   const categoryName = (id: string) => (categories.data ?? []).find((c) => c.id === id)?.name ?? "";
 
+  // Charts and numbers play their entrance when the page shows, when the data first arrives, and
+  // when you switch type or range. The split (donut, list) also replays for another bar.
+  const chartKey = `${type}|${range}|${transactions.data ? "ready" : "loading"}`;
+  const splitKey = `${chartKey}|${selected.key}`;
+  const listRef = useEntrance<HTMLUListElement>("[data-fill]", [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], {
+    replay: splitKey,
+    duration: 800,
+    stagger: 60,
+  });
+
   // Budget / target for the selected bucket: only when it is a stored pay period.
   const storedPeriod =
     range === "month" || range === "all" ? (periods.data ?? []).find((p) => p.start === selected.start) ?? null : null;
@@ -117,7 +128,12 @@ function AnalyticsBody({ today }: { today: string }) {
         <span className="text-[13px] font-medium text-muted">
           {VERB[type].label} · {selected.name}
         </span>
-        <span className="text-[34px] leading-[1.25] font-bold tracking-[-0.03em]">{formatRupiah(total)}</span>
+        <CountUp
+          value={total}
+          format={formatRupiah}
+          replay={chartKey}
+          className="text-[34px] leading-[1.25] font-bold tracking-[-0.03em] tabular-nums"
+        />
 
         <div role="group" aria-label="Time range" className="mt-3 flex flex-wrap gap-1.5">
           {RANGES.map((r) => {
@@ -139,7 +155,14 @@ function AnalyticsBody({ today }: { today: string }) {
           })}
         </div>
 
-        <Bars list={list} totals={totals} selected={selected} onSelect={(b) => setSelectedKey(b.key)} verb={VERB[type].label} />
+        <Bars
+          list={list}
+          totals={totals}
+          selected={selected}
+          onSelect={(b) => setSelectedKey(b.key)}
+          verb={VERB[type].label}
+          replay={chartKey}
+        />
         <span className="mt-2 text-xs text-muted">{RANGE_NOTE[range]}. Tap a bar to see its split.</span>
       </section>
 
@@ -151,7 +174,13 @@ function AnalyticsBody({ today }: { today: string }) {
           <span className="text-[13px] text-muted">{selected.name} · top categories</span>
         </div>
         {split.length ? (
-          <Donut segments={split} total={total} sub={VERB[type].sub} name={(s) => (s.key === "other" ? "Other" : categoryName(s.key))} />
+          <Donut
+            segments={split}
+            total={total}
+            sub={VERB[type].sub}
+            name={(s) => (s.key === "other" ? "Other" : categoryName(s.key))}
+            replay={splitKey}
+          />
         ) : (
           <p className="py-6 text-center text-[13px] font-medium text-muted">Nothing {VERB[type].sub} in {selected.name}.</p>
         )}
@@ -162,7 +191,7 @@ function AnalyticsBody({ today }: { today: string }) {
           <h2 id="split-list-title" className="sr-only">
             Categories in {selected.name}
           </h2>
-          <ul>
+          <ul ref={listRef}>
             {split.map((s, i) => {
               const isOther = s.key === "other";
               const plan = isOther ? null : planFor(s.key);
@@ -179,7 +208,12 @@ function AnalyticsBody({ today }: { today: string }) {
                     <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
                       {isOther ? "Other" : categoryName(s.key)}
                     </span>
-                    <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(s.amount)}</span>
+                    <CountUp
+                      value={s.amount}
+                      format={formatRupiah}
+                      replay={splitKey}
+                      className="text-[15px] font-bold whitespace-nowrap tabular-nums"
+                    />
                   </span>
                   <span className="flex items-center justify-between gap-2 pl-5 text-xs">
                     {isOther ? (
@@ -202,7 +236,8 @@ function AnalyticsBody({ today }: { today: string }) {
                   {line && (
                     <span aria-hidden className="ml-5 h-1 overflow-hidden rounded-full bg-page">
                       <span
-                        className={`block h-full rounded-full ${over ? "bg-ember" : "bg-ink"}`}
+                        data-fill
+                        className={`block h-full origin-left rounded-full ${over ? "bg-ember" : "bg-ink"}`}
                         style={{ width: `${line.barPercent}%` }}
                       />
                     </span>
@@ -224,18 +259,26 @@ function Bars({
   selected,
   onSelect,
   verb,
+  replay,
 }: {
   list: Bucket[];
   totals: number[];
   selected: Bucket;
   onSelect: (b: Bucket) => void;
   verb: string;
+  replay: string;
 }) {
+  const ref = useEntrance<HTMLUListElement>("[data-bar]", [{ transform: "scaleY(0)" }, { transform: "scaleY(1)" }], {
+    replay,
+    duration: 700,
+    stagger: 45,
+    maxStagger: 450,
+  });
   const max = Math.max(1, ...totals.map((t) => Math.max(0, t)));
   const many = list.length > 12;
   return (
     <div className={`mt-4 ${many ? "no-scrollbar -mx-5 overflow-x-auto px-5" : ""}`}>
-      <ul aria-label={`${verb} per ${list.length > 1 ? "bar" : "period"}`} className="flex h-[170px] items-end gap-1.5">
+      <ul ref={ref} aria-label={`${verb} per ${list.length > 1 ? "bar" : "period"}`} className="flex h-[170px] items-end gap-1.5">
         {list.map((b, i) => {
           const on = b.key === selected.key;
           const v = Math.max(0, totals[i]);
@@ -251,7 +294,8 @@ function Bars({
               >
                 <span
                   aria-hidden
-                  className={`block w-full rounded-md transition-colors duration-150 ${on ? "bg-lime" : "bg-line"}`}
+                  data-bar
+                  className={`block w-full origin-bottom rounded-md transition-colors duration-150 ${on ? "bg-lime" : "bg-line"}`}
                   style={{ height: h }}
                 />
                 <span aria-hidden className={`text-[11px] ${on ? "font-bold text-ink" : "font-medium text-muted"}`}>
@@ -272,14 +316,23 @@ function Donut({
   total,
   sub,
   name,
+  replay,
 }: {
   segments: Segment[];
   total: number;
   sub: string;
   name: (s: Segment) => string;
+  replay: string;
 }) {
   const R = 80;
   const C = 2 * Math.PI * R;
+  // The coloured arcs show through a mask whose ring is drawn in, clockwise from the top.
+  const maskId = `donut-${useId().replace(/:/g, "")}`;
+  const ref = useEntrance<SVGSVGElement>("[data-sweep]", [{ strokeDashoffset: `${C}` }, { strokeDashoffset: "0" }], {
+    replay,
+    duration: 1100,
+    easing: "cubic-bezier(0.45, 0, 0.2, 1)", // even sweep, soft finish
+  });
   const sum = segs.reduce((s, x) => s + x.amount, 0);
   const gap = segs.length > 1 ? 3 : 0;
   // Each arc starts where the previous ones end.
@@ -296,8 +349,26 @@ function Donut({
         width="200"
         height="200"
         viewBox="0 0 200 200"
+        ref={ref}
       >
+        <defs>
+          <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
+            <circle
+              data-sweep
+              cx="100"
+              cy="100"
+              r={R}
+              fill="none"
+              stroke="white"
+              strokeWidth="32"
+              strokeDasharray={`${C} ${C}`}
+              strokeDashoffset={0}
+              transform="rotate(-90 100 100)"
+            />
+          </mask>
+        </defs>
         <circle cx="100" cy="100" r={R} fill="none" stroke="#F2F2F2" strokeWidth="28" />
+        <g mask={`url(#${maskId})`}>
         {arcs.map(({ s, len, start }) => (
             <circle
               key={s.key}
@@ -312,10 +383,11 @@ function Donut({
               transform="rotate(-90 100 100)"
             />
         ))}
+        </g>
       </svg>
       <div aria-hidden className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
         <span className={`max-w-[136px] text-center leading-tight font-bold ${formatRupiah(total).length > 13 ? "text-[15px]" : formatRupiah(total).length > 11 ? "text-[17px]" : "text-xl"}`}>
-          {formatRupiah(total)}
+          <CountUp value={total} format={formatRupiah} replay={replay} duration={1000} className="tabular-nums" />
         </span>
         <span className="text-xs text-muted">{sub}</span>
       </div>
