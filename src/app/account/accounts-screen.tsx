@@ -10,6 +10,7 @@ import { Sheet } from "@/components/sheet";
 import { Button, ErrorNote } from "@/components/ui";
 import { useAccounts, type Account, type AccountGroup } from "@/lib/accounts";
 import { accountBalance, savedInAccount, sumBalances } from "@/lib/balances";
+import { cardTransitionName, useHandoff } from "@/lib/card-handoff";
 import { useTransactions } from "@/lib/transactions";
 import { AccountForm } from "./account-form";
 
@@ -23,6 +24,8 @@ const GROUPS: { id: AccountGroup; title: string }[] = [
 export function AccountsScreen() {
   const state = useAccounts();
   const { money, hidden } = useMoney();
+  // Cards arriving from the Home stack zoom into place (shared view-transition names).
+  const arriving = useHandoff();
   const transactions = useTransactions();
   const txs = transactions.data ?? [];
   // Sheet: null = closed, "new" = create, Account = edit.
@@ -109,7 +112,8 @@ export function AccountsScreen() {
               {list.map((a) => (
                 <div
                   key={a.id}
-                  className="relative rounded-3xl transition-transform duration-150 ease-out has-[>a:active]:scale-[0.98]"
+                  className="acct-card relative rounded-3xl transition-transform duration-150 ease-out has-[>a:active]:scale-[0.98]"
+                  style={arriving.includes(a.id) ? { viewTransitionName: cardTransitionName(a.id) } : undefined}
                 >
                   {/* Card opens this account's transactions (link laid over the card, so the
                       copy button inside it stays a separate button); the pencil edits the account. */}

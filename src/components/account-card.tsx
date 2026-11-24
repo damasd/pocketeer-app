@@ -27,6 +27,7 @@ export function AccountCardFace({
   compact = false,
   masked = false,
   copyable = false,
+  contentHidden = false,
 }: {
   name: string;
   accountNumber: string | null;
@@ -39,10 +40,13 @@ export function AccountCardFace({
   masked?: boolean;
   /** Show a copy button next to the account number (Accounts page only, not the form preview). */
   copyable?: boolean;
+  /** Start with the text hidden (Home card stack fades it in while the card is pulled). */
+  contentHidden?: boolean;
 }) {
   const s = CARD_STYLES[colour];
   const shownNumber = formatAccountNumber(accountNumber);
   const digits = accountDigits(accountNumber);
+  const content = contentHidden ? { opacity: 0 } : undefined;
   return (
     <span
       className="relative flex w-full flex-col justify-between overflow-hidden rounded-3xl border p-5 text-left"
@@ -53,7 +57,7 @@ export function AccountCardFace({
         className="absolute -top-[70px] -right-[70px] size-[220px] rounded-full"
         style={{ background: s.circle }}
       />
-      <span className="relative flex flex-col gap-1">
+      <span className="card-content relative flex flex-col gap-1" style={content}>
         <span className="text-[17px] font-bold" style={placeholderName ? { color: s.muted } : undefined}>
           {name}
         </span>
@@ -62,7 +66,7 @@ export function AccountCardFace({
           {copyable && digits && <CopyNumberButton digits={digits} name={name} colour={s.muted} />}
         </span>
       </span>
-      <span className="relative flex flex-col gap-0.5">
+      <span className="card-content relative flex flex-col gap-0.5" style={content}>
         <span className="text-xs font-medium" style={{ color: s.muted }}>
           Balance
         </span>

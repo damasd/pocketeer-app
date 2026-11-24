@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AccountStack, stackColours, useAccountSwipe } from "@/components/account-stack";
+import { AccountStack, topCards, useAccountSwipe } from "@/components/account-stack";
 import { RevealButton, useMoney } from "@/components/amount";
 import { Greeting } from "@/components/greeting";
 import { LogForm } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
 import { TransactionRow } from "@/components/transaction-row";
 import { useAccounts } from "@/lib/accounts";
+import { accountBalance, savedInAccount } from "@/lib/balances";
 import { useBudgets } from "@/lib/budgets";
 import { useCategories } from "@/lib/categories";
 import { CategoryIcon } from "@/lib/category-icons";
@@ -33,7 +34,7 @@ export function HomeScreen() {
   const transactions = useTransactions();
   const accounts = useAccounts();
   const [editing, setEditing] = useState<Transaction | null>(null);
-  const swipe = useAccountSwipe(() => router.push("/account", { transitionTypes: ["nav-forward"] }));
+  const swipe = useAccountSwipe(() => router.push("/account", { transitionTypes: ["account-zoom"] }));
   const { money, hidden } = useMoney();
 
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
@@ -99,8 +100,12 @@ export function HomeScreen() {
   const accountName = (id: string | null) => (accounts.data ?? []).find((a) => a.id === id)?.name ?? "";
   const category = (id: string | null) => allCategories.find((c) => c.id === id) ?? null;
 
-  // Card stack peeking at the right edge: the first accounts' colours.
-  const peekColours = stackColours((accounts.data ?? []).filter((a) => !a.archived));
+  // Card stack peeking at the right edge: the top three cards of the Accounts page.
+  const stack = topCards(accounts.data ?? []).map((a) => ({
+    ...a,
+    balance: accountBalance(a.id, a.startingBalance, txs),
+    saved: savedInAccount(a.id, txs),
+  }));
 
   const loading = !today || (budgets.status === "loading" && !budgets.data) || (transactions.status === "loading" && !transactions.data);
 
@@ -155,7 +160,7 @@ export function HomeScreen() {
           )}
         </section>
 
-        <AccountStack colours={peekColours} stackRef={swipe.stackRef} />
+        <AccountStack accounts={stack} masked={hidden} stackRef={swipe.stackRef} />
       </div>
 
       <div className="flex flex-1 flex-col gap-6 rounded-t-[28px] bg-card px-5 pt-2.5 pb-36">
