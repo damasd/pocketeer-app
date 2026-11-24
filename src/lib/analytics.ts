@@ -1,12 +1,12 @@
 // Analytics maths (brief: Screens > Analytics; confirmed decisions on time ranges).
-// Month = one bar per pay period (last 12), Quarter = three pay periods (last 8),
-// Year = one bar per year, All time = one bar per pay period since the start.
+// Month = one bar per pay period (last 12), Quarter = this year's four (three pay periods each),
+// Year = one bar per year.
 
 import type { TransactionType } from "@/lib/balances";
 import { periodFor, type Period } from "@/lib/periods";
 
 export type AnalyticsType = "expense" | "income" | "saving";
-export type Range = "month" | "quarter" | "year" | "all";
+export type Range = "month" | "quarter" | "year";
 
 export type Bucket = {
   key: string;
@@ -45,25 +45,20 @@ const periodBucket = (p: Pick<Period, "start" | "end" | "name">): Bucket => ({
  */
 export function buckets(range: Range, today: string, periods: readonly Pick<Period, "start" | "end" | "name">[], oldest: string): Bucket[] {
   if (range === "quarter") {
-    // Three pay periods, by the month each is named after: Jan–Mar is Q1. The last 8 quarters.
+    // This year's four quarters, three pay periods each by the month they're named after
+    // (Jan–Mar is Q1). Later quarters show too, with what is planned for them.
     const named = (y: number, m0: number) => {
       const date = `${y}-${String(m0 + 1).padStart(2, "0")}-15`; // always inside the period named after that month
       return periods.find((p) => p.start <= date && date <= p.end) ?? periodFor(date);
     };
-    const now = periodFor(today);
-    const nowQ = Number(now.end.slice(0, 4)) * 4 + Math.floor((Number(now.end.slice(5, 7)) - 1) / 3);
-    return Array.from({ length: 8 }, (_, i) => {
-      const k = nowQ - (7 - i);
-      const y = Math.floor(k / 4);
-      const q = k % 4;
-      return {
-        key: `${y}-Q${q + 1}`,
-        start: named(y, q * 3).start,
-        end: named(y, q * 3 + 2).end,
-        label: `Q${q + 1} '${String(y).slice(2)}`,
-        name: `Q${q + 1} ${y}`,
-      };
-    });
+    const y = Number(periodFor(today).end.slice(0, 4));
+    return [0, 1, 2, 3].map((q) => ({
+      key: `${y}-Q${q + 1}`,
+      start: named(y, q * 3).start,
+      end: named(y, q * 3 + 2).end,
+      label: `Q${q + 1}`,
+      name: `Q${q + 1} ${y}`,
+    }));
   }
 
   if (range === "year") {
@@ -78,12 +73,6 @@ export function buckets(range: Range, today: string, periods: readonly Pick<Peri
   // Pay periods up to today, oldest first.
   const stored = [...periods].filter((p) => p.start <= today).sort((a, b) => a.start.localeCompare(b.start));
   const list = stored.length ? stored : [periodFor(today)];
-  if (range === "all") {
-    const from = oldest < today ? oldest : today;
-    const filled = [...list];
-    while (filled[0].start > from) filled.unshift(periodFor(addDays(filled[0].start, -1)));
-    return filled.map(periodBucket);
-  }
   const filled = list.slice(-12);
   while (filled.length < 12) filled.unshift(periodFor(addDays(filled[0].start, -1)));
   return filled.map(periodBucket);

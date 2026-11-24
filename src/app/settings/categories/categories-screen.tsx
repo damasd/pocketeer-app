@@ -80,7 +80,7 @@ export function CategoriesScreen() {
       {state.status === "error" && <ErrorNote>{state.message}</ErrorNote>}
 
       <div className="-mb-3 flex items-center justify-between gap-2">
-        <p className="text-[13px] text-muted">{arranging ? "Move with the arrows, or archive" : "Tap a category to edit it"}</p>
+        <p className="text-[13px] text-muted">{arranging ? "Reorder with ↑ ↓, or archive to hide" : "Tap a category to edit it"}</p>
         {active.length > 0 && (
           <ArrangeButton
             on={arranging}

@@ -271,3 +271,11 @@ html[data-locked] {
     transform: translateY(-6px) scale(0.96);
   }
 }
+
+/* Planned amounts in the Analytics bars: light colour with diagonal hatching (analytics-screen.tsx). */
+.hatch-lime {
+  background: repeating-linear-gradient(-45deg, #d9fd4d 0 2px, var(--color-lime-soft) 2px 6px);
+}
+.hatch-grey {
+  background: repeating-linear-gradient(-45deg, #d6d6d6 0 2px, #efefef 2px 6px);
+}

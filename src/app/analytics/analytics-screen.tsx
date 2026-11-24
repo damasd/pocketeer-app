@@ -33,7 +33,6 @@ const RANGES: { value: Range; label: string }[] = [
   { value: "month", label: "Month" },
   { value: "quarter", label: "Quarter" },
   { value: "year", label: "Year" },
-  { value: "all", label: "All time" },
 ];
 /** Legend words: what was planned, and what really happened. */
 const PLAN_WORD: Record<AnalyticsType, string> = { expense: "Budget", income: "Expected", saving: "Target" };
@@ -74,7 +73,9 @@ function AnalyticsBody({ today }: { today: string }) {
   }, [oldest]);
 
   const list = useMemo(() => buckets(range, today, periods.data ?? [], oldest), [range, today, periods.data, oldest]);
-  const selected = list.find((b) => b.key === selectedKey) ?? list[list.length - 1];
+  // The bar you tapped, else the one containing today (quarters can run past today).
+  const selected =
+    list.find((b) => b.key === selectedKey) ?? list.find((b) => b.start <= today && today <= b.end) ?? list[list.length - 1];
   const totals = list.map((b) => totalIn(type, txs, b));
   const total = totalIn(type, txs, selected);
   const split = segments(byCategory(type, txs, selected));
@@ -163,12 +164,12 @@ function AnalyticsBody({ today }: { today: string }) {
         {/* Legend for the bar picked: the light part is the plan, the dark part what really happened. */}
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs">
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="size-2.5 rounded-[3px] bg-lime-soft" />
+            <span aria-hidden className="hatch-lime size-3 rounded-[3px]" />
             <span className="text-muted">{PLAN_WORD[type]}</span>
             <span className="font-bold tabular-nums">{formatRupiah(plan)}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="size-2.5 rounded-[3px] bg-lime" />
+            <span aria-hidden className="size-3 rounded-[3px] bg-lime" />
             <span className="text-muted">{VERB[type].label}</span>
             <span className="font-bold tabular-nums">{formatRupiah(total)}</span>
           </span>
@@ -273,7 +274,7 @@ function Bars({
               >
                 <span aria-hidden data-bar className="relative block w-full origin-bottom" style={{ height: h }}>
                   <span
-                    className={`absolute inset-x-0 bottom-0 rounded-md transition-colors duration-150 ${on ? "bg-lime-soft" : "bg-[#EDEDED]"}`}
+                    className={`absolute inset-x-0 bottom-0 rounded-md transition-colors duration-150 ${on ? "hatch-lime" : "hatch-grey"}`}
                     style={{ height: planned }}
                   />
                   <span

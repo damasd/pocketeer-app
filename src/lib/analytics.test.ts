@@ -7,14 +7,13 @@ const stored = [
 ];
 
 describe("buckets", () => {
-  it("gives the last 8 quarters of three pay periods, named by their months", () => {
+  it("gives this year's four quarters of three pay periods, named by their months", () => {
     const b = buckets("quarter", "2026-12-07", stored, "2026-01-01"); // in the December period
-    expect(b).toHaveLength(8);
+    expect(b.map((x) => x.name)).toEqual(["Q1 2026", "Q2 2026", "Q3 2026", "Q4 2026"]);
     // Q4 2026 = October, November, December periods: from 25 Sep (rule) to the stored December end.
-    expect(b[7]).toMatchObject({ key: "2026-Q4", start: "2026-09-25", end: "2026-12-24", label: "Q4 '26", name: "Q4 2026" });
-    expect(b[0].name).toBe("Q1 2025");
+    expect(b[3]).toMatchObject({ key: "2026-Q4", start: "2026-09-25", end: "2026-12-24", label: "Q4" });
     // Quarters follow on from each other with no gap.
-    expect(b[6].end < b[7].start).toBe(true);
+    expect(b[2].end < b[3].start).toBe(true);
   });
 
   it("gives 12 pay periods, filling older ones by the 25th rule", () => {
@@ -25,19 +24,15 @@ describe("buckets", () => {
     expect(b[9].end).toBe("2026-10-25"); // rule-built period ends the day before the stored one
   });
 
+  it("leaves out future periods in the month view", () => {
+    const withNext = [...stored, { start: "2026-12-25", end: "2027-01-24", name: "January 2027" }];
+    expect(buckets("month", "2026-12-07", withNext, "2026-11-30").at(-1)?.name).toBe("December");
+  });
+
   it("gives one bar per year from the oldest transaction", () => {
     expect(buckets("year", "2026-12-07", stored, "2024-05-01").map((b) => b.label)).toEqual(["2024", "2025", "2026"]);
   });
 
-  it("gives every pay period since the oldest transaction for all time", () => {
-    const b = buckets("all", "2026-12-07", stored, "2026-09-30");
-    expect(b.map((x) => x.name)).toEqual(["October", "November", "December"]);
-  });
-
-  it("leaves out future periods", () => {
-    const withNext = [...stored, { start: "2026-12-25", end: "2027-01-24", name: "January 2027" }];
-    expect(buckets("all", "2026-12-07", withNext, "2026-11-30").at(-1)?.name).toBe("December");
-  });
 });
 
 const moves = [

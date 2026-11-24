@@ -511,7 +511,7 @@ function PlanSlides({ slides }: { slides: Slide[] }) {
             </span>
           </div>
           <p className="text-[13px] text-muted">
-            {slide.arranging ? "Move with the arrows, or archive" : "Tap an amount to change it"}
+            {slide.arranging ? "Reorder with ↑ ↓, or archive to hide" : "Tap an amount to change it"}
           </p>
         </div>
         {slide.body}
