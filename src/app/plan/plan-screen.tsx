@@ -139,8 +139,13 @@ function PlanBody({ today }: { today: string }) {
 
   const allCategories = useMemo(() => categories.data ?? [], [categories.data]);
   const activeOf = (kind: Kind) => allCategories.filter((c) => c.kind === kind && !c.archived);
-  const arrangeButton = (kind: Kind, what: string) => (
-    <ArrangeButton on={arranging === kind} onToggle={() => setArranging((a) => (a === kind ? null : kind))} what={what} />
+  const arrangeButton = (kind: Kind, what: string, icon = false) => (
+    <ArrangeButton
+      on={arranging === kind}
+      onToggle={() => setArranging((a) => (a === kind ? null : kind))}
+      what={what}
+      icon={icon}
+    />
   );
   const periodTxs = period ? txs.filter((t) => t.date >= period.start && t.date <= period.end) : [];
   const amountFor = (categoryId: string) =>
@@ -349,7 +354,7 @@ function PlanBody({ today }: { today: string }) {
             slides={[
               {
                 id: "expense",
-                action: arrangeButton("expense", "expense categories"),
+                action: arrangeButton("expense", "expense categories", true),
                 arranging: arranging === "expense",
                 label: "Expense",
                 title: "Expense budget",
@@ -363,7 +368,7 @@ function PlanBody({ today }: { today: string }) {
               },
               {
                 id: "income",
-                action: arrangeButton("income", "income categories"),
+                action: arrangeButton("income", "income categories", true),
                 arranging: arranging === "income",
                 label: "Income",
                 title: "Expected income",
@@ -377,7 +382,7 @@ function PlanBody({ today }: { today: string }) {
               },
               {
                 id: "saving",
-                action: arrangeButton("saving", "goals"),
+                action: arrangeButton("saving", "goals", true),
                 arranging: arranging === "saving",
                 label: "Saving",
                 title: "Saving target",
@@ -493,18 +498,20 @@ function PlanSlides({ slides }: { slides: Slide[] }) {
         value={active}
         onChange={pick}
       />
-      <div key={slide.id} className={`flex flex-col gap-3 ${from ? `slide-in-${from}` : ""}`}>
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 id={`list-${slide.id}`} className="text-[17px] font-semibold">
-            {slide.title}
-          </h2>
-          <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(slide.total)}</span>
-        </div>
-        <div className="-mt-1.5 flex items-center justify-between gap-2">
-          <p className="text-[13px] text-muted">
-            {slide.arranging ? "Move with the arrows, or archive" : "Tap an amount to change it"}
-          </p>
-          {slide.action}
+      <div key={slide.id} className={`mt-3 flex flex-col gap-3 ${from ? `slide-in-${from}` : ""}`}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <h2 id={`list-${slide.id}`} className="text-[17px] font-semibold">
+              {slide.title}
+            </h2>
+            <p className="text-[13px] text-muted">
+              {slide.arranging ? "Move with the arrows, or archive" : "Tap an amount to change it"}
+            </p>
+          </div>
+          <span className="flex flex-none items-center gap-2.5">
+            <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(slide.total)}</span>
+            {slide.action}
+          </span>
         </div>
         {slide.body}
       </div>

@@ -1,12 +1,36 @@
 "use client";
 
-import { Archive, ArrowDown, ArrowUp } from "lucide-react";
+import { Archive, ArrowDown, ArrowDownUp, ArrowUp, Check } from "lucide-react";
 import { showToast } from "@/components/toast";
 import { reorderCategories, setCategoryArchived, type Category } from "@/lib/categories";
 import { errorMessage } from "@/lib/errors";
 
-/** "Arrange" / "Done" switch for a list of categories. */
-export function ArrangeButton({ on, onToggle, what }: { on: boolean; onToggle: () => void; what: string }) {
+/** "Arrange" / "Done" switch for a list of categories; `icon` makes it a round icon button. */
+export function ArrangeButton({
+  on,
+  onToggle,
+  what,
+  icon = false,
+}: {
+  on: boolean;
+  onToggle: () => void;
+  what: string;
+  icon?: boolean;
+}) {
+  if (icon)
+    return (
+      <button
+        type="button"
+        aria-pressed={on}
+        aria-label={on ? `Done arranging ${what}` : `Arrange ${what}`}
+        onClick={onToggle}
+        className={`flex size-11 flex-none items-center justify-center rounded-full transition-colors duration-150 ${
+          on ? "bg-ink text-white" : "bg-card text-ink ring-1 ring-line ring-inset"
+        }`}
+      >
+        {on ? <Check aria-hidden size={18} strokeWidth={2.5} /> : <ArrowDownUp aria-hidden size={18} strokeWidth={2.25} />}
+      </button>
+    );
   return (
     <button
       type="button"
