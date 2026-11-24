@@ -32,6 +32,24 @@ const ZOOM_MS = 720;
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
+/**
+ * Slide the nav bar's selected circle (nav-bar.tsx) from Home toward Account by p, following the
+ * finger (no transition) or finishing with the cards. p = null hands it back to the nav bar.
+ */
+function moveNavCircle(p: number | null, transition: string | null) {
+  const circle = document.querySelector<HTMLElement>("[data-nav-circle]");
+  if (!circle) return;
+  if (p === null) {
+    circle.style.transition = "";
+    return;
+  }
+  const from = document.querySelector<HTMLElement>('nav a[href="/"]');
+  const to = document.querySelector<HTMLElement>('nav a[href="/account"]');
+  if (!from || !to) return;
+  circle.style.transition = transition ? `left ${transition}` : p > 0 ? "none" : "";
+  circle.style.left = `${from.offsetLeft + (to.offsetLeft - from.offsetLeft) * p}px`;
+}
+
 /** The first three cards in the order the Accounts page shows them: Spending, then Saving. */
 export function topCards<T extends Pick<Account, "group" | "archived">>(accounts: T[]): T[] {
   const active = accounts.filter((a) => !a.archived);
@@ -114,7 +132,7 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
   }
 
   /** Progress p: 0 = resting stack on Home, 1 = Accounts page in place with the cards on it. */
-  function place(p: number, transition: string | null, els = cards()) {
+  function place(p: number, transition: string | null, els = cards(), nav = true) {
     const to = p > 0 ? moves() : [];
     const w = pageWidth();
     const pageX = -p * w;
@@ -135,6 +153,8 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
       else setTimeout(() => shift.current === 0 && (preview.style.visibility = "hidden"), SNAP_MS);
     }
     shift.current = pageX;
+    // The nav bar's grey circle travels from Home to Account with the pull.
+    if (nav) moveNavCircle(p, transition);
     // Band behind the iPhone status bar: Home's black until Accounts covers most of the screen.
     setStatusBarColour(p > 0.5 ? STATUS_BAR.light : null);
     // At rest the stack is clipped at the screen edge; while pulled, cards travel beyond Home.
@@ -186,7 +206,9 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
   /** Back to the resting stack, with no leftovers from a swipe. */
   function reset(els = cards()) {
     nameCards(false, els);
-    place(0, null, els);
+    // Not the nav circle: by now it belongs to whichever page is showing.
+    place(0, null, els, false);
+    moveNavCircle(null, null);
     busy.current = false;
   }
 

@@ -132,6 +132,7 @@ export function NavBar() {
         {circle && (
           <span
             aria-hidden
+            data-nav-circle
             className={`absolute top-2 z-0 size-12 rounded-full bg-nav-selected ${
               // Moved with left, not transform: Safari draws a transformed, animating element on its
               // own layer above the icons whatever the stacking order.

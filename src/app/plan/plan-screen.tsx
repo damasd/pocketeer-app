@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "lucide-react";
 import { DeleteCategoryConfirm } from "@/components/delete-category";
+import { Wheel, WheelGroup } from "@/components/wheel-picker";
 import { Segmented } from "@/components/segmented";
 import { Sheet } from "@/components/sheet";
 import { showToast } from "@/components/toast";
@@ -14,7 +15,7 @@ import { savingBalance } from "@/lib/balances";
 import { useGoals, type Goal } from "@/lib/goals";
 import { formatRupiah, groupThousands, parseRupiahInput } from "@/lib/money";
 import { periodRangeLabel } from "@/lib/periods";
-import { coverPeriodsFrom, periodOf, usePeriods, type StoredPeriod } from "@/lib/periods-store";
+import { coverPeriodAt, coverPeriodsFrom, periodOf, usePeriods, type StoredPeriod } from "@/lib/periods-store";
 import { budgetLine, goalPercent, goalPlan, leftToPlan, targetLine } from "@/lib/plan";
 import { useTransactions, type Transaction } from "@/lib/transactions";
 import { useToday } from "@/lib/use-today";
@@ -38,6 +39,44 @@ function daysLeft(p: StoredPeriod, today: string): number | null {
 }
 
 const TITLE = "Target";
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/** Months you can pick: five years back and five ahead. */
+const FIRST_YEAR = (today: string) => Number(today.slice(0, 4)) - 5;
+const LAST_YEAR = (today: string) => Number(today.slice(0, 4)) + 5;
+
+function shiftDay(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d + days));
+  return t.toISOString().slice(0, 10);
+}
+
+/**
+ * Month and year wheels (like the iPhone date picker). A period is named after the month it
+ * ends in, so the 15th of the picked month always falls in the period with that name.
+ */
+function MonthPicker({ today, start, onDone }: { today: string; start: string; onDone: (date: string) => void }) {
+  const [month, setMonth] = useState(Number(start.slice(5, 7)) - 1);
+  const [year, setYear] = useState(Number(start.slice(0, 4)));
+  const years = Array.from({ length: LAST_YEAR(today) - FIRST_YEAR(today) + 1 }, (_, i) => FIRST_YEAR(today) + i);
+  return (
+    <div className="flex flex-col gap-5">
+      <WheelGroup>
+        <Wheel
+          label="Month"
+          options={MONTH_NAMES.map((name, i) => ({ value: i, label: name }))}
+          value={month}
+          onChange={setMonth}
+          align="left"
+        />
+        <Wheel label="Year" options={years.map((y) => ({ value: y, label: String(y) }))} value={year} onChange={setYear} />
+      </WheelGroup>
+      <Button type="button" onClick={() => onDone(`${year}-${String(month + 1).padStart(2, "0")}-15`)}>
+        Show {MONTH_NAMES[month]} {year}
+      </Button>
+    </div>
+  );
+}
 
 /** Target tab: Plan (expense budget, expected income, saving target) and Goals. Waits for today's date. */
 export function PlanScreen() {
@@ -65,7 +104,10 @@ function PlanBody({ today }: { today: string }) {
   const transactions = useTransactions();
 
   const [tab, setTab] = useState<Tab>("plan");
-  const [periodId, setPeriodId] = useState<string | null>(null);
+  // A day inside the period on show (null = the current one). Any month can be picked; its
+  // period is created if it doesn't exist yet.
+  const [anchor, setAnchor] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [goalSheet, setGoalSheet] = useState<Category | "new" | null>(null);
   const [addKind, setAddKind] = useState<"expense" | "income" | null>(null);
   const [deleting, setDeleting] = useState<Category | null>(null);
@@ -73,10 +115,18 @@ function PlanBody({ today }: { today: string }) {
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
   const list = periods.data ?? []; // newest first
   const current = periodOf(list, today);
-  const period = list.find((p) => p.id === periodId) ?? current ?? list[0] ?? null;
+  const period = anchor ? periodOf(list, anchor) : (current ?? list[0] ?? null);
   const index = period ? list.indexOf(period) : -1;
   const older = index >= 0 ? (list[index + 1] ?? null) : null;
   const newer = index > 0 ? list[index - 1] : null;
+
+  function showPeriodAt(date: string) {
+    setAnchor(date);
+    coverPeriodAt(date).catch((e) => showToast({ message: errorMessage(e, "Could not open that month"), tone: "error" }));
+  }
+  const dayBefore = (iso: string) => shiftDay(iso, -1);
+  const dayAfter = (iso: string) => shiftDay(iso, 1);
+  const canGo = (date: string) => Number(date.slice(0, 4)) >= FIRST_YEAR(today) && Number(date.slice(0, 4)) <= LAST_YEAR(today);
 
   // Periods reach back to the oldest transaction.
   const oldest = txs.length ? txs[txs.length - 1].date : null;
@@ -221,27 +271,38 @@ function PlanBody({ today }: { today: string }) {
           <div className="flex h-14 items-center justify-between rounded-full bg-card px-1.5">
             <button
               type="button"
-              aria-label={older ? `Previous period, ${older.name}` : "No earlier period"}
-              disabled={!older}
-              onClick={() => older && setPeriodId(older.id)}
+              aria-label={older ? `Previous period, ${older.name}` : "Previous period"}
+              disabled={!period || !canGo(dayBefore(period.start))}
+              onClick={() => period && showPeriodAt(dayBefore(period.start))}
               className="flex size-11 items-center justify-center rounded-full bg-page disabled:opacity-40"
             >
               <ChevronLeft aria-hidden size={16} strokeWidth={2.25} />
             </button>
-            <div className="flex flex-col items-center gap-0.5" aria-live="polite">
-              <span className="text-[15px] font-bold">{period?.name ?? "…"}</span>
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={`${period?.name ?? "Period"}. Pick a month`}
+              disabled={!period}
+              onClick={() => setPickerOpen(true)}
+              className="flex min-h-11 flex-col items-center gap-0.5 rounded-2xl px-3"
+              aria-live="polite"
+            >
+              <span className="flex items-center gap-1 text-[15px] font-bold">
+                {period?.name ?? "…"}
+                <ChevronDown aria-hidden size={14} strokeWidth={2.5} className="text-muted" />
+              </span>
               {period && (
                 <span className="text-xs text-muted">
                   {periodRangeLabel(period)}
                   {daysLeft(period, today) !== null && ` · ${daysLeft(period, today)} days left`}
                 </span>
               )}
-            </div>
+            </button>
             <button
               type="button"
-              aria-label={newer ? `Next period, ${newer.name}` : "No later period"}
-              disabled={!newer}
-              onClick={() => newer && setPeriodId(newer.id)}
+              aria-label={newer ? `Next period, ${newer.name}` : "Next period"}
+              disabled={!period || !canGo(dayAfter(period.end))}
+              onClick={() => period && showPeriodAt(dayAfter(period.end))}
               className="flex size-11 items-center justify-center rounded-full bg-page disabled:opacity-40"
             >
               <ChevronRight aria-hidden size={16} strokeWidth={2.25} />
@@ -319,6 +380,19 @@ function PlanBody({ today }: { today: string }) {
       ) : (
         <GoalsTab rows={goalRows} onNew={() => setGoalSheet("new")} onOpen={(c) => setGoalSheet(c)} />
       )}
+
+      <Sheet open={pickerOpen} onClose={() => setPickerOpen(false)} title="Pick a month">
+        {period && pickerOpen && (
+          <MonthPicker
+            today={today}
+            start={period.end}
+            onDone={(date) => {
+              setPickerOpen(false);
+              showPeriodAt(date);
+            }}
+          />
+        )}
+      </Sheet>
 
       <Sheet open={deleting !== null} onClose={() => setDeleting(null)} title="Delete category">
         {deleting && (

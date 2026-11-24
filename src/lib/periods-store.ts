@@ -11,6 +11,8 @@ type Row = { id: string; start_date: string; end_date: string; name: string };
 
 /** Earliest date the periods must cover (set from the oldest transaction once it is known). */
 let coverFrom: string | null = null;
+/** Latest date the periods must cover (a month picked on the Plan tab, possibly far ahead). */
+let coverTo: string | null = null;
 
 async function fetchRows(): Promise<Row[]> {
   const { data, error } = await supabase().from("periods").select("id, start_date, end_date, name").order("start_date");
@@ -27,8 +29,9 @@ async function load(): Promise<StoredPeriod[]> {
   const today = localDate();
   const from = coverFrom && coverFrom < today ? coverFrom : today;
 
-  // Through the next period too, so next month can be planned ahead.
-  const to = nextRuleStart(periodFor(today).start);
+  // Through the next period too, so next month can be planned ahead, or further when picked.
+  const next = nextRuleStart(periodFor(today).start);
+  const to = coverTo && coverTo > next ? coverTo : next;
   const toAdd = missingStarts(
     rows.map((r) => r.start_date),
     from,
@@ -62,6 +65,7 @@ const store = createStore<StoredPeriod[]>(load, "pay periods");
 export const usePeriods = store.use;
 export const resetPeriods = () => {
   coverFrom = null;
+  coverTo = null;
   store.reset();
 };
 
@@ -69,6 +73,18 @@ export const resetPeriods = () => {
 export async function coverPeriodsFrom(date: string | null) {
   if (!date || (coverFrom && coverFrom <= date)) return;
   coverFrom = date;
+  await store.refresh();
+}
+
+/**
+ * Make sure the period containing `date` exists (and every period between it and the ones
+ * stored, since periods follow on from each other). For picking any month on the Plan tab.
+ */
+export async function coverPeriodAt(date: string) {
+  const list = store.get();
+  if (list && periodOf(list, date)) return;
+  if (date < (coverFrom ?? localDate())) coverFrom = date;
+  if (date > (coverTo ?? localDate())) coverTo = date;
   await store.refresh();
 }
 

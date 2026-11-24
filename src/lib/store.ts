@@ -76,6 +76,8 @@ export function createStore<T>(load: () => Promise<T>, what: string) {
       if (state.data !== null) emit({ status: "ready", data: fn(state.data) });
     },
     refresh,
+    /** The data loaded so far, if any (outside React). */
+    get: (): T | null => state.data,
     /** Forget everything (sign out). */
     reset() {
       inflight = null;
