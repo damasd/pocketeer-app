@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Pencil, Plus, Wallet as WalletIcon } from "lucide-react";
 import { ArchivedSection } from "@/components/archived-section";
@@ -10,7 +10,7 @@ import { Sheet } from "@/components/sheet";
 import { Button, ErrorNote } from "@/components/ui";
 import { useAccounts, type Account, type AccountGroup } from "@/lib/accounts";
 import { accountBalance, savedInAccount, sumBalances } from "@/lib/balances";
-import { cardTransitionName, useHandoff } from "@/lib/card-handoff";
+import { cardTransitionName, saveSlots, useHandoff, type CardSlot } from "@/lib/card-handoff";
 import { useTransactions } from "@/lib/transactions";
 import { AccountForm } from "./account-form";
 
@@ -43,6 +43,24 @@ export function AccountsScreen() {
   const byGroup = (g: AccountGroup) => active.filter((a) => a.group === g);
   const nextSortOrder = Math.max(0, ...all.map((a) => a.sortOrder)) + 1;
   const loading = state.status === "loading" && !state.data;
+
+  // Tell Home where each card sits, so a card pulled from the Home stack lands exactly here.
+  const layoutKey = active.map((a) => `${a.id}:${a.group}`).join(",");
+  useLayoutEffect(() => {
+    if (loading) return;
+    const measure = () => {
+      const byId: Record<string, CardSlot> = {};
+      document.querySelectorAll<HTMLElement>("[data-slot]").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0) return; // page hidden: keep the last good measurement
+        byId[el.dataset.slot!] = { x: r.left, y: r.top + window.scrollY, width: r.width };
+      });
+      if (Object.keys(byId).length) saveSlots(window.innerWidth, byId);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [loading, layoutKey]);
 
   return (
     <>
@@ -112,6 +130,7 @@ export function AccountsScreen() {
               {list.map((a) => (
                 <div
                   key={a.id}
+                  data-slot={a.id}
                   className="acct-card relative rounded-3xl transition-transform duration-150 ease-out has-[>a:active]:scale-[0.98]"
                   style={arriving.includes(a.id) ? { viewTransitionName: cardTransitionName(a.id) } : undefined}
                 >

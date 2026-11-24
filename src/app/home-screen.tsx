@@ -34,7 +34,6 @@ export function HomeScreen() {
   const transactions = useTransactions();
   const accounts = useAccounts();
   const [editing, setEditing] = useState<Transaction | null>(null);
-  const swipe = useAccountSwipe(() => router.push("/account", { transitionTypes: ["account-zoom"] }));
   const { money, hidden } = useMoney();
 
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
@@ -106,6 +105,10 @@ export function HomeScreen() {
     balance: accountBalance(a.id, a.startingBalance, txs),
     saved: savedInAccount(a.id, txs),
   }));
+  const swipe = useAccountSwipe(() => router.push("/account", { transitionTypes: ["account-zoom"] }), {
+    cards: stack.map((a) => ({ id: a.id, group: a.group })),
+    spending: (accounts.data ?? []).filter((a) => !a.archived && a.group === "spending").length,
+  });
 
   const loading = !today || (budgets.status === "loading" && !budgets.data) || (transactions.status === "loading" && !transactions.data);
 

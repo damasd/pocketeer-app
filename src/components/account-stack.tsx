@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useLayoutEffect, useRef, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { AccountCardFace, CARD_STYLES } from "@/components/account-card";
 import type { Account } from "@/lib/accounts";
-import { cardTransitionName, setHandoff } from "@/lib/card-handoff";
+import { cardTransitionName, estimatedSlots, measuredSlots, setHandoff } from "@/lib/card-handoff";
 
 /** Peek strip at the right edge, and the gap between card edges inside it (unchanged look). */
 const PEEK_WIDTH = 84;
@@ -13,9 +13,6 @@ const STEP = 26;
 const CARD_H = 216;
 const SMALL_H = 160;
 const SCALE = SMALL_H / CARD_H;
-/** Column the cards line up in while pulled: left edge and vertical gap. */
-const COLUMN_X = 20;
-const COLUMN_GAP = 12;
 /** Swipe distance that counts as "open Accounts". */
 const COMMIT_AT = 60;
 /** iOS-like curve: quick start, long natural deceleration. */
@@ -23,7 +20,7 @@ const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 const ARRANGE_MS = 380;
 const SNAP_MS = 320;
 const STAGGER_MS = 30;
-/** How long the zoom into Accounts takes (matches ::view-transition-group(.acct-card) in globals.css). */
+/** How long the hand-over into Accounts takes (matches ::view-transition-group(.acct-card) in globals.css). */
 const ZOOM_MS = 520;
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
@@ -38,69 +35,121 @@ function reducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** The Accounts page's top padding: max(8px, safe area at the top), as in src/app/account/page.tsx. */
+function accountsTopPadding() {
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:fixed;visibility:hidden;padding-top:max(8px, env(safe-area-inset-top))";
+  document.body.appendChild(probe);
+  const px = parseFloat(getComputedStyle(probe).paddingTop) || 8;
+  probe.remove();
+  return px;
+}
+
+/** What the gesture needs to know about the cards in the stack. */
+export type StackLayout = { cards: { id: string; group: "spending" | "saving" }[]; spending: number };
+
 /**
- * Swipe-left gesture for the Home header. While pulled, all cards come out of the stack and line
- * up top to bottom, their details fading in; on release past the threshold they finish lining up,
- * then each card zooms into its place on the Accounts page. A short swipe springs back.
- * Only the cards move; the header stays still.
+ * Swipe-left gesture for the Home header. While pulled, all cards come out of the stack and move
+ * to the exact places and size they have on the Accounts page, their details fading in; on
+ * release past the threshold they finish the move and Accounts takes over around them.
+ * A short swipe springs back. Only the cards move; the header stays still.
  */
-export function useAccountSwipe(open: () => void) {
+export function useAccountSwipe(open: () => void, layout: StackLayout) {
   const stackRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ id: number; x: number; y: number; dx: number; active: boolean } | null>(null);
   const busy = useRef(false);
   const swallowClick = useRef(false);
+  const layoutRef = useRef(layout);
+  const topPad = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    layoutRef.current = layout;
+  });
 
   const cards = () => Array.from(stackRef.current?.querySelectorAll<HTMLElement>("[data-card]") ?? []);
 
-  /** Card i at progress p: 0 = resting in the stack, 1 = lined up in the column. */
-  function place(p: number, transition: string | null) {
+  /** Where each card goes: measured on the last visit to Accounts, else calculated from its layout. */
+  function targets() {
+    const { cards: list, spending } = layoutRef.current;
+    const vw = window.innerWidth;
+    topPad.current ??= accountsTopPadding();
+    return (
+      measuredSlots(
+        list.map((c) => c.id),
+        vw,
+      ) ?? estimatedSlots(list, spending, vw, topPad.current)
+    );
+  }
+
+  /** Offset that takes card i from its resting place to its place on Accounts. */
+  function moves() {
+    const box = stackRef.current?.getBoundingClientRect();
     const width = stackRef.current?.clientWidth ?? 390;
-    const travel = width - PEEK_WIDTH - COLUMN_X; // front card's distance, so it tracks the finger
-    cards().forEach((el, i) => {
+    const cardW = width - 40;
+    return targets().map((t, i) => ({
+      x: t.x - ((box?.left ?? 0) + width - PEEK_WIDTH + i * STEP),
+      y: t.y - (box?.top ?? 0),
+      scale: t.width / cardW,
+    }));
+  }
+
+  /** Progress p: 0 = resting in the stack, 1 = at the Accounts places. */
+  function place(p: number, transition: string | null, els = cards()) {
+    const to = p > 0 ? moves() : [];
+    els.forEach((el, i) => {
       // The front card leads; the ones behind follow a little later.
       const q = clamp01(p * 1.25 - i * 0.125);
-      const x = -(travel + i * STEP) * q;
-      const y = i * (SMALL_H + COLUMN_GAP) * q;
+      const m = to[i] ?? { x: 0, y: 0, scale: SCALE };
+      const scale = SCALE + (m.scale - SCALE) * q;
       el.style.transition = transition ? `transform ${transition}` : "none";
       el.style.transitionDelay = transition ? `${i * STAGGER_MS}ms` : "0ms";
-      el.style.transform = `translate3d(${x}px,${y}px,0) scale(${SCALE})`;
-      const content = el.querySelectorAll<HTMLElement>(".card-content");
-      content.forEach((c) => {
+      el.style.transform = `translate3d(${m.x * q}px,${m.y * q}px,0) scale(${scale})`;
+      el.querySelectorAll<HTMLElement>(".card-content").forEach((c) => {
         c.style.transition = transition ? `opacity ${transition}` : "none";
         c.style.opacity = String(clamp01((q - 0.25) / 0.5));
       });
     });
-    return travel;
   }
 
-  function nameCards(on: boolean) {
-    cards().forEach((el) => {
+  function nameCards(on: boolean, els = cards()) {
+    els.forEach((el) => {
       el.style.viewTransitionName = on ? cardTransitionName(el.dataset.card ?? "") : "";
     });
   }
 
+  /** Back to the resting stack, with no leftovers from a swipe. */
+  function reset(els = cards()) {
+    nameCards(false, els);
+    place(0, null, els);
+    busy.current = false;
+  }
+
+  // Home stays alive in the background after a swipe; whenever it is shown again,
+  // start from the resting stack (the pulled cards belong to Accounts now).
+  useLayoutEffect(() => {
+    reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function commit() {
     busy.current = true;
-    const ids = cards().map((el) => el.dataset.card ?? "");
+    const els = cards(); // keep hold of them: Home may be hidden before the clean-up runs
+    const ids = els.map((el) => el.dataset.card ?? "");
     if (reducedMotion() || ids.length === 0) {
       open();
       busy.current = false;
       return;
     }
-    place(1, `${ARRANGE_MS}ms ${EASE}`);
+    place(1, `${ARRANGE_MS}ms ${EASE}`, els);
     const lined = ARRANGE_MS + STAGGER_MS * (ids.length - 1);
     setTimeout(() => {
-      // Same names here and on Accounts: the browser zooms each card into its new place.
-      nameCards(true);
+      // Same names here and on Accounts: each card hands over to its twin on the new page.
+      nameCards(true, els);
       setHandoff(ids);
       open();
     }, lined);
-    // Once Accounts has taken over: put the stack back for the next visit to Home.
     setTimeout(() => {
-      nameCards(false);
       setHandoff([]);
-      place(0, null);
-      busy.current = false;
+      reset(els);
     }, lined + ZOOM_MS + 400);
   }
 
@@ -129,9 +178,8 @@ export function useAccountSwipe(open: () => void) {
     }
     d.dx = dx;
     if (reducedMotion()) return;
-    const width = stackRef.current?.clientWidth ?? 390;
-    const travel = width - PEEK_WIDTH - COLUMN_X;
     // Left: the front card follows the finger. Right: no movement (nothing to pull).
+    const travel = Math.max(1, -(moves()[0]?.x ?? -300) / 1.25);
     place(clamp01(-dx / travel), null);
   };
 
