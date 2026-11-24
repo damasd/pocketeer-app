@@ -17,6 +17,7 @@ export function Sheet({
   onClose,
   title,
   tall = false,
+  hideTitle = false,
   children,
 }: {
   open: boolean;
@@ -24,6 +25,8 @@ export function Sheet({
   title: string;
   /** Fixed 92% height, content fills it (Log sheet with the keypad at the bottom). */
   tall?: boolean;
+  /** Only the handle shows; the title is still read out (Log sheet starts with its type switch). */
+  hideTitle?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -98,10 +101,14 @@ export function Sheet({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerEnd}
           onPointerCancel={onPointerEnd}
-          className="-mx-5 flex cursor-grab touch-none flex-col items-center gap-3 px-5 pt-2.5 select-none active:cursor-grabbing"
+          className={`-mx-5 flex cursor-grab touch-none flex-col items-center gap-3 px-5 pt-2.5 select-none active:cursor-grabbing ${hideTitle ? "-mb-1 pb-3" : ""}`}
         >
           <div aria-hidden className="h-[5px] w-10 rounded-full bg-line" />
-          <h2 className="flex min-h-11 items-center text-center text-[17px] font-bold">{title}</h2>
+          {hideTitle ? (
+            <h2 className="sr-only">{title}</h2>
+          ) : (
+            <h2 className="flex min-h-11 items-center text-center text-[17px] font-bold">{title}</h2>
+          )}
         </div>
         <button type="button" onClick={() => ref.current?.close()} className="sr-only">
           Close

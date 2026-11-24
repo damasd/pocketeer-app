@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, ChevronDown, Delete } from "lucide-react";
+import { ChevronDown, Delete } from "lucide-react";
+import { DatePopover } from "@/components/date-popover";
 import { Segmented } from "@/components/segmented";
 import { showToast } from "@/components/toast";
 import { ErrorNote } from "@/components/ui";
@@ -13,7 +14,6 @@ import { errorMessage } from "@/lib/errors";
 import {
   accountBadge,
   categoryKindFor,
-  dateLabel,
   defaultAccountId,
   accountGroupsFor,
   defaultToAccountId,
@@ -254,24 +254,12 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
       </div>
 
       {/* When and what: right under the amount. */}
-      <div className="flex gap-2">
-        {/* The real date field covers the pill (invisible), so a tap opens the phone's own date picker. */}
-        <label className="relative flex h-11 flex-none items-center gap-1.5 rounded-full border border-line bg-card px-3.5 text-[13px] font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
-          <CalendarDays aria-hidden size={16} strokeWidth={2} />
-          <span aria-hidden>{dateLabel(date)}</span>
-          <input
-            type="date"
-            aria-label={`Date, ${dateLabel(date)}`}
-            required
-            value={date}
-            onChange={(e) => e.target.value && setDate(e.target.value)}
-            className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
-          />
-        </label>
+      <div className="mt-2 flex gap-2">
+        <DatePopover value={date} onChange={setDate} />
         <input
           type="text"
           aria-label="Note"
-          placeholder="Note (optional)"
+          placeholder="Note"
           maxLength={NOTE_MAX}
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -288,12 +276,9 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
       {loadError && <ErrorNote>{loadError}</ErrorNote>}
 
       {kind && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-3">
-            <span id="category-label" className="text-[13px] font-medium text-muted">
-              {mode === "saving" ? "Saving category" : "Category"}
-            </span>
-            {mode === "saving" && (
+        <div className="mt-3 flex flex-col gap-2">
+          {mode === "saving" && (
+            <div className="mb-2 flex">
               <div role="group" aria-label="Deposit or withdraw" className="flex rounded-full bg-page p-0.5">
                 {DIRECTIONS.map((d) => {
                   const on = d.value === direction;
@@ -316,8 +301,11 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
                   );
                 })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          <span id="category-label" className="text-[13px] font-medium text-muted">
+            {mode === "saving" ? "Saving category" : "Category"}
+          </span>
           <div role="group" aria-labelledby="category-label" className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
             {loading &&
               [0, 1, 2].map((i) => <span key={i} aria-hidden className="h-11 w-24 flex-none rounded-full bg-page" />)}
@@ -534,7 +522,7 @@ function AccountPicker({
   onLeave: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="mt-3 flex flex-col gap-2">
       <span id={`${id}-label`} className="text-[13px] font-medium text-muted">
         {label}
       </span>
