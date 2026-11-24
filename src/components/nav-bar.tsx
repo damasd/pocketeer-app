@@ -56,7 +56,7 @@ function TabLink({ tab, active, pathname, linkRef }: { tab: Tab; active: boolean
       aria-current={active ? "page" : undefined}
       className={[
         // The grey circle behind the selected icon is the sliding one in NavBar.
-        "relative flex size-12 items-center justify-center rounded-full transition-colors duration-300",
+        "relative z-10 flex size-12 items-center justify-center rounded-full transition-colors duration-300",
         active ? "text-white" : "text-nav-idle hover:text-white",
       ].join(" ")}
     >
@@ -132,7 +132,7 @@ export function NavBar() {
         {circle && (
           <span
             aria-hidden
-            className={`absolute top-2 left-0 size-12 rounded-full bg-nav-selected ${
+            className={`absolute top-2 left-0 z-0 size-12 rounded-full bg-nav-selected ${
               circle.animate ? "transition-[translate,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" : ""
             } ${activeHref ? "" : "opacity-0"}`}
             style={{ translate: `${circle.x}px 0` }}
@@ -146,7 +146,7 @@ export function NavBar() {
           aria-label="Log transaction"
           aria-haspopup="dialog"
           onClick={() => setLogOpen(true)}
-          className="relative flex size-[68px] flex-none items-center justify-center rounded-full bg-lime text-ink shadow-[0_6px_16px_rgba(17,17,17,0.25)] transition-transform duration-150 ease-out active:scale-[0.96]"
+          className="relative z-10 flex size-[68px] flex-none items-center justify-center rounded-full bg-lime text-ink shadow-[0_6px_16px_rgba(17,17,17,0.25)] transition-transform duration-150 ease-out active:scale-[0.96]"
         >
           <Plus aria-hidden size={30} strokeWidth={2.5} />
         </button>
