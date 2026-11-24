@@ -19,7 +19,9 @@ const COMMIT_AT = 60;
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 const ARRANGE_MS = 380;
 const SNAP_MS = 320;
-const STAGGER_MS = 30;
+/** Landing bounce once the cards are in place. */
+const BUMP_MS = 360;
+const BUMP_STAGGER_MS = 60;
 /** How long the hand-over into Accounts takes (matches ::view-transition-group(.acct-card) in globals.css). */
 const ZOOM_MS = 520;
 
@@ -49,65 +51,123 @@ function accountsTopPadding() {
 export type StackLayout = { cards: { id: string; group: "spending" | "saving" }[]; spending: number };
 
 /**
- * Swipe-left gesture for the Home header. While pulled, all cards come out of the stack and move
- * to the exact places and size they have on the Accounts page, their details fading in; on
- * release past the threshold they finish the move and Accounts takes over around them.
- * A short swipe springs back. Only the cards move; the header stays still.
+ * Swipe-left gesture for the Home header. While pulled, Home slides left and a copy of the
+ * Accounts page slides in from the right; the cards come out of the stack and move to the exact
+ * places and size they have on Accounts, their details fading in. On release past the threshold
+ * everything finishes the move, the cards land with a small bounce, and the real Accounts page
+ * takes over. A short swipe springs back.
  */
 export function useAccountSwipe(open: () => void, layout: StackLayout) {
   const stackRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ id: number; x: number; y: number; dx: number; active: boolean } | null>(null);
   const busy = useRef(false);
   const swallowClick = useRef(false);
   const layoutRef = useRef(layout);
   const topPad = useRef<number | null>(null);
+  /** How far Home is currently slid left (px, negative). */
+  const shift = useRef(0);
   useLayoutEffect(() => {
     layoutRef.current = layout;
   });
 
   const cards = () => Array.from(stackRef.current?.querySelectorAll<HTMLElement>("[data-card]") ?? []);
+  const pageWidth = () => pageRef.current?.clientWidth ?? 390;
 
-  /** Where each card goes: measured on the last visit to Accounts, else calculated from its layout. */
+  /**
+   * Where each card goes: measured on the last visit to Accounts; else the gap left for it in the
+   * sliding copy of the page; else calculated from the page layout.
+   */
   function targets() {
     const { cards: list, spending } = layoutRef.current;
     const vw = window.innerWidth;
-    topPad.current ??= accountsTopPadding();
-    return (
-      measuredSlots(
-        list.map((c) => c.id),
-        vw,
-      ) ?? estimatedSlots(list, spending, vw, topPad.current)
+    const measured = measuredSlots(
+      list.map((c) => c.id),
+      vw,
     );
+    if (measured) return measured;
+    topPad.current ??= accountsTopPadding();
+    const estimate = estimatedSlots(list, spending, vw, topPad.current);
+    return estimate.map((slot, i) => {
+      const gap = previewRef.current?.querySelector<HTMLElement>(`[data-preview-slot="${list[i].id}"]`);
+      return gap ? { ...slot, y: gap.getBoundingClientRect().top } : slot;
+    });
   }
 
-  /** Offset that takes card i from its resting place to its place on Accounts. */
+  /** Offset that takes card i from its resting place (Home not slid) to its place on Accounts. */
   function moves() {
     const box = stackRef.current?.getBoundingClientRect();
     const width = stackRef.current?.clientWidth ?? 390;
     const cardW = width - 40;
+    const left = (box?.left ?? 0) - shift.current;
     return targets().map((t, i) => ({
-      x: t.x - ((box?.left ?? 0) + width - PEEK_WIDTH + i * STEP),
+      x: t.x - (left + width - PEEK_WIDTH + i * STEP),
       y: t.y - (box?.top ?? 0),
       scale: t.width / cardW,
     }));
   }
 
-  /** Progress p: 0 = resting in the stack, 1 = at the Accounts places. */
+  /** Progress p: 0 = resting stack on Home, 1 = Accounts page in place with the cards on it. */
   function place(p: number, transition: string | null, els = cards()) {
     const to = p > 0 ? moves() : [];
+    const w = pageWidth();
+    const pageX = -p * w;
+    const css = (prop: string) => (transition ? `${prop} ${transition}` : "none");
+
+    // Home slides left; the copy of Accounts comes in from the right, touching its edge.
+    const page = pageRef.current;
+    if (page) {
+      page.style.transition = css("transform");
+      page.style.transform = p > 0 ? `translate3d(${pageX}px,0,0)` : "";
+    }
+    const preview = previewRef.current;
+    if (preview) {
+      preview.style.transition = css("transform");
+      preview.style.transform = `translate3d(${w + pageX}px,0,0)`;
+      if (p > 0) preview.style.visibility = "visible";
+      else if (!transition) preview.style.visibility = "hidden";
+      else setTimeout(() => shift.current === 0 && (preview.style.visibility = "hidden"), SNAP_MS);
+    }
+    shift.current = pageX;
+    // At rest the stack is clipped at the screen edge; while pulled, cards travel beyond Home.
+    // The page clips them instead, so it never grows wider than the screen (no sideways scroll or zoom).
+    const pulled = p > 0 || transition !== null;
+    const stack = stackRef.current;
+    if (stack) stack.style.overflowX = pulled ? "visible" : "";
+    document.documentElement.style.overflowX = pulled ? "clip" : "";
+    document.body.style.overflowX = pulled ? "clip" : "";
+
     els.forEach((el, i) => {
       // The front card leads; the ones behind follow a little later.
       const q = clamp01(p * 1.25 - i * 0.125);
       const m = to[i] ?? { x: 0, y: 0, scale: SCALE };
       const scale = SCALE + (m.scale - SCALE) * q;
-      el.style.transition = transition ? `transform ${transition}` : "none";
-      el.style.transitionDelay = transition ? `${i * STAGGER_MS}ms` : "0ms";
-      el.style.transform = `translate3d(${m.x * q}px,${m.y * q}px,0) scale(${scale})`;
+      // The cards sit inside Home, so undo Home's slide to keep them on their own path.
+      el.style.transition = css("transform");
+      el.style.transform = `translate3d(${m.x * q - pageX}px,${m.y * q}px,0) scale(${scale})`;
       el.querySelectorAll<HTMLElement>(".card-content").forEach((c) => {
-        c.style.transition = transition ? `opacity ${transition}` : "none";
+        c.style.transition = css("opacity");
         c.style.opacity = String(clamp01((q - 0.25) / 0.5));
       });
     });
+  }
+
+  /** Landing: each card dips up and settles, one after another, like it was set down. */
+  function bump(els: HTMLElement[]) {
+    els.forEach((el, i) => {
+      const at = el.style.transform;
+      el.animate(
+        [
+          { transform: at },
+          { transform: `${at} translateY(-10px)`, offset: 0.35 },
+          { transform: `${at} translateY(3px)`, offset: 0.7 },
+          { transform: at },
+        ],
+        { duration: BUMP_MS, delay: i * BUMP_STAGGER_MS, easing: "ease-in-out" },
+      );
+    });
+    return BUMP_MS + BUMP_STAGGER_MS * (els.length - 1);
   }
 
   function nameCards(on: boolean, els = cards()) {
@@ -140,17 +200,19 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
       return;
     }
     place(1, `${ARRANGE_MS}ms ${EASE}`, els);
-    const lined = ARRANGE_MS + STAGGER_MS * (ids.length - 1);
     setTimeout(() => {
-      // Same names here and on Accounts: each card hands over to its twin on the new page.
-      nameCards(true, els);
-      setHandoff(ids);
-      open();
-    }, lined);
-    setTimeout(() => {
-      setHandoff([]);
-      reset(els);
-    }, lined + ZOOM_MS + 400);
+      const settled = bump(els);
+      setTimeout(() => {
+        // Same names here and on Accounts: each card hands over to its twin on the real page.
+        nameCards(true, els);
+        setHandoff(ids);
+        open();
+        setTimeout(() => {
+          setHandoff([]);
+          reset(els);
+        }, ZOOM_MS + 400);
+      }, settled);
+    }, ARRANGE_MS);
   }
 
   const onPointerDown = (e: ReactPointerEvent<HTMLElement>) => {
@@ -192,11 +254,20 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
     swallowClick.current = true;
     setTimeout(() => (swallowClick.current = false), 0);
     if (!cancelled && d.dx < -COMMIT_AT) commit();
-    else place(0, `${SNAP_MS}ms ${EASE}`);
+    else {
+      busy.current = true; // let it settle before the next pull
+      place(0, `${SNAP_MS}ms ${EASE}`);
+      setTimeout(() => {
+        place(0, null); // settled: clip the stack again and hide the Accounts copy
+        busy.current = false;
+      }, SNAP_MS);
+    }
   };
 
   return {
     stackRef,
+    pageRef,
+    previewRef,
     handlers: {
       onPointerDown,
       onPointerMove,
