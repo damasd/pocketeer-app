@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CARD_STYLES } from "@/components/account-card";
+import { RevealButton, useMoney } from "@/components/amount";
 import { Greeting } from "@/components/greeting";
 import { LogForm } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
@@ -15,7 +16,6 @@ import { CategoryIcon } from "@/lib/category-icons";
 import { useGoals } from "@/lib/goals";
 import { groupByDay } from "@/lib/history";
 import { recentFrom, remainingBudget, share, topTiles, type Tile } from "@/lib/home";
-import { formatRupiah } from "@/lib/money";
 import { periodFor } from "@/lib/periods";
 import { coverPeriodsFrom, periodOf, usePeriods } from "@/lib/periods-store";
 import { goalPlan } from "@/lib/plan";
@@ -34,6 +34,7 @@ export function HomeScreen() {
   const accounts = useAccounts();
   const [editing, setEditing] = useState<Transaction | null>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
+  const { money, hidden } = useMoney();
 
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
   const oldest = txs.length ? txs[txs.length - 1].date : null;
@@ -121,15 +122,16 @@ export function HomeScreen() {
         <Greeting />
 
         <section aria-label="Budget this period" className="mr-[92px] flex flex-col gap-1">
-          <span className="text-[13px] font-medium text-[#BDBDBD]">
+          <span className="flex items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
             Remaining budget{period ? ` · ${period.name}` : ""}
+            <RevealButton tone="dark" />
           </span>
           {loading ? (
             <span aria-hidden className="mt-1 block h-[46px] w-52 rounded-xl bg-nav-selected" />
           ) : budgetTotal > 0 ? (
             <>
-              <span className="mt-1 text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{formatRupiah(head.remaining)}</span>
-              <span className="text-[13px] font-medium text-[#BDBDBD]">of {formatRupiah(budgetTotal)} budget</span>
+              <span className="mt-1 text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{money(head.remaining)}</span>
+              <span className="text-[13px] font-medium text-[#BDBDBD]">of {money(budgetTotal)} budget</span>
               <div
                 role="progressbar"
                 aria-label="Budget used"
@@ -141,7 +143,7 @@ export function HomeScreen() {
                 <div className={`h-full rounded-full ${head.over ? "bg-ember" : "bg-lime"}`} style={{ width: `${head.barPercent}%` }} />
               </div>
               <div className="mt-1.5 flex justify-between text-xs text-[#BDBDBD]">
-                <span>{formatRupiah(spentTotal)} spent</span>
+                <span>{money(spentTotal)} spent</span>
                 <span>
                   {head.percent}%{daysLeft !== null ? ` · ${daysLeft} days left` : ""}
                 </span>
@@ -150,7 +152,7 @@ export function HomeScreen() {
           ) : (
             <>
               <span className="mt-1 text-[22px] leading-[1.3] font-bold">No budget yet</span>
-              <span className="text-[13px] font-medium text-[#BDBDBD]">{formatRupiah(spentTotal)} spent this period</span>
+              <span className="text-[13px] font-medium text-[#BDBDBD]">{money(spentTotal)} spent this period</span>
               <Link
                 href="/plan"
                 className="mt-3 flex h-11 items-center self-start rounded-full bg-lime px-4 text-[13px] font-bold text-ink"
@@ -213,9 +215,9 @@ export function HomeScreen() {
                       <span className="truncate text-[13px] font-semibold">{c?.name}</span>
                     </span>
                     <span className="flex flex-col gap-0.5">
-                      <span className="text-[17px] font-bold">{formatRupiah(t.amount)}</span>
+                      <span className="text-[17px] font-bold">{money(t.amount)}</span>
                       <span className="text-xs text-muted">
-                        of {formatRupiah(t.of)}
+                        of {money(t.of)}
                         {t.kind === "saving" ? " target" : ""}
                       </span>
                     </span>
@@ -227,7 +229,7 @@ export function HomeScreen() {
                     </span>
                     {over ? (
                       <span className="self-start rounded-full bg-ember px-2 py-0.5 text-xs font-bold text-white">
-                        {formatRupiah(t.amount - t.of)} over
+                        {money(t.amount - t.of)} over
                       </span>
                     ) : (
                       <span className="text-xs text-muted">
@@ -265,6 +267,7 @@ export function HomeScreen() {
                       categoryIcon={category(t.categoryId)?.icon ?? "ellipsis"}
                       accountName={accountName}
                       onOpen={() => setEditing(t)}
+                      masked={hidden}
                     />
                   </li>
                 ))}

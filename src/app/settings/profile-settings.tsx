@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
+import { clearLock } from "@/lib/app-lock";
 import { resetAccounts } from "@/lib/accounts";
 import { resetCategories } from "@/lib/categories";
 import { resetTransactions } from "@/lib/transactions";
@@ -104,6 +105,7 @@ export function ProfileSettings() {
 
   async function onSignOut() {
     if (await run("signout", signOut)) {
+      clearLock();
       resetAccounts();
       resetCategories();
       resetTransactions();
@@ -276,6 +278,11 @@ export function ProfileSettings() {
             href: "/settings/categories",
             label: "Categories",
             hint: "Expense, income and saving lists",
+          },
+          {
+            href: "/settings/security",
+            label: "Security",
+            hint: "PIN, Face ID and hidden amounts",
           },
           {
             href: "/settings/export",

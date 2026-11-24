@@ -217,3 +217,12 @@ html.dark-top {
     translate: 0 0;
   }
 }
+
+/* App lock: while <html data-locked> is set, only the lock screen can be seen. The attribute is
+   set before first paint by an inline script when a lock exists (src/lib/app-lock.ts). */
+html[data-locked] body > :not(#app-lock-root) {
+  visibility: hidden !important;
+}
+html[data-locked] {
+  background: var(--color-ink);
+}

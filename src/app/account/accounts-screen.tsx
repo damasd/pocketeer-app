@@ -5,12 +5,12 @@ import Link from "next/link";
 import { ChevronRight, Pencil, Plus, Wallet as WalletIcon } from "lucide-react";
 import { ArchivedSection } from "@/components/archived-section";
 import { AccountCardFace, CARD_STYLES } from "@/components/account-card";
+import { RevealButton, useMoney } from "@/components/amount";
 import { Sheet } from "@/components/sheet";
 import { Button, ErrorNote } from "@/components/ui";
 import { useAccounts, type Account, type AccountGroup } from "@/lib/accounts";
 import { accountBalance, savedInAccount, sumBalances } from "@/lib/balances";
 import { useTransactions } from "@/lib/transactions";
-import { formatRupiah } from "@/lib/money";
 import { AccountForm } from "./account-form";
 
 type WithBalance = Account & { balance: number; saved: number };
@@ -22,6 +22,7 @@ const GROUPS: { id: AccountGroup; title: string }[] = [
 
 export function AccountsScreen() {
   const state = useAccounts();
+  const { money, hidden } = useMoney();
   const transactions = useTransactions();
   const txs = transactions.data ?? [];
   // Sheet: null = closed, "new" = create, Account = edit.
@@ -61,11 +62,14 @@ export function AccountsScreen() {
       )}
 
       <section aria-label="Total balance" className="mt-6 flex flex-col gap-1">
-        <span className="text-[13px] font-medium text-muted">Total balance</span>
+        <span className="flex items-center gap-1 text-[13px] font-medium text-muted">
+          Total balance
+          <RevealButton />
+        </span>
         {loading ? (
           <span aria-hidden className="h-[46px] w-56 rounded-xl bg-line" />
         ) : (
-          <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{formatRupiah(sumBalances(active))}</span>
+          <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{money(sumBalances(active))}</span>
         )}
       </section>
 
@@ -95,7 +99,7 @@ export function AccountsScreen() {
               </h2>
               {!loading && (
                 <span className="text-[13px] text-muted">
-                  {list.length} {list.length === 1 ? "account" : "accounts"} · {formatRupiah(sumBalances(list))}
+                  {list.length} {list.length === 1 ? "account" : "accounts"} · {money(sumBalances(list))}
                 </span>
               )}
             </div>
@@ -107,7 +111,7 @@ export function AccountsScreen() {
                   {/* Card opens this account's transactions; the pencil edits the account. */}
                   <Link
                     href={`/history?account=${a.id}`}
-                    aria-label={`${a.name}, balance ${formatRupiah(a.balance)}. Show transactions`}
+                    aria-label={`${a.name}, balance ${money(a.balance)}. Show transactions`}
                     className="block rounded-3xl transition-transform duration-150 ease-out active:scale-[0.98]"
                   >
                     <AccountCardFace
@@ -116,6 +120,7 @@ export function AccountsScreen() {
                       colour={a.colour}
                       balance={a.balance}
                       saved={a.saved}
+                      masked={hidden}
                     />
                   </Link>
                   <button
@@ -151,7 +156,7 @@ export function AccountsScreen() {
                 >
                   <span className="flex flex-col">
                     <span className="text-[15px] font-semibold">{a.name}</span>
-                    <span className="text-[13px] font-medium text-muted">{formatRupiah(a.balance)}</span>
+                    <span className="text-[13px] font-medium text-muted">{money(a.balance)}</span>
                   </span>
                   <ChevronRight aria-hidden size={20} className="text-muted" />
                 </button>

@@ -1,5 +1,6 @@
 import type { AccountColour } from "@/lib/accounts";
 import { formatRupiah, maskAccountNumber } from "@/lib/money";
+import { MASK } from "@/lib/amounts";
 
 /** Card colours from the mockup (Wallet.dc.html / NewWallet.dc.html). Palette colours only. */
 export const CARD_STYLES: Record<
@@ -23,6 +24,7 @@ export function AccountCardFace({
   saved = 0,
   placeholderName = false,
   compact = false,
+  masked = false,
 }: {
   name: string;
   accountNumber: string | null;
@@ -31,9 +33,11 @@ export function AccountCardFace({
   saved?: number;
   placeholderName?: boolean;
   compact?: boolean;
+  /** Show "Rp ••••••" instead of the amounts (hidden amounts on the Accounts page). */
+  masked?: boolean;
 }) {
   const s = CARD_STYLES[colour];
-  const masked = maskAccountNumber(accountNumber);
+  const maskedNumber = maskAccountNumber(accountNumber);
   return (
     <span
       className="relative flex w-full flex-col justify-between overflow-hidden rounded-3xl border p-5 text-left"
@@ -49,15 +53,15 @@ export function AccountCardFace({
           {name}
         </span>
         <span className="text-[13px] font-medium tracking-[0.04em]" style={{ color: s.muted }}>
-          {masked ?? "No account number"}
+          {maskedNumber ?? "No account number"}
         </span>
       </span>
       <span className="relative flex flex-col gap-0.5">
         <span className="text-xs font-medium" style={{ color: s.muted }}>
           Balance
         </span>
-        <span className="text-[28px] font-bold tracking-[-0.02em]">{formatRupiah(balance)}</span>
-        {saved > 0 && (
+        <span className="text-[28px] font-bold tracking-[-0.02em]">{masked ? MASK : formatRupiah(balance)}</span>
+        {saved > 0 && !masked && (
           <span className="text-xs font-semibold" style={{ color: s.muted }}>
             {formatRupiah(saved)} saved
           </span>

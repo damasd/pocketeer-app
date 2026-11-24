@@ -3,6 +3,7 @@
 import { ArrowDownLeft, ArrowLeftRight } from "lucide-react";
 import { CategoryIcon } from "@/lib/category-icons";
 import { signedAmount } from "@/lib/history";
+import { MASK } from "@/lib/amounts";
 import type { Transaction } from "@/lib/transactions";
 
 /** One transaction row (mockup History / Home): icon, title, "Category · Account", signed amount. */
@@ -12,12 +13,15 @@ export function TransactionRow({
   categoryIcon,
   accountName,
   onOpen,
+  masked = false,
 }: {
   tx: Transaction;
   categoryName: string;
   categoryIcon: string;
   accountName: (id: string | null) => string;
   onOpen?: () => void;
+  /** Show "Rp ••••••" instead of the amount (hidden amounts on Home). */
+  masked?: boolean;
 }) {
   const saving = tx.type === "saving_deposit" || tx.type === "saving_withdraw";
   const title = tx.note || categoryName || (tx.type === "transfer" ? "Transfer" : "Transaction");
@@ -55,7 +59,7 @@ export function TransactionRow({
         <span className="truncate text-[15px] font-semibold">{title}</span>
         <span className="truncate text-xs text-muted">{sub}</span>
       </span>
-      <span className="text-[15px] font-semibold whitespace-nowrap">{signedAmount(tx.type, tx.amount)}</span>
+      <span className="text-[15px] font-semibold whitespace-nowrap">{masked ? MASK : signedAmount(tx.type, tx.amount)}</span>
     </>
   );
 
