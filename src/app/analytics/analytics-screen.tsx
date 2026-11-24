@@ -326,12 +326,12 @@ function Donut({
     start: (segs.slice(0, i).reduce((n, x) => n + x.amount, 0) / sum) * C,
   }));
   return (
-    <div className="relative size-[200px] self-center">
+    <div className="relative size-[260px] self-center">
       <svg
         role="img"
         aria-label={`Split by category: ${segs.map((s) => `${name(s)} ${s.share}%`).join(", ")}`}
-        width="200"
-        height="200"
+        width="260"
+        height="260"
         viewBox="0 0 200 200"
         ref={ref}
       >
@@ -370,10 +370,10 @@ function Donut({
         </g>
       </svg>
       <div aria-hidden className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        <span className={`max-w-[136px] text-center leading-tight font-bold ${formatRupiah(total).length > 13 ? "text-[15px]" : formatRupiah(total).length > 11 ? "text-[17px]" : "text-xl"}`}>
+        <span className={`max-w-[176px] text-center leading-tight font-bold ${formatRupiah(total).length > 13 ? "text-[18px]" : formatRupiah(total).length > 11 ? "text-[21px]" : "text-2xl"}`}>
           <CountUp value={total} format={formatRupiah} replay={replay} duration={1000} className="tabular-nums" />
         </span>
-        <span className="text-xs text-muted">{sub}</span>
+        <span className="text-[13px] text-muted">{sub}</span>
       </div>
     </div>
   );

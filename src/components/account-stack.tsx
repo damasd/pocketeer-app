@@ -17,15 +17,15 @@ const SMALL_H = 124;
 const SCALE = SMALL_H / CARD_H;
 /** Swipe distance that counts as "open Accounts". */
 const COMMIT_AT = 60;
-/** Ease in and out: a gentle start, a gentle stop. */
-const EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
-const ARRANGE_MS = 620;
-const SNAP_MS = 440;
+/** Ease out: moves off at once, then slows to a long, soft stop. */
+const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+const ARRANGE_MS = 900;
+const SNAP_MS = 560;
 /** Edge shadow that separates the cards in the resting stack; it fades as they come out. */
 const stackShadow = (strength: number, dark: boolean) =>
   `${dark ? `0 0 0 1.5px rgba(46,46,46,${strength.toFixed(3)}), ` : ""}-6px 0 14px rgba(0,0,0,${(0.28 * strength).toFixed(3)})`;
 /** How long the hand-over into Accounts takes (matches ::view-transition-group(.acct-card) in globals.css). */
-const ZOOM_MS = 720;
+const ZOOM_MS = 900;
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
