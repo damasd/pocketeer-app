@@ -1,6 +1,7 @@
 import type { AccountColour } from "@/lib/accounts";
-import { formatRupiah, maskAccountNumber } from "@/lib/money";
+import { accountDigits, formatAccountNumber, formatRupiah } from "@/lib/money";
 import { MASK } from "@/lib/amounts";
+import { CopyNumberButton } from "@/components/copy-number-button";
 
 /** Card colours from the mockup (Wallet.dc.html / NewWallet.dc.html). Palette colours only. */
 export const CARD_STYLES: Record<
@@ -15,7 +16,7 @@ export const CARD_STYLES: Record<
 
 export const COLOURS = Object.keys(CARD_STYLES) as AccountColour[];
 
-/** The visual card: name, masked number, balance, and saved amount when there is one. */
+/** The visual card: name, account number, balance, and saved amount when there is one. */
 export function AccountCardFace({
   name,
   accountNumber,
@@ -25,6 +26,7 @@ export function AccountCardFace({
   placeholderName = false,
   compact = false,
   masked = false,
+  copyable = false,
 }: {
   name: string;
   accountNumber: string | null;
@@ -35,9 +37,12 @@ export function AccountCardFace({
   compact?: boolean;
   /** Show "Rp ••••••" instead of the amounts (hidden amounts on the Accounts page). */
   masked?: boolean;
+  /** Show a copy button next to the account number (Accounts page only, not the form preview). */
+  copyable?: boolean;
 }) {
   const s = CARD_STYLES[colour];
-  const maskedNumber = maskAccountNumber(accountNumber);
+  const shownNumber = formatAccountNumber(accountNumber);
+  const digits = accountDigits(accountNumber);
   return (
     <span
       className="relative flex w-full flex-col justify-between overflow-hidden rounded-3xl border p-5 text-left"
@@ -52,8 +57,9 @@ export function AccountCardFace({
         <span className="text-[17px] font-bold" style={placeholderName ? { color: s.muted } : undefined}>
           {name}
         </span>
-        <span className="text-[13px] font-medium tracking-[0.04em]" style={{ color: s.muted }}>
-          {maskedNumber ?? "No account number"}
+        <span className="flex items-center gap-1 text-[13px] font-medium tracking-[0.04em]" style={{ color: s.muted }}>
+          <span>{shownNumber ?? "No account number"}</span>
+          {copyable && digits && <CopyNumberButton digits={digits} name={name} colour={s.muted} />}
         </span>
       </span>
       <span className="relative flex flex-col gap-0.5">

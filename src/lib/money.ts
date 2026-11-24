@@ -30,8 +30,13 @@ export function parseRupiahInput(text: string): number {
   return digits ? Number(digits) : 0;
 }
 
-/** "1234567890" -> "•••• 7890"; null when there is no number worth showing. */
-export function maskAccountNumber(accountNumber: string | null | undefined): string | null {
+/** Digits only, ready to paste into a bank app; null when there is no number. */
+export function accountDigits(accountNumber: string | null | undefined): string | null {
   const digits = (accountNumber ?? "").replace(/\D/g, "");
-  return digits.length >= 4 ? `•••• ${digits.slice(-4)}` : null;
+  return digits || null;
+}
+
+/** "1234567890" -> "1234 5678 90" so the full number is easy to read; null when there is none. */
+export function formatAccountNumber(accountNumber: string | null | undefined): string | null {
+  return accountDigits(accountNumber)?.replace(/(\d{4})(?=\d)/g, "$1 ") ?? null;
 }

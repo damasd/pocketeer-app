@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatRupiah, groupThousands, maskAccountNumber, parseRupiahInput } from "./money";
+import {
+  accountDigits,
+  formatAccountNumber,
+  formatRupiah,
+  groupThousands,
+  parseRupiahInput,
+} from "./money";
 
 describe("formatRupiah", () => {
   it("uses dot thousands and no decimals", () => {
@@ -40,13 +46,22 @@ describe("parseRupiahInput", () => {
   });
 });
 
-describe("maskAccountNumber", () => {
-  it("shows the last 4 digits", () => {
-    expect(maskAccountNumber("1234567890")).toBe("•••• 7890");
+describe("formatAccountNumber", () => {
+  it("shows the full number in groups of 4", () => {
+    expect(formatAccountNumber("1234567890")).toBe("1234 5678 90");
+    expect(formatAccountNumber("12345678")).toBe("1234 5678");
+    expect(formatAccountNumber("123")).toBe("123");
   });
 
-  it("hides short or missing numbers", () => {
-    expect(maskAccountNumber("123")).toBeNull();
-    expect(maskAccountNumber(null)).toBeNull();
+  it("returns null when there is no number", () => {
+    expect(formatAccountNumber(null)).toBeNull();
+    expect(formatAccountNumber("")).toBeNull();
+  });
+});
+
+describe("accountDigits", () => {
+  it("keeps digits only for copying", () => {
+    expect(accountDigits("1234 5678-90")).toBe("1234567890");
+    expect(accountDigits(null)).toBeNull();
   });
 });

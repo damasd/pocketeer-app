@@ -107,22 +107,26 @@ export function AccountsScreen() {
               {loading &&
                 [0, 1].map((i) => <span key={i} aria-hidden className="block h-[216px] rounded-3xl bg-line" />)}
               {list.map((a) => (
-                <div key={a.id} className="relative">
-                  {/* Card opens this account's transactions; the pencil edits the account. */}
+                <div
+                  key={a.id}
+                  className="relative rounded-3xl transition-transform duration-150 ease-out has-[>a:active]:scale-[0.98]"
+                >
+                  {/* Card opens this account's transactions (link laid over the card, so the
+                      copy button inside it stays a separate button); the pencil edits the account. */}
+                  <AccountCardFace
+                    name={a.name}
+                    accountNumber={a.accountNumber}
+                    colour={a.colour}
+                    balance={a.balance}
+                    saved={a.saved}
+                    masked={hidden}
+                    copyable
+                  />
                   <Link
                     href={`/history?account=${a.id}`}
                     aria-label={`${a.name}, balance ${money(a.balance)}. Show transactions`}
-                    className="block rounded-3xl transition-transform duration-150 ease-out active:scale-[0.98]"
-                  >
-                    <AccountCardFace
-                      name={a.name}
-                      accountNumber={a.accountNumber}
-                      colour={a.colour}
-                      balance={a.balance}
-                      saved={a.saved}
-                      masked={hidden}
-                    />
-                  </Link>
+                    className="absolute inset-0 rounded-3xl"
+                  />
                   <button
                     type="button"
                     aria-label={`Edit ${a.name}`}
