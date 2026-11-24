@@ -51,7 +51,6 @@ export function GoalForm({
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) return setError("Give the goal a name.");
-    if (target > 0 && !date) return setError("Pick a target date, or clear the amount.");
     if (date && target <= 0) return setError("Type a target amount, or clear the date.");
 
     run(async () => {
@@ -61,7 +60,7 @@ export function GoalForm({
       } else if (trimmed !== c.name) {
         c = await saveCategory(c.id, { name: trimmed, icon: c.icon, note: c.note });
       }
-      if (target > 0) await saveGoal(goal?.id ?? null, { categoryId: c.id, target, targetDate: date });
+      if (target > 0) await saveGoal(goal?.id ?? null, { categoryId: c.id, target, targetDate: date || null });
       else if (goal) await deleteGoal(goal.id);
       showToast({ message: category ? "Goal updated" : `${trimmed} added` });
     });
@@ -103,15 +102,28 @@ export function GoalForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="goal-date">Target date (optional)</Label>
-        <input
-          id="goal-date"
-          type="date"
-          min={localDate()}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="h-12 rounded-2xl border-0 bg-page px-4 text-base font-semibold"
-        />
-        <p className="text-xs text-muted">With both, the app works out how much to set aside each pay period.</p>
+        <div className="flex items-center gap-2">
+          <input
+            id="goal-date"
+            type="date"
+            min={localDate()}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="h-12 min-w-0 flex-1 rounded-2xl border-0 bg-page px-4 text-base font-semibold"
+          />
+          {date && (
+            <button
+              type="button"
+              onClick={() => setDate("")}
+              className="h-12 flex-none rounded-2xl bg-page px-4 text-sm font-semibold"
+            >
+              Clear date
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-muted">
+          With a date, the app suggests how much to set aside each pay period. Without one, it just tracks progress.
+        </p>
       </div>
 
       {error && <ErrorNote>{error}</ErrorNote>}

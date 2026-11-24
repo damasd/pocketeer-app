@@ -86,7 +86,7 @@ export function HomeScreen() {
         .filter((c) => c.kind === "saving" && !c.archived)
         .flatMap((c) => {
           const g = (goals.data ?? []).find((x) => x.categoryId === c.id);
-          const plan = g
+          const plan = g?.targetDate
             ? goalPlan({ target: g.target, targetDate: g.targetDate, period, moves: txs.filter((t) => t.categoryId === c.id) })
             : null;
           const of = savingTargetFor(budgetRows.find((b) => b.categoryId === c.id)?.amount ?? null, plan?.neededThisPeriod ?? null);

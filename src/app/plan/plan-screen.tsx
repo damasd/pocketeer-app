@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "lucide-react";
 import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { Segmented } from "@/components/segmented";
@@ -104,7 +104,7 @@ function PlanBody({ today }: { today: string }) {
   const incomeRows = rowsOf("income");
   const savingRows = rowsOf("saving").map((r) => {
     const goal = (goals.data ?? []).find((g) => g.categoryId === r.category.id);
-    if (!goal || !period) return r;
+    if (!goal?.targetDate || !period) return r;
     const plan = goalPlan({
       target: goal.target,
       targetDate: goal.targetDate,
@@ -254,9 +254,9 @@ function PlanBody({ today }: { today: string }) {
             <SummaryLine label="Saving target" value={savingTarget} />
             <div aria-hidden className="my-1 h-px bg-nav-selected" />
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[13px] text-[#BDBDBD]">{left >= 0 ? "Left to plan" : "Planned more than you expect"}</span>
+              <span className="min-w-0 text-[13px] text-[#BDBDBD]">{left >= 0 ? "Left to plan" : "Over-planned by"}</span>
               <span
-                className={`rounded-full px-3 py-1 text-[17px] font-bold ${left >= 0 ? "bg-lime text-ink" : "bg-ember text-white"}`}
+                className={`flex-none rounded-full px-3 py-1 text-[17px] font-bold whitespace-nowrap ${left >= 0 ? "bg-lime text-ink" : "bg-ember text-white"}`}
               >
                 {formatRupiah(Math.abs(left))}
               </span>
@@ -279,6 +279,7 @@ function PlanBody({ today }: { today: string }) {
             slides={[
               {
                 id: "expense",
+                label: "Expense",
                 title: "Expense budget",
                 total: expenseBudget,
                 body: (
@@ -290,6 +291,7 @@ function PlanBody({ today }: { today: string }) {
               },
               {
                 id: "income",
+                label: "Income",
                 title: "Expected income",
                 total: expectedIncome,
                 body: (
@@ -301,6 +303,7 @@ function PlanBody({ today }: { today: string }) {
               },
               {
                 id: "saving",
+                label: "Saving",
                 title: "Saving target",
                 total: savingTarget,
                 body: (
@@ -367,95 +370,43 @@ function SummaryLine({ label, value }: { label: string; value: number }) {
   );
 }
 
-type Slide = { id: string; title: string; total: number; body: ReactNode };
+type Slide = { id: string; label: string; title: string; total: number; body: ReactNode };
 
 /**
- * Expense budget → Expected income → Saving target, side by side. Swipe left or right (the
- * browser's own scroll snapping) or tap a dot. The box takes the height of the slide in view.
+ * Expense budget, Expected income and Saving target behind a three-way switch (the same sliding
+ * pill as Plan / Goals). The list slides in from the side of the option you picked.
  */
 function PlanSlides({ slides }: { slides: Slide[] }) {
-  const scroller = useRef<HTMLDivElement>(null);
-  const panels = useRef<(HTMLElement | null)[]>([]);
-  const [active, setActive] = useState(0);
-  const [height, setHeight] = useState<number | null>(null);
+  const [active, setActive] = useState(slides[0].id);
+  const [from, setFrom] = useState<"left" | "right" | null>(null);
+  const index = slides.findIndex((s) => s.id === active);
+  const slide = slides[index];
 
-  // Follow the slide in view, also mid-swipe, so its rows are ready to tap as it lands.
-  function onScroll() {
-    const el = scroller.current;
-    if (!el || !el.clientWidth) return;
-    const i = Math.max(0, Math.min(slides.length - 1, Math.round(el.scrollLeft / el.clientWidth)));
-    if (i !== active) setActive(i);
-  }
-
-  // Match the box to the slide in view, and keep matching as its rows change.
-  useLayoutEffect(() => {
-    const panel = panels.current[active];
-    if (!panel) return;
-    const measure = () => setHeight(panel.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(panel);
-    return () => ro.disconnect();
-  }, [active]);
-
-  function go(i: number) {
-    const el = scroller.current;
-    if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollTo({ left: i * el.clientWidth, behavior: reduce ? "auto" : "smooth" });
+  function pick(id: string) {
+    const next = slides.findIndex((s) => s.id === id);
+    if (next === index) return;
+    setFrom(next > index ? "right" : "left");
+    setActive(id);
   }
 
   return (
-    <section aria-roledescription="carousel" aria-label="Plan amounts" className="flex flex-col gap-1">
-      <div className="flex items-center justify-between">
-        <div role="group" aria-label="Choose a list" className="-ml-3.5 flex">
-          {slides.map((s, i) => (
-            <button
-              key={s.id}
-              type="button"
-              aria-label={s.title}
-              aria-current={i === active}
-              onClick={() => go(i)}
-              className="flex size-11 items-center justify-center"
-            >
-              <span
-                aria-hidden
-                className={`block h-2 rounded-full transition-all duration-300 motion-reduce:transition-none ${
-                  i === active ? "w-5 bg-ink" : "w-2 bg-[#BDBDBD]"
-                }`}
-              />
-            </button>
-          ))}
+    <section aria-labelledby={`list-${slide.id}`} className="flex flex-col gap-3">
+      <Segmented
+        label="Show list"
+        surface="card"
+        options={slides.map((s) => ({ value: s.id, label: s.label }))}
+        value={active}
+        onChange={pick}
+      />
+      <div key={slide.id} className={`flex flex-col gap-3 ${from ? `slide-in-${from}` : ""}`}>
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 id={`list-${slide.id}`} className="text-[17px] font-semibold">
+            {slide.title}
+          </h2>
+          <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(slide.total)}</span>
         </div>
-        <span className="text-[13px] text-muted">Tap an amount to change it</span>
-      </div>
-
-      <div
-        ref={scroller}
-        onScroll={onScroll}
-        className="-mx-5 flex snap-x snap-mandatory items-start overflow-x-auto overscroll-x-contain transition-[height] duration-300 ease-out [scrollbar-width:none] motion-reduce:transition-none [&::-webkit-scrollbar]:hidden"
-        style={height !== null ? { height } : undefined}
-      >
-        {slides.map((s, i) => (
-          <section
-            key={s.id}
-            ref={(el) => {
-              panels.current[i] = el;
-            }}
-            aria-roledescription="slide"
-            aria-labelledby={`slide-${s.id}`}
-            inert={i !== active}
-            className="flex w-full flex-none snap-start snap-always flex-col gap-3 px-5"
-          >
-            <div className="flex items-baseline justify-between gap-2">
-              <h2 id={`slide-${s.id}`} className="text-[17px] font-semibold">
-                {s.title}
-              </h2>
-              <span className="text-[15px] font-bold">{formatRupiah(s.total)}</span>
-            </div>
-            {s.body}
-          </section>
-        ))}
+        <p className="-mt-1.5 text-[13px] text-muted">Tap an amount to change it</p>
+        {slide.body}
       </div>
     </section>
   );
@@ -664,12 +615,9 @@ function GoalsTab({ rows, onNew, onOpen }: { rows: GoalRow[]; onNew: () => void;
           >
             <span className="flex w-full items-baseline justify-between gap-2">
               <span className="text-[17px] font-bold">{category.name}</span>
-              {goal && <span className="text-xs text-muted">{byDate(goal.targetDate)}</span>}
+              {goal?.targetDate && <span className="text-xs text-muted">{byDate(goal.targetDate)}</span>}
             </span>
-            <span className="flex w-full items-baseline justify-between gap-2">
-              <span className="text-xl font-bold">{formatRupiah(saved)}</span>
-              {goal && <span className="text-[13px] text-muted">of {formatRupiah(goal.target)}</span>}
-            </span>
+            <span className="text-xl font-bold">{formatRupiah(saved)}</span>
             {goal ? (
               <>
                 <span aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-page">

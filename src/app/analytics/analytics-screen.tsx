@@ -90,7 +90,7 @@ function AnalyticsBody({ today }: { today: string }) {
     const typed = (budgets.data ?? []).find((b) => b.periodId === storedPeriod.id && b.categoryId === categoryId)?.amount ?? null;
     if (type !== "saving") return typed;
     const g = (goals.data ?? []).find((x) => x.categoryId === categoryId);
-    const suggested = g
+    const suggested = g?.targetDate
       ? goalPlan({
           target: g.target,
           targetDate: g.targetDate,

@@ -243,3 +243,16 @@ html[data-locked] body > :not(#app-lock-root) {
 html[data-locked] {
   background: var(--color-ink);
 }
+
+/* Target > Plan: the list slides in from the side of the option picked (plan-screen.tsx). */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+}
+.slide-in-right { animation: slide-in-right 280ms cubic-bezier(0.32, 0.72, 0, 1); }
+.slide-in-left { animation: slide-in-left 280ms cubic-bezier(0.32, 0.72, 0, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .slide-in-right, .slide-in-left { animation: none; }
+}

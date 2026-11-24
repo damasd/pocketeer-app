@@ -3,10 +3,11 @@
 import { createStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 
-export type Goal = { id: string; categoryId: string; target: number; targetDate: string };
+/** A goal: an amount to reach, and optionally a date to reach it by. */
+export type Goal = { id: string; categoryId: string; target: number; targetDate: string | null };
 export type GoalInput = Omit<Goal, "id">;
 
-type Row = { id: string; category_id: string; target_amount: number; target_date: string };
+type Row = { id: string; category_id: string; target_amount: number; target_date: string | null };
 
 const COLUMNS = "id, category_id, target_amount, target_date";
 const fromRow = (r: Row): Goal => ({
