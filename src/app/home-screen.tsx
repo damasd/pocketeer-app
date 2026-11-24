@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { CARD_STYLES } from "@/components/account-card";
+import { useEffect, useMemo, useState } from "react";
+import { AccountStack, stackColours, useAccountSwipe } from "@/components/account-stack";
 import { RevealButton, useMoney } from "@/components/amount";
 import { Greeting } from "@/components/greeting";
 import { LogForm } from "@/components/log-sheet";
@@ -33,7 +33,7 @@ export function HomeScreen() {
   const transactions = useTransactions();
   const accounts = useAccounts();
   const [editing, setEditing] = useState<Transaction | null>(null);
-  const touch = useRef<{ x: number; y: number } | null>(null);
+  const swipe = useAccountSwipe(() => router.push("/account", { transitionTypes: ["nav-forward"] }));
   const { money, hidden } = useMoney();
 
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
@@ -99,25 +99,17 @@ export function HomeScreen() {
   const accountName = (id: string | null) => (accounts.data ?? []).find((a) => a.id === id)?.name ?? "";
   const category = (id: string | null) => allCategories.find((c) => c.id === id) ?? null;
 
-  // Card stack peeking at the right edge: the first three accounts' colours.
-  const peek = (accounts.data ?? []).filter((a) => !a.archived).slice(0, 3);
-  const peekColours = [0, 1, 2].map((i) => CARD_STYLES[peek[i]?.colour ?? (["lime", "white", "grey"] as const)[i]]);
+  // Card stack peeking at the right edge: the first accounts' colours.
+  const peekColours = stackColours((accounts.data ?? []).filter((a) => !a.archived));
 
   const loading = !today || (budgets.status === "loading" && !budgets.data) || (transactions.status === "loading" && !transactions.data);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-ink">
+      {/* Swipe left anywhere on the header: the account cards slide and Accounts opens. */}
       <div
-        className="relative flex flex-col gap-6 px-5 pt-[max(32px,env(safe-area-inset-top))] pb-7 text-white"
-        onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })}
-        onTouchEnd={(e) => {
-          const start = touch.current;
-          touch.current = null;
-          if (!start) return;
-          const dx = e.changedTouches[0].clientX - start.x;
-          const dy = e.changedTouches[0].clientY - start.y;
-          if (dx < -60 && Math.abs(dy) < 40) router.push("/account"); // swipe left opens Accounts
-        }}
+        className="relative flex touch-pan-y flex-col gap-6 px-5 pt-[max(32px,env(safe-area-inset-top))] pb-7 text-white select-none"
+        {...swipe.handlers}
       >
         <Greeting />
 
@@ -163,21 +155,7 @@ export function HomeScreen() {
           )}
         </section>
 
-        <Link href="/account" aria-label="Open accounts" className="absolute top-[100px] right-0 block h-40 w-[84px] overflow-hidden">
-          {peekColours.map((s, i) => (
-            <span
-              key={i}
-              aria-hidden
-              className="absolute top-0 h-40 w-[140px] rounded-[18px] border"
-              style={{
-                left: i * 26,
-                background: s.bg,
-                borderColor: s.bg === "#111111" ? "#2E2E2E" : "transparent",
-                boxShadow: i ? "-6px 0 12px rgba(0,0,0,0.28)" : undefined,
-              }}
-            />
-          ))}
-        </Link>
+        <AccountStack colours={peekColours} stackRef={swipe.stackRef} />
       </div>
 
       <div className="flex flex-1 flex-col gap-6 rounded-t-[28px] bg-card px-5 pt-2.5 pb-36">
