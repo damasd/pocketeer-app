@@ -499,19 +499,20 @@ function PlanSlides({ slides }: { slides: Slide[] }) {
         onChange={pick}
       />
       <div key={slide.id} className={`mt-3 flex flex-col gap-3 ${from ? `slide-in-${from}` : ""}`}>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <h2 id={`list-${slide.id}`} className="text-[17px] font-semibold">
+        <div className="flex flex-col gap-0.5">
+          {/* Title, total and the arrange icon on one line; the hint under it, full width. */}
+          <div className="flex items-center justify-between gap-2">
+            <h2 id={`list-${slide.id}`} className="min-w-0 truncate text-[17px] font-semibold">
               {slide.title}
             </h2>
-            <p className="text-[13px] text-muted">
-              {slide.arranging ? "Move with the arrows, or archive" : "Tap an amount to change it"}
-            </p>
+            <span className="flex flex-none items-center gap-2.5">
+              <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(slide.total)}</span>
+              {slide.action}
+            </span>
           </div>
-          <span className="flex flex-none items-center gap-2.5">
-            <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(slide.total)}</span>
-            {slide.action}
-          </span>
+          <p className="text-[13px] text-muted">
+            {slide.arranging ? "Move with the arrows, or archive" : "Tap an amount to change it"}
+          </p>
         </div>
         {slide.body}
       </div>
