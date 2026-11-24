@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AccountStack, topCards, useAccountSwipe } from "@/components/account-stack";
 import { AccountsPreview } from "@/components/accounts-preview";
 import { RevealButton, useMoney } from "@/components/amount";
+import { FitText } from "@/components/fit-text";
 import { Greeting } from "@/components/greeting";
 import { LogForm } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
@@ -138,7 +139,7 @@ export function HomeScreen() {
               ) : budgetTotal > 0 ? (
                 <>
                   <span className="mt-1 flex items-center gap-1">
-                    <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{money(head.remaining)}</span>
+                    <FitText text={money(head.remaining)} max={38} min={22} className="leading-[46px] font-bold tracking-[-0.03em]" />
                     <RevealButton tone="dark" />
                   </span>
                   <div
