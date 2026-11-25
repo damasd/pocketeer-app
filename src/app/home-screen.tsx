@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AccountStack, topCards, useAccountSwipe } from "@/components/account-stack";
 import { AccountsPreview } from "@/components/accounts-preview";
 import { RevealButton, useMoney } from "@/components/amount";
+import { BudgetTileBody } from "@/components/budget-tile";
 import { FitText } from "@/components/fit-text";
 import { Greeting } from "@/components/greeting";
 import { LogForm } from "@/components/log-sheet";
@@ -16,8 +17,8 @@ import { useAccounts } from "@/lib/accounts";
 import { accountBalance, savedInAccount } from "@/lib/balances";
 import { useBudgets } from "@/lib/budgets";
 import { useCategories } from "@/lib/categories";
-import { CategoryIcon } from "@/lib/category-icons";
 import { groupByDay } from "@/lib/history";
+import { useHomeTiles } from "@/lib/home-tiles";
 import { netSaved, remainingBudget, savingChange, topTiles, type Tile } from "@/lib/home";
 import { periodFor } from "@/lib/periods";
 import { coverPeriodsFrom, periodOf, usePeriods } from "@/lib/periods-store";
@@ -188,7 +189,10 @@ export function HomeScreen() {
   const savedNow = period ? netSaved(txs, period) : 0;
   const savedBefore = lastPeriod ? netSaved(txs, lastPeriod) : 0;
   const saving = savingChange(savedNow, savedBefore);
-  const tiles = topTiles(expenseTiles);
+  // The tiles picked on the Budget page, in category order; none picked: the six used most.
+  const homeTiles = useHomeTiles();
+  const chosenTiles = homeTiles.data ?? [];
+  const tiles = chosenTiles.length ? expenseTiles.filter((t) => chosenTiles.includes(t.id)) : topTiles(expenseTiles);
 
   // The 6 latest transactions (newest first, future-dated ones left out), grouped by day.
   const LATEST = 6;
@@ -303,51 +307,22 @@ export function HomeScreen() {
               <h2 id="tiles-title" className="text-[17px] font-semibold">
                 Budget
               </h2>
-              <Link href="/plan" aria-label="See all budgets" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-[13px] font-semibold">
+              <Link href="/budgets" aria-label="See all budgets" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-[13px] font-semibold">
                 See all
                 <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>
             </div>
             {tiles.length === 0 && !loading ? (
               <p className="rounded-[20px] bg-page px-4 py-4 text-[13px] font-medium text-muted">
-                Set budgets in Target to see them here.
+                Set budgets in Target, or pick tiles in See all, to see them here.
               </p>
             ) : (
               <ul className="grid grid-cols-2 gap-3">
                 {tiles.map((t) => {
                   const c = category(t.id);
-                  const over = t.kind === "expense" && t.amount > t.of;
                   return (
                     <li key={`${t.kind}-${t.id}`} className="flex flex-col gap-2 rounded-[20px] bg-page p-3">
-                      <span className="flex min-w-0 items-center gap-1.5">
-                        <span
-                          aria-hidden
-                          className="flex size-7 flex-none items-center justify-center rounded-full bg-card text-ink"
-                        >
-                          <CategoryIcon name={c?.icon ?? "ellipsis"} size={16} />
-                        </span>
-                        <span className="truncate text-[13px] font-semibold">{c?.name}</span>
-                      </span>
-                      <span className="flex flex-col gap-0.5">
-                        {/* What's left of the budget (Rp 0 once over; the pill below says by how much). */}
-                        <span className="text-[17px] font-bold">{money(Math.max(0, t.of - t.amount))}</span>
-                        <span className="text-xs text-muted">left of {money(t.of)}</span>
-                      </span>
-                      <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-card">
-                        <span
-                          className={`block h-full rounded-full ${over ? "bg-ember" : "bg-ink"}`}
-                          style={{ width: `${Math.min(100, t.percent)}%` }}
-                        />
-                      </span>
-                      {over ? (
-                        <span className="self-start rounded-full bg-ember px-2 py-0.5 text-xs font-bold text-white">
-                          {money(t.amount - t.of)} over
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted">
-                          {t.percent}% {t.kind === "saving" ? "saved" : "used"}
-                        </span>
-                      )}
+                      <BudgetTileBody name={c?.name ?? ""} icon={c?.icon ?? "ellipsis"} spent={t.amount} budget={t.of} money={money} />
                     </li>
                   );
                 })}

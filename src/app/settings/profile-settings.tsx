@@ -18,6 +18,7 @@ import { resetCategories } from "@/lib/categories";
 import { resetTransactions } from "@/lib/transactions";
 import { resetBudgets } from "@/lib/budgets";
 import { resetGoals } from "@/lib/goals";
+import { resetHomeTiles } from "@/lib/home-tiles";
 import { resetPeriods } from "@/lib/periods-store";
 import {
   NAME_MAX,
@@ -112,6 +113,7 @@ export function ProfileSettings() {
       resetPeriods();
       resetBudgets();
       resetGoals();
+      resetHomeTiles();
       router.replace("/login");
       router.refresh();
     }
