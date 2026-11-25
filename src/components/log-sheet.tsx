@@ -247,6 +247,45 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
     );
   }
 
+  // Keys are 52 px tall, a little shorter on small screens (never under 44 px).
+  const keypad = (
+    <div className="grid flex-none grid-cols-4 grid-rows-[repeat(4,clamp(44px,6.5dvh,52px))] gap-2 pt-1">
+      {(["1", "2", "3"] as const).map((k, i) => (
+        <Key key={k} col={i + 1} row={1} onPress={() => press(k)}>
+          {k}
+        </Key>
+      ))}
+      <Key col={4} row={1} label="Delete last digit" onPress={() => press("back")}>
+        <Delete aria-hidden size={22} strokeWidth={2} />
+      </Key>
+      {(["4", "5", "6"] as const).map((k, i) => (
+        <Key key={k} col={i + 1} row={2} onPress={() => press(k)}>
+          {k}
+        </Key>
+      ))}
+      {(["7", "8", "9"] as const).map((k, i) => (
+        <Key key={k} col={i + 1} row={3} onPress={() => press(k)}>
+          {k}
+        </Key>
+      ))}
+      <Key col="1 / span 2" row={4} onPress={() => press("0")}>
+        0
+      </Key>
+      <Key col={3} row={4} onPress={() => press("000")} small>
+        000
+      </Key>
+      <button
+        type="button"
+        onClick={save}
+        disabled={busy}
+        style={{ gridColumn: 4, gridRow: "2 / span 3" }}
+        className="rounded-2xl bg-lime text-[17px] font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97] disabled:opacity-60"
+      >
+        {busy ? "Saving…" : "Save"}
+      </button>
+    </div>
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <Segmented
@@ -421,8 +460,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
             </button>
           ))}
 
-        {/* When and what: with the keypad at the bottom (spare room goes above). The calendar floats near the bottom of the screen. */}
-        <div className="mt-auto flex flex-none gap-2">
+        {/* When and what: right under the accounts. The calendar floats near the bottom of the screen. */}
+        <div className="flex flex-none gap-2">
           <DatePopover value={date} onChange={setDate} up />
           <input
             type="text"
@@ -443,43 +482,13 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
 
         {error && <ErrorNote>{error}</ErrorNote>}
 
-        {/* Keys are 52 px tall, a little shorter on small screens (never under 44 px). */}
-        <div className="grid flex-none grid-cols-4 grid-rows-[repeat(4,clamp(44px,6.5dvh,52px))] gap-2 pt-1">
-          {(["1", "2", "3"] as const).map((k, i) => (
-            <Key key={k} col={i + 1} row={1} onPress={() => press(k)}>
-              {k}
-            </Key>
-          ))}
-          <Key col={4} row={1} label="Delete last digit" onPress={() => press("back")}>
-            <Delete aria-hidden size={22} strokeWidth={2} />
-          </Key>
-          {(["4", "5", "6"] as const).map((k, i) => (
-            <Key key={k} col={i + 1} row={2} onPress={() => press(k)}>
-              {k}
-            </Key>
-          ))}
-          {(["7", "8", "9"] as const).map((k, i) => (
-            <Key key={k} col={i + 1} row={3} onPress={() => press(k)}>
-              {k}
-            </Key>
-          ))}
-          <Key col="1 / span 2" row={4} onPress={() => press("0")}>
-            0
-          </Key>
-          <Key col={3} row={4} onPress={() => press("000")} small>
-            000
-          </Key>
-          <button
-            type="button"
-            onClick={save}
-            disabled={busy}
-            style={{ gridColumn: 4, gridRow: "2 / span 3" }}
-            className="rounded-2xl bg-lime text-[17px] font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97] disabled:opacity-60"
-          >
-            {busy ? "Saving…" : "Save"}
-          </button>
-        </div>
+        {/* Saving scrolls, keypad included. */}
+        {mode === "saving" && <div className="mt-auto">{keypad}</div>}
       </div>
+
+      {/* Expense, Income and Transfer: the keypad is pinned to the bottom of the sheet, so it sits in
+          exactly the same place on each of them whatever is above it. */}
+      {mode !== "saving" && keypad}
     </div>
   );
 }
