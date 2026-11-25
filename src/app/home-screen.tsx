@@ -18,7 +18,7 @@ import { useBudgets } from "@/lib/budgets";
 import { useCategories } from "@/lib/categories";
 import { CategoryIcon } from "@/lib/category-icons";
 import { groupByDay } from "@/lib/history";
-import { netSaved, recentFrom, remainingBudget, savingChange, topTiles, type Tile } from "@/lib/home";
+import { netSaved, remainingBudget, savingChange, topTiles, type Tile } from "@/lib/home";
 import { periodFor } from "@/lib/periods";
 import { coverPeriodsFrom, periodOf, usePeriods } from "@/lib/periods-store";
 import { useTransactions, type Transaction } from "@/lib/transactions";
@@ -186,8 +186,9 @@ export function HomeScreen() {
   const saving = savingChange(savedNow, savedBefore);
   const tiles = topTiles(expenseTiles);
 
-  // Last 3 days, grouped by day.
-  const recent = today ? groupByDay(txs.filter((t) => t.date >= recentFrom(today) && t.date <= today), today) : [];
+  // The 6 latest transactions (newest first, future-dated ones left out), grouped by day.
+  const LATEST = 6;
+  const recent = today ? groupByDay(txs.filter((t) => t.date <= today).slice(0, LATEST), today) : [];
   const accountName = (id: string | null) => (accounts.data ?? []).find((a) => a.id === id)?.name ?? "";
   const category = (id: string | null) => allCategories.find((c) => c.id === id) ?? null;
 
@@ -384,7 +385,7 @@ export function HomeScreen() {
               </Link>
             </div>
             {!loading && recent.length === 0 && (
-              <p className="text-[13px] font-medium text-muted">Nothing in the last 3 days. Tap + to log one.</p>
+              <p className="text-[13px] font-medium text-muted">No transactions yet. Tap + to log one.</p>
             )}
             {recent.map((g) => (
               <section key={g.date} aria-label={g.label}>
