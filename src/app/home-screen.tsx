@@ -17,12 +17,10 @@ import { accountBalance, savedInAccount } from "@/lib/balances";
 import { useBudgets } from "@/lib/budgets";
 import { useCategories } from "@/lib/categories";
 import { CategoryIcon } from "@/lib/category-icons";
-import { useGoals } from "@/lib/goals";
 import { groupByDay } from "@/lib/history";
-import { recentFrom, remainingBudget, share, topTiles, type Tile } from "@/lib/home";
+import { netSaved, recentFrom, remainingBudget, savingChange, topTiles, type Tile } from "@/lib/home";
 import { periodFor } from "@/lib/periods";
 import { coverPeriodsFrom, periodOf, usePeriods } from "@/lib/periods-store";
-import { goalPlan, savingTargetFor } from "@/lib/plan";
 import { useTransactions, type Transaction } from "@/lib/transactions";
 import { useToday } from "@/lib/use-today";
 
@@ -33,7 +31,6 @@ export function HomeScreen() {
   const periods = usePeriods();
   const budgets = useBudgets();
   const categories = useCategories();
-  const goals = useGoals();
   const transactions = useTransactions();
   const accounts = useAccounts();
   const [editing, setEditing] = useState<Transaction | null>(null);
@@ -66,31 +63,26 @@ export function HomeScreen() {
     .reduce((s, b) => s + b.amount, 0);
   const spentTotal = periodTxs.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
   const head = remainingBudget(budgetTotal, spentTotal);
-  // Tiles: expense budgets and saving goals, the six with the highest share used.
+  // Tiles: expense budgets, the six with the highest share used.
   const spentBy = (id: string) => periodTxs.filter((t) => t.type === "expense" && t.categoryId === id).reduce((s, t) => s + t.amount, 0);
   const expenseTiles: Tile[] = expenseCategories.map((c) => {
     const of = budgetRows.find((b) => b.categoryId === c.id)?.amount ?? 0;
     const amount = spentBy(c.id);
     return { id: c.id, kind: "expense", amount, of, percent: of > 0 ? Math.round((amount / of) * 100) : 0 };
   });
-  // Saving tiles: the target typed on the Plan tab, else what the goal needs this period.
-  const savingTiles: Tile[] = period
-    ? allCategories
-        .filter((c) => c.kind === "saving" && !c.archived)
-        .flatMap((c) => {
-          const g = (goals.data ?? []).find((x) => x.categoryId === c.id);
-          const plan = g?.targetDate
-            ? goalPlan({ target: g.target, targetDate: g.targetDate, period, moves: txs.filter((t) => t.categoryId === c.id) })
-            : null;
-          const of = savingTargetFor(budgetRows.find((b) => b.categoryId === c.id)?.amount ?? null, plan?.neededThisPeriod ?? null);
-          if (!of) return [];
-          const amount = periodTxs
-            .filter((t) => t.categoryId === c.id)
-            .reduce((n, t) => n + (t.type === "saving_deposit" ? t.amount : t.type === "saving_withdraw" ? -t.amount : 0), 0);
-          return [{ id: c.id, kind: "saving" as const, amount, of, percent: share(amount, of) }];
-        })
-    : [];
-  const tiles = topTiles([...expenseTiles, ...savingTiles]);
+  // Saving this month against last month (net: deposits − withdrawals).
+  const dayBefore = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    const t = new Date(y, m - 1, d - 1);
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+  };
+  const lastPeriod = period
+    ? (periodOf(periods.data ?? [], dayBefore(period.start)) ?? periodFor(dayBefore(period.start)))
+    : null;
+  const savedNow = period ? netSaved(txs, period) : 0;
+  const savedBefore = lastPeriod ? netSaved(txs, lastPeriod) : 0;
+  const saving = savingChange(savedNow, savedBefore);
+  const tiles = topTiles(expenseTiles);
 
   // Last 3 days, grouped by day.
   const recent = today ? groupByDay(txs.filter((t) => t.date >= recentFrom(today) && t.date <= today), today) : [];
@@ -124,7 +116,8 @@ export function HomeScreen() {
       <main ref={pageRef} className="relative mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-ink">
         {/* Swipe left anywhere on the header: the account cards slide and Accounts opens. */}
         <div
-          className="relative flex touch-pan-y flex-col gap-6 px-5 pt-[max(32px,env(safe-area-inset-top))] pb-7 text-white select-none"
+          // Stays where it is while the white part below slides up over it.
+          className="sticky top-0 z-0 flex touch-pan-y flex-col gap-6 px-5 pt-[max(32px,env(safe-area-inset-top))] pb-7 text-white select-none"
           {...swipeHandlers}
         >
           <Greeting />
@@ -181,22 +174,23 @@ export function HomeScreen() {
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col gap-6 rounded-t-[28px] bg-card px-5 pt-2.5 pb-36">
+        {/* Tall enough to cover the header completely when pushed up. */}
+        <div className="relative z-10 flex min-h-dvh flex-1 flex-col gap-6 rounded-t-[28px] bg-card px-5 pt-2.5 pb-36 shadow-[0_-10px_30px_rgba(0,0,0,0.25)]">
           <div aria-hidden className="h-[5px] w-10 self-center rounded-full bg-line" />
 
           <section aria-labelledby="tiles-title" className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <h2 id="tiles-title" className="text-[17px] font-semibold">
-                Budget &amp; saving
+                Budget
               </h2>
-              <Link href="/plan" aria-label="See all budgets and savings" className="relative flex h-8 items-center gap-0.5 rounded-full bg-page pr-2 pl-3 text-[13px] font-semibold after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']">
+              <Link href="/plan" aria-label="See all budgets" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-[13px] font-semibold">
                 See all
                 <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>
             </div>
             {tiles.length === 0 && !loading ? (
               <p className="rounded-[20px] bg-page px-4 py-4 text-[13px] font-medium text-muted">
-                Set budgets and goals in Plan to see them here.
+                Set budgets in Target to see them here.
               </p>
             ) : (
               <ul className="grid grid-cols-2 gap-3">
@@ -208,9 +202,7 @@ export function HomeScreen() {
                       <span className="flex min-w-0 items-center gap-1.5">
                         <span
                           aria-hidden
-                          className={`flex size-7 flex-none items-center justify-center rounded-full ${
-                            over ? "bg-ember text-white" : t.kind === "saving" ? "bg-lime text-ink" : "bg-card text-ink"
-                          }`}
+                          className="flex size-7 flex-none items-center justify-center rounded-full bg-card text-ink"
                         >
                           <CategoryIcon name={c?.icon ?? "ellipsis"} size={16} />
                         </span>
@@ -245,12 +237,45 @@ export function HomeScreen() {
             )}
           </section>
 
+          <section aria-labelledby="saving-title" className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 id="saving-title" className="text-[17px] font-semibold">
+                Saving
+              </h2>
+              <Link href="/plan" aria-label="See all goals" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-[13px] font-semibold">
+                See all
+                <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
+              </Link>
+            </div>
+            <div className="flex flex-col gap-1 rounded-3xl bg-ink p-5 text-white">
+              <span className="text-[13px] text-[#BDBDBD]">Saved this month{period ? ` · ${period.name}` : ""}</span>
+              {loading ? (
+                <span aria-hidden className="mt-1 block h-9 w-44 rounded-xl bg-nav-selected" />
+              ) : (
+                <span className="text-[30px] leading-[1.25] font-bold tracking-[-0.03em]">{money(savedNow)}</span>
+              )}
+              {!loading && lastPeriod && (
+                <span
+                  className={`mt-2 self-start rounded-full px-2.5 py-1 text-xs font-bold ${
+                    saving.trend === "down" ? "bg-nav-selected text-white" : "bg-lime text-ink"
+                  }`}
+                >
+                  {saving.trend === "same"
+                    ? `Same as ${lastPeriod.name}`
+                    : `${saving.trend === "up" ? "▲" : "▼"} ${
+                        saving.percent !== null ? `${saving.percent}%` : money(saving.diff)
+                      } vs ${lastPeriod.name}`}
+                </span>
+              )}
+            </div>
+          </section>
+
           <section aria-labelledby="recent-title" className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <h2 id="recent-title" className="text-[17px] font-semibold">
                 Transaction
               </h2>
-              <Link href="/history" aria-label="See all transactions" className="relative flex h-8 items-center gap-0.5 rounded-full bg-page pr-2 pl-3 text-[13px] font-semibold after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']">
+              <Link href="/history" aria-label="See all transactions" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-[13px] font-semibold">
                 See all
                 <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>

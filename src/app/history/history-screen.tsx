@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { LogForm } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
 import { ErrorNote } from "@/components/ui";
@@ -42,8 +42,8 @@ export function HistoryScreen() {
   const [accountId, setAccountId] = useState<string>(fromAccount ?? ALL);
   const [categoryId, setCategoryId] = useState<string>(ALL);
   const [type, setType] = useState<TypeFilter>("all");
-  const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Transaction | null>(null);
 
@@ -75,7 +75,7 @@ export function HistoryScreen() {
     accountId: accountId === ALL ? null : accountId,
     categoryId: categoryId === ALL ? null : categoryId,
     type,
-    query: searchOpen ? query : "",
+    query,
   };
   const shown = filterHistory(txs, filter, { account: accountName, category: (id) => category(id)?.name ?? "" });
   const groups = groupByDay(shown, today);
@@ -89,35 +89,46 @@ export function HistoryScreen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex items-center gap-2 pt-3">
+      {/* Back, the title in the middle, and + to log a transaction (as the nav bar's Log button). */}
+      <header className="grid grid-cols-[44px_1fr_44px] items-center gap-2 pt-3">
         <Link
           href={fromAccount ? "/account" : "/"}
           aria-label={fromAccount ? "Back to Accounts" : "Back to Home"}
-          className="flex size-11 flex-none items-center justify-center rounded-full border border-line bg-card"
+          className="flex size-11 items-center justify-center rounded-full border border-line bg-card"
         >
           <ChevronLeft aria-hidden size={18} strokeWidth={2.25} />
         </Link>
-        <h1 className="flex-1 text-center text-[17px] font-bold">Transactions</h1>
+        <h1 className="text-center text-[17px] font-bold">Transactions</h1>
         <button
           type="button"
-          aria-label={searchOpen ? "Close search" : "Search transactions"}
-          aria-expanded={searchOpen}
-          onClick={() => {
-            setSearchOpen((o) => !o);
-            setQuery("");
-          }}
-          className="flex size-11 flex-none items-center justify-center rounded-full border border-line bg-card"
+          aria-label="Log transaction"
+          aria-haspopup="dialog"
+          onClick={() => setAdding(true)}
+          className="flex size-11 items-center justify-center rounded-full bg-lime text-ink"
         >
-          {searchOpen ? <X aria-hidden size={18} strokeWidth={2.25} /> : <Search aria-hidden size={18} strokeWidth={2.25} />}
+          <Plus aria-hidden size={20} strokeWidth={2.5} />
         </button>
+      </header>
+
+      <div className="flex items-center gap-2">
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-line bg-card px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+          <Search aria-hidden size={18} strokeWidth={2.25} className="flex-none text-muted" />
+          <input
+            type="search"
+            aria-label="Search notes, categories and accounts"
+            placeholder="Search transactions"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="h-full min-w-0 flex-1 border-0 bg-transparent text-base outline-none placeholder:text-muted"
+          />
+        </label>
         <button
           type="button"
           aria-label={activeFilters ? `Filters, ${activeFilters} on` : "Filters"}
-          aria-expanded={filtersOpen}
-          aria-controls="history-filters"
-          onClick={() => setFiltersOpen((o) => !o)}
+          aria-haspopup="dialog"
+          onClick={() => setFiltersOpen(true)}
           className={`relative flex size-11 flex-none items-center justify-center rounded-full border ${
-            filtersOpen ? "border-ink bg-ink text-white" : "border-line bg-card"
+            activeFilters ? "border-ink bg-ink text-white" : "border-line bg-card"
           }`}
         >
           <SlidersHorizontal aria-hidden size={18} strokeWidth={2.25} />
@@ -130,111 +141,108 @@ export function HistoryScreen() {
             </span>
           )}
         </button>
-      </header>
-
-      {searchOpen && (
-        <input
-          type="search"
-          aria-label="Search notes, categories and accounts"
-          placeholder="Search notes, categories, accounts"
-          autoFocus
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="h-11 rounded-full border border-line bg-card px-4 text-base placeholder:text-muted"
-        />
-      )}
-
-      {filtersOpen && (
-      <section id="history-filters" aria-label="Filters" className="flex flex-col gap-3 rounded-3xl bg-card p-4">
-      <div className="flex flex-wrap gap-2">
-        <FilterSelect
-          label="Pay period"
-          value={period ? period.start : ALL}
-          active={period !== null}
-          display={period ? period.name : "All time"}
-          onChange={setPeriodStart}
-        >
-          {periods.map((p) => (
-            <option key={p.start} value={p.start}>
-              {p.name} ({periodRangeLabel(p)})
-            </option>
-          ))}
-          <option value={ALL}>All time</option>
-        </FilterSelect>
-
-        <FilterSelect
-          label="Account"
-          value={accountId}
-          active={accountId !== ALL}
-          display={accountId === ALL ? "All accounts" : accountName(accountId) || "Account"}
-          onChange={setAccountId}
-        >
-          <option value={ALL}>All accounts</option>
-          {accountList.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-              {a.archived ? " (archived)" : ""}
-            </option>
-          ))}
-        </FilterSelect>
-
-        <FilterSelect
-          label="Category"
-          value={categoryId}
-          active={categoryId !== ALL}
-          display={categoryId === ALL ? "All categories" : (category(categoryId)?.name ?? "Category")}
-          onChange={setCategoryId}
-        >
-          <option value={ALL}>All categories</option>
-          {(["expense", "income", "saving"] as const).map((kind) => (
-            <optgroup key={kind} label={kind[0].toUpperCase() + kind.slice(1)}>
-              {categoryList
-                .filter((c) => c.kind === kind)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                    {c.archived ? " (archived)" : ""}
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-        </FilterSelect>
       </div>
 
-      <div role="group" aria-label="Transaction type" className="flex flex-wrap gap-2">
-        {TYPE_CHIPS.map((c) => {
-          const on = c.value === type;
-          return (
+      <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filter">
+        <div className="flex flex-col gap-4">
+          <FilterField
+            label="Pay period"
+            value={period ? period.start : ALL}
+            display={period ? `${period.name} (${periodRangeLabel(period)})` : "All time"}
+            onChange={setPeriodStart}
+          >
+            {periods.map((p) => (
+              <option key={p.start} value={p.start}>
+                {p.name} ({periodRangeLabel(p)})
+              </option>
+            ))}
+            <option value={ALL}>All time</option>
+          </FilterField>
+
+          <FilterField
+            label="Account"
+            value={accountId}
+            display={accountId === ALL ? "All accounts" : accountName(accountId) || "Account"}
+            onChange={setAccountId}
+          >
+            <option value={ALL}>All accounts</option>
+            {accountList.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+                {a.archived ? " (archived)" : ""}
+              </option>
+            ))}
+          </FilterField>
+
+          <FilterField
+            label="Category"
+            value={categoryId}
+            display={categoryId === ALL ? "All categories" : (category(categoryId)?.name ?? "Category")}
+            onChange={setCategoryId}
+          >
+            <option value={ALL}>All categories</option>
+            {(["expense", "income", "saving"] as const).map((kind) => (
+              <optgroup key={kind} label={kind[0].toUpperCase() + kind.slice(1)}>
+                {categoryList
+                  .filter((c) => c.kind === kind)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                      {c.archived ? " (archived)" : ""}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </FilterField>
+
+          <div className="flex flex-col gap-2">
+            <span id="type-label" className="text-[13px] font-medium text-muted">
+              Type
+            </span>
+            <div role="group" aria-labelledby="type-label" className="flex flex-wrap gap-2">
+              {TYPE_CHIPS.map((c) => {
+                const on = c.value === type;
+                return (
+                  <button
+                    key={c.value}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setType(c.value)}
+                    className={`h-11 flex-none rounded-full border px-4 text-[13px] font-semibold transition-colors duration-150 ${
+                      on ? "border-lime bg-lime" : "border-line bg-card"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-2 flex gap-2">
             <button
-              key={c.value}
               type="button"
-              aria-pressed={on}
-              onClick={() => setType(c.value)}
-              className={`h-11 flex-none rounded-full border px-4 text-[13px] font-semibold transition-colors duration-150 ${
-                on ? "border-lime bg-lime" : "border-line bg-card"
-              }`}
+              disabled={activeFilters === 0}
+              onClick={() => {
+                setPeriodStart(CURRENT);
+                setAccountId(ALL);
+                setCategoryId(ALL);
+                setType("all");
+              }}
+              className="h-12 flex-1 rounded-full border border-line bg-card text-sm font-semibold disabled:opacity-40"
             >
-              {c.label}
+              Clear
             </button>
-          );
-        })}
-      </div>
-      {activeFilters > 0 && (
-        <button
-          type="button"
-          onClick={() => {
-            setPeriodStart(CURRENT);
-            setAccountId(ALL);
-            setCategoryId(ALL);
-            setType("all");
-          }}
-          className="flex h-11 items-center self-start px-1 text-[13px] font-semibold underline-offset-4 hover:underline"
-        >
-          Clear filters
-        </button>
-      )}
-      </section>
-      )}
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(false)}
+              className="h-12 flex-[2] rounded-full bg-lime text-sm font-bold text-ink"
+            >
+              Show {shown.length} {shown.length === 1 ? "transaction" : "transactions"}
+            </button>
+          </div>
+        </div>
+      </Sheet>
 
       <p className="text-[13px] text-muted" aria-live="polite">
         {loading
@@ -289,6 +297,10 @@ export function HistoryScreen() {
         </div>
       )}
 
+      <Sheet open={adding} onClose={() => setAdding(false)} title="Log transaction" tall hideTitle>
+        <LogForm onDone={() => setAdding(false)} />
+      </Sheet>
+
       <Sheet open={editing !== null} onClose={() => setEditing(null)} title="Edit transaction" tall>
         {editing && <LogForm key={editing.id} editing={editing} onDone={() => setEditing(null)} />}
       </Sheet>
@@ -296,38 +308,36 @@ export function HistoryScreen() {
   );
 }
 
-/** A filter chip that opens the phone's native picker. Black when it is filtering. */
-function FilterSelect({
+/** One filter in the Filter sheet: its name, then a full-width field that opens the phone's picker. */
+function FilterField({
   label,
   value,
   display,
-  active,
   onChange,
   children,
 }: {
   label: string;
   value: string;
   display: string;
-  active: boolean;
   onChange: (value: string) => void;
   children: React.ReactNode;
 }) {
   return (
-    <label
-      className={`relative flex h-11 flex-none items-center gap-1 rounded-full border pr-3 pl-3.5 text-[13px] font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime ${
-        active ? "border-ink bg-ink text-white" : "border-line bg-card text-ink"
-      }`}
-    >
-      <span className="sr-only">{label}: </span>
-      <span aria-hidden>{display}</span>
-      <ChevronDown aria-hidden size={16} strokeWidth={2.25} />
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="absolute inset-0 cursor-pointer appearance-none opacity-0"
-      >
-        {children}
-      </select>
+    <label className="flex flex-col gap-2">
+      <span className="text-[13px] font-medium text-muted">{label}</span>
+      <span className="relative flex h-12 items-center justify-between gap-2 rounded-2xl bg-page px-4 text-[15px] font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+        <span aria-hidden className="truncate">
+          {display}
+        </span>
+        <ChevronDown aria-hidden size={18} strokeWidth={2.25} className="flex-none text-muted" />
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 cursor-pointer appearance-none opacity-0"
+        >
+          {children}
+        </select>
+      </span>
     </label>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recentFrom, remainingBudget, share, topTiles, type Tile } from "./home";
+import { netSaved, recentFrom, remainingBudget, savingChange, share, topTiles, type Tile } from "./home";
 
 describe("remainingBudget", () => {
   it("is budget minus spent, with the share used", () => {
@@ -51,5 +51,29 @@ describe("recentFrom", () => {
     expect(recentFrom("2026-12-07")).toBe("2026-12-05");
     expect(recentFrom("2026-03-01")).toBe("2026-02-27");
     expect(recentFrom("2026-12-07", 1)).toBe("2026-12-07");
+  });
+});
+
+describe("netSaved", () => {
+  const moves = [
+    { type: "saving_deposit", amount: 500000, date: "2026-11-26" },
+    { type: "saving_withdraw", amount: 100000, date: "2026-12-01" },
+    { type: "expense", amount: 70000, date: "2026-12-01" },
+    { type: "saving_deposit", amount: 300000, date: "2026-11-20" }, // last month
+  ];
+  it("adds deposits and takes off withdrawals inside the dates only", () => {
+    expect(netSaved(moves, { start: "2026-11-25", end: "2026-12-24" })).toBe(400000);
+    expect(netSaved(moves, { start: "2026-10-26", end: "2026-11-24" })).toBe(300000);
+  });
+});
+
+describe("savingChange", () => {
+  it("says up or down, by how much and by what share of last month", () => {
+    expect(savingChange(400000, 300000)).toEqual({ trend: "up", diff: 100000, percent: 33 });
+    expect(savingChange(150000, 300000)).toEqual({ trend: "down", diff: 150000, percent: 50 });
+    expect(savingChange(200000, 200000)).toEqual({ trend: "same", diff: 0, percent: 0 });
+  });
+  it("gives no percentage when last month saved nothing", () => {
+    expect(savingChange(250000, 0)).toEqual({ trend: "up", diff: 250000, percent: null });
   });
 });

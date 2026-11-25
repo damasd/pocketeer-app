@@ -275,35 +275,28 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
       </div>
 
       {/* Type and amount stay at the top; everything below scrolls when it doesn't fit. */}
-      <div className="no-scrollbar -mx-5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-5 pb-1">
+      <div
+        className={`no-scrollbar -mx-5 flex min-h-0 flex-1 flex-col gap-3 px-5 pb-1 ${
+          // Saving holds the most (direction, category, From and To); the other tabs fit as they are.
+          mode === "saving" ? "overflow-y-auto overscroll-contain" : "overflow-hidden"
+        }`}
+      >
         {loadError && <ErrorNote>{loadError}</ErrorNote>}
 
         {kind && (
           <div className="mt-3 flex flex-col gap-2">
             {mode === "saving" && (
-              <div className="mb-2 flex">
-                <div role="group" aria-label="Deposit or withdraw" className="flex rounded-full bg-page p-0.5">
-                  {DIRECTIONS.map((d) => {
-                    const on = d.value === direction;
-                    return (
-                      <button
-                        key={d.value}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => {
-                          setDirection(d.value);
-                          setChosenToId(null);
-                          setError(null);
-                        }}
-                        className={`relative h-8 rounded-full px-3 text-xs font-semibold transition-colors duration-150 after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[""] ${
-                          on ? "bg-ink text-white" : "text-[#4A4A4A]"
-                        }`}
-                      >
-                        {d.label}
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="mb-2">
+                <Segmented
+                  label="Deposit or withdraw"
+                  options={DIRECTIONS}
+                  value={direction}
+                  onChange={(v) => {
+                    setDirection(v);
+                    setChosenToId(null);
+                    setError(null);
+                  }}
+                />
               </div>
             )}
             <span id="category-label" className="text-[13px] font-medium text-muted">
@@ -339,51 +332,55 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
             </div>
             {mode === "saving" && categoryId && (
               <p className="text-xs text-muted">
-                Saved in {chips.find((c) => c.id === categoryId)?.name}:{" "}
-                <b className="font-bold text-ink">{formatRupiah(savingBalance(categoryId, txs))}</b>
+                <b className="font-bold text-ink">{formatRupiah(savingBalance(categoryId, txs))}</b> saved
               </p>
             )}
             {mode === "expense" && categoryId && <BudgetNote line={budgetNote(categoryId)} />}
           </div>
         )}
 
-        <AccountPicker
-          id="from"
-          label={fromLabel}
-          accounts={fromList}
-          emptyText={groups.from === "saving" ? "No Saving accounts yet." : "No Spending accounts yet."}
-          onLeave={onDone}
-          value={from}
-          balanceOf={balanceOf}
-          open={openPicker === "from"}
-          onToggle={() => setOpenPicker((p) => (p === "from" ? null : "from"))}
-          onPick={(a) => {
-            setChosenFromId(a.id);
-            setOpenPicker(null);
-            setError(null);
-          }}
-          badge="ink"
-        />
-
-        {(mode === "transfer" || mode === "saving") && (
+        {/* Transfer: From and To side by side. */}
+        <div className={mode === "transfer" ? "grid grid-cols-2 items-start gap-3" : "contents"}>
           <AccountPicker
-            id="to"
-            label="To"
-            accounts={toCandidates}
-            emptyText={groups.to === "saving" ? "No Saving accounts yet." : "No other Spending account yet."}
+            id="from"
+            label={fromLabel}
+            accounts={fromList}
+            emptyText={groups.from === "saving" ? "No Saving accounts yet." : "No Spending accounts yet."}
             onLeave={onDone}
-            value={to}
+            value={from}
             balanceOf={balanceOf}
-            open={openPicker === "to"}
-            onToggle={() => setOpenPicker((p) => (p === "to" ? null : "to"))}
+            open={openPicker === "from"}
+            onToggle={() => setOpenPicker((p) => (p === "from" ? null : "from"))}
             onPick={(a) => {
-              setChosenToId(a.id);
+              setChosenFromId(a.id);
               setOpenPicker(null);
               setError(null);
             }}
-            badge="lime"
+            badge="ink"
+            compact={mode === "transfer"}
           />
-        )}
+
+          {(mode === "transfer" || mode === "saving") && (
+            <AccountPicker
+              id="to"
+              label="To"
+              accounts={toCandidates}
+              emptyText={groups.to === "saving" ? "No Saving accounts yet." : "No other Spending account yet."}
+              onLeave={onDone}
+              value={to}
+              balanceOf={balanceOf}
+              open={openPicker === "to"}
+              onToggle={() => setOpenPicker((p) => (p === "to" ? null : "to"))}
+              onPick={(a) => {
+                setChosenToId(a.id);
+                setOpenPicker(null);
+                setError(null);
+              }}
+              badge="lime"
+              compact={mode === "transfer"}
+            />
+          )}
+        </div>
 
 
         {editing &&
@@ -533,6 +530,7 @@ function AccountPicker({
   hint,
   emptyText,
   onLeave,
+  compact = false,
 }: {
   id: string;
   label: string;
@@ -547,6 +545,8 @@ function AccountPicker({
   emptyText: string;
   /** Called when the user follows a link out of the sheet. */
   onLeave: () => void;
+  /** Half width (Transfer): tighter button, each account's balance under its name in the list. */
+  compact?: boolean;
 }) {
   return (
     <div className="mt-3 flex flex-col gap-2">
@@ -559,7 +559,7 @@ function AccountPicker({
         aria-expanded={open}
         aria-controls={`${id}-options`}
         onClick={onToggle}
-        className="flex h-14 items-center gap-3 rounded-2xl bg-page px-3.5 text-left"
+        className={`flex h-14 items-center rounded-2xl bg-page text-left ${compact ? "gap-2 px-2.5" : "gap-3 px-3.5"}`}
       >
         <span
           aria-hidden
@@ -595,12 +595,12 @@ function AccountPicker({
                 type="button"
                 aria-pressed={a.id === value?.id}
                 onClick={() => onPick(a)}
-                className={`flex min-h-12 w-full items-center justify-between gap-3 px-4 py-2 text-left ${
-                  a.id === value?.id ? "bg-page" : "bg-card"
-                }`}
+                className={`flex min-h-12 w-full py-2 text-left ${
+                  compact ? "flex-col items-start justify-center gap-0.5 px-3" : "items-center justify-between gap-3 px-4"
+                } ${a.id === value?.id ? "bg-page" : "bg-card"}`}
               >
-                <span className="text-[15px] font-semibold">{a.name}</span>
-                <span className="text-[13px] text-muted">{formatRupiah(balanceOf(a))}</span>
+                <span className="max-w-full truncate text-[15px] font-semibold">{a.name}</span>
+                <span className={`text-muted ${compact ? "text-xs" : "text-[13px]"}`}>{formatRupiah(balanceOf(a))}</span>
               </button>
             </li>
           ))}
@@ -614,25 +614,16 @@ type BudgetLineNote =
   | { kind: "none"; name: string; period: string }
   | { kind: "left" | "over"; amount: number; budget: number; name: string; period: string };
 
-/** Under the expense categories: what's left of the picked one's budget this period. */
+/**
+ * Under the expense categories: what's left of the picked one's budget this period. Over budget,
+ * the amount is ember (4.57:1 on white, bold: readable).
+ */
 function BudgetNote({ line }: { line: BudgetLineNote }) {
-  if (line.kind === "none")
-    return (
-      <p className="text-xs text-muted">
-        No budget for {line.name}
-        {line.period ? ` in ${line.period}` : ""}. Set one in Target.
-      </p>
-    );
+  if (line.kind === "none") return <p className="text-xs text-muted">No budget set</p>;
   return (
-    <p className="flex items-center gap-1.5 text-xs text-muted">
-      {/* Over budget: a red dot (red text on white would be too faint to read). */}
-      {line.kind === "over" && <span aria-hidden className="size-1.5 flex-none rounded-full bg-ember" />}
-      <span>
-        <b className="font-bold text-ink">{formatRupiah(line.amount)}</b>{" "}
-        {line.kind === "over"
-          ? `over the ${formatRupiah(line.budget)} budget`
-          : `left of ${formatRupiah(line.budget)} in ${line.period}`}
-      </span>
+    <p className="text-xs text-muted">
+      <b className={`font-bold ${line.kind === "over" ? "text-ember" : "text-ink"}`}>{formatRupiah(line.amount)}</b>{" "}
+      {line.kind === "over" ? "over" : "left"}
     </p>
   );
 }

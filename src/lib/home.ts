@@ -39,3 +39,26 @@ export function recentFrom(today: string, days = 3): string {
   const start = new Date(y, m - 1, d - (days - 1));
   return `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
 }
+
+type SavingMove = { type: string; amount: number; date: string };
+
+/** Net amount saved between two dates (inclusive): saving deposits − saving withdrawals. */
+export function netSaved(moves: readonly SavingMove[], range: { start: string; end: string }): number {
+  return moves.reduce((n, t) => {
+    if (t.date < range.start || t.date > range.end) return n;
+    if (t.type === "saving_deposit") return n + t.amount;
+    if (t.type === "saving_withdraw") return n - t.amount;
+    return n;
+  }, 0);
+}
+
+/**
+ * This month's saving against last month's: up or down by how much, and by what share of last
+ * month's (null when last month saved nothing, so there's no fair percentage).
+ */
+export function savingChange(now: number, before: number): { trend: "up" | "down" | "same"; diff: number; percent: number | null } {
+  const diff = now - before;
+  const trend = diff > 0 ? "up" : diff < 0 ? "down" : "same";
+  const percent = before > 0 ? Math.round((Math.abs(diff) / before) * 100) : null;
+  return { trend, diff: Math.abs(diff), percent };
+}
