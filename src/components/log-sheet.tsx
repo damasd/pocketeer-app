@@ -275,18 +275,6 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
             <FitText text={formatRupiah(amount)} max={42} min={24} className="leading-[1.2] font-bold tracking-[-0.03em]" />
           </output>
         </div>
-        {mode === "saving" && (
-          <VerticalSwitch
-            label="Deposit or withdraw"
-            options={DIRECTIONS}
-            value={direction}
-            onChange={(v) => {
-              setDirection(v);
-              setChosenToId(null);
-              setError(null);
-            }}
-          />
-        )}
       </div>
 
       {/* Type and amount stay at the top; everything below scrolls when it doesn't fit. */}
@@ -300,6 +288,20 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
 
         {kind && (
           <div className="mt-3 flex flex-col gap-2">
+            {mode === "saving" && (
+              <div className="mb-2">
+                <Segmented
+                  label="Deposit or withdraw"
+                  options={DIRECTIONS}
+                  value={direction}
+                  onChange={(v) => {
+                    setDirection(v);
+                    setChosenToId(null);
+                    setError(null);
+                  }}
+                />
+              </div>
+            )}
             {/* The picked category's note sits on the label line, so showing it moves nothing. */}
             <div className="flex h-5 items-center justify-between gap-3 leading-5">
               <span id="category-label" className="text-[13px] font-medium text-muted">
@@ -345,8 +347,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
           </div>
         )}
 
-        {/* Transfer and Saving: From and To side by side. */}
-        <div className={mode === "transfer" || mode === "saving" ? "grid grid-cols-2 items-start gap-3" : "contents"}>
+        {/* Transfer: From and To side by side. */}
+        <div className={mode === "transfer" ? "grid grid-cols-2 items-start gap-3" : "contents"}>
           <AccountPicker
             id="from"
             label={fromLabel}
@@ -363,7 +365,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
               setError(null);
             }}
             badge="ink"
-            compact={mode === "transfer" || mode === "saving"}
+            compact={mode === "transfer"}
           />
 
           {(mode === "transfer" || mode === "saving") && (
@@ -383,7 +385,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
                 setError(null);
               }}
               badge="lime"
-              compact={mode === "transfer" || mode === "saving"}
+              compact={mode === "transfer"}
             />
           )}
         </div>
@@ -419,8 +421,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
             </button>
           ))}
 
-        {/* When and what: after the accounts. The calendar floats near the bottom of the screen. */}
-        <div className="flex flex-none gap-2">
+        {/* When and what: with the keypad at the bottom (spare room goes above). The calendar floats near the bottom of the screen. */}
+        <div className="mt-auto flex flex-none gap-2">
           <DatePopover value={date} onChange={setDate} up />
           <input
             type="text"
@@ -442,7 +444,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         {error && <ErrorNote>{error}</ErrorNote>}
 
         {/* Keys are 52 px tall, a little shorter on small screens (never under 44 px). */}
-        <div className="mt-auto grid flex-none grid-cols-4 grid-rows-[repeat(4,clamp(44px,6.5dvh,52px))] gap-2 pt-1">
+        <div className="grid flex-none grid-cols-4 grid-rows-[repeat(4,clamp(44px,6.5dvh,52px))] gap-2 pt-1">
           {(["1", "2", "3"] as const).map((k, i) => (
             <Key key={k} col={i + 1} row={1} onPress={() => press(k)}>
               {k}
@@ -631,48 +633,5 @@ function BudgetNote({ line }: { line: BudgetLineNote }) {
       <b className={`font-bold ${line.kind === "over" ? "text-ember" : "text-ink"}`}>{formatRupiah(line.amount)}</b>{" "}
       {line.kind === "over" ? "over" : "left"}
     </span>
-  );
-}
-
-/**
- * Two options stacked (Deposit over Withdraw), the chosen one on a black pill that slides up and
- * down. Sits beside the amount on the Saving tab.
- */
-function VerticalSwitch<T extends string>({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (value: T) => void;
-}) {
-  const index = Math.max(0, options.findIndex((o) => o.value === value));
-  return (
-    <div role="group" aria-label={label} className="relative flex w-28 flex-none flex-col gap-1 rounded-[22px] bg-page p-1">
-      <span
-        aria-hidden
-        className="absolute inset-x-1 top-1 h-11 rounded-[18px] bg-ink transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
-        style={{ transform: `translateY(${index * 48}px)` }}
-      />
-      {options.map((o) => {
-        const on = o.value === value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onChange(o.value)}
-            className={`relative h-11 rounded-[18px] text-[13px] font-semibold transition-colors duration-300 ${
-              on ? "text-white" : "text-[#4A4A4A]"
-            }`}
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
   );
 }
