@@ -56,6 +56,7 @@ export function HomeScreen() {
     let g: { x: number; y: number; from: number; t: number; v: number; on: boolean } | null = null;
     let frame = 0;
     let settleTimer: ReturnType<typeof setTimeout> | undefined;
+    let holding = false; // page scrolling held still during a snap
 
     const coverAt = () => {
       const sheet = sheetRef.current;
@@ -64,16 +65,36 @@ export function HomeScreen() {
     const blocked = (e: Event) =>
       document.body.style.position === "fixed" || (e.target as Element | null)?.closest?.("dialog") != null;
 
+    /**
+     * Move to `to`. The page's own scrolling is held still meanwhile: on iPhone the momentum of a
+     * flick keeps going after the finger lifts and would otherwise carry the page past the snap,
+     * leaving it stuck halfway. It always ends exactly on `to`.
+     */
     function glide(to: number) {
       cancelAnimationFrame(frame);
       const from = window.scrollY;
       if (Math.abs(to - from) < 1) return;
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return window.scrollTo(0, to);
+      const html = document.documentElement;
+      const hold = document.body.style.position !== "fixed"; // a sheet's lock owns it otherwise
+      if (hold) {
+        html.style.overflow = "hidden"; // stops momentum scrolling
+        holding = true;
+      }
+      const land = () => {
+        window.scrollTo(0, to);
+        if (hold) {
+          html.style.overflow = "";
+          holding = false;
+        }
+        window.scrollTo(0, to);
+      };
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return land();
       const start = performance.now();
       const step = (now: number) => {
         const t = Math.min(1, (now - start) / MS);
+        if (t >= 1) return land();
         window.scrollTo(0, from + (to - from) * ease(t));
-        if (t < 1) frame = requestAnimationFrame(step);
+        frame = requestAnimationFrame(step);
       };
       frame = requestAnimationFrame(step);
     }
@@ -89,6 +110,10 @@ export function HomeScreen() {
       if (blocked(e) || e.touches.length !== 1) return (g = null);
       cancelAnimationFrame(frame);
       clearTimeout(settleTimer);
+      if (holding) {
+        document.documentElement.style.overflow = ""; // touched again mid-snap: let go of the hold
+        holding = false;
+      }
       const t = e.touches[0];
       // Only from the resting or covered position (or in between); deeper in the list, scroll natively.
       g = window.scrollY <= coverAt() + 1 ? { x: t.clientX, y: t.clientY, from: window.scrollY, t: e.timeStamp, v: 0, on: false } : null;
@@ -137,6 +162,7 @@ export function HomeScreen() {
     return () => {
       cancelAnimationFrame(frame);
       clearTimeout(settleTimer);
+      if (holding) document.documentElement.style.overflow = ""; // never leave the page stuck
       window.removeEventListener("touchstart", onStart);
       window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend", onEnd);
