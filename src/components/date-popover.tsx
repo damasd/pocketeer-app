@@ -17,7 +17,16 @@ const iso = (y: number, m0: number, d: number) => {
  * styled): the chosen day is a lime circle, today has a black ring, and "Today" jumps back.
  * Picking a day closes it; so do Escape and tapping outside.
  */
-export function DatePopover({ value, onChange }: { value: string; onChange: (date: string) => void }) {
+export function DatePopover({
+  value,
+  onChange,
+  up = false,
+}: {
+  value: string;
+  onChange: (date: string) => void;
+  /** Open above the pill (when it sits low on the screen). */
+  up?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState(() => ({ y: Number(value.slice(0, 4)), m: Number(value.slice(5, 7)) - 1 }));
   const wrap = useRef<HTMLDivElement>(null);
@@ -85,7 +94,7 @@ export function DatePopover({ value, onChange }: { value: string; onChange: (dat
         <div
           role="dialog"
           aria-label="Choose a date"
-          className="calendar-in absolute top-full left-0 z-30 mt-2 w-[min(332px,calc(100vw-40px))] rounded-3xl bg-card p-3 shadow-[0_12px_32px_rgba(17,17,17,0.18)] ring-1 ring-line"
+          className={`calendar-in absolute left-0 z-30 w-[min(332px,calc(100vw-40px))] ${up ? "bottom-full mb-2 origin-bottom-left" : "top-full mt-2 origin-top-left"} rounded-3xl bg-card p-3 shadow-[0_12px_32px_rgba(17,17,17,0.18)] ring-1 ring-line`}
         >
           <div className="flex items-center justify-between">
             <button

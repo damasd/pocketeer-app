@@ -30,6 +30,8 @@ import {
 } from "@/lib/log";
 import { haptic } from "@/lib/haptics";
 import { formatRupiah } from "@/lib/money";
+import { useBudgets } from "@/lib/budgets";
+import { periodOf, usePeriods } from "@/lib/periods-store";
 import {
   NOTE_MAX,
   createTransaction,
@@ -78,6 +80,25 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
   const type = storedType(mode, direction);
   const kind = categoryKindFor(mode);
   const txs = useMemo(() => transactions.data ?? [], [transactions.data]);
+  const budgets = useBudgets();
+  const periods = usePeriods();
+
+  // What's left of an expense category's budget in the pay period of the chosen date (this
+  // transaction not counted yet; when editing, its old amount is left out).
+  function budgetNote(categoryId: string): BudgetLineNote {
+    const period = periodOf(periods.data ?? [], date);
+    const name = (categories.data ?? []).find((c) => c.id === categoryId)?.name ?? "";
+    if (!period) return { kind: "none", name, period: "" };
+    const budget = (budgets.data ?? []).find((b) => b.periodId === period.id && b.categoryId === categoryId)?.amount ?? 0;
+    const spent = txs
+      .filter(
+        (t) =>
+          t.type === "expense" && t.categoryId === categoryId && t.id !== editing?.id && t.date >= period.start && t.date <= period.end,
+      )
+      .reduce((n, t) => n + t.amount, 0);
+    if (budget <= 0) return { kind: "none", name, period: period.name };
+    return { kind: budget >= spent ? "left" : "over", amount: Math.abs(budget - spent), budget, name, period: period.name };
+  }
 
   // Archived accounts and categories are hidden, except the ones the edited transaction already uses.
   const active = useMemo(
@@ -253,26 +274,6 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         </output>
       </div>
 
-      {/* When and what: right under the amount. */}
-      <div className="mt-2 flex gap-2">
-        <DatePopover value={date} onChange={setDate} />
-        <input
-          type="text"
-          aria-label="Note"
-          placeholder="Note"
-          maxLength={NOTE_MAX}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-          className="h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-base placeholder:text-muted"
-        />
-      </div>
-
       {loadError && <ErrorNote>{loadError}</ErrorNote>}
 
       {kind && (
@@ -335,10 +336,12 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
             )}
           </div>
           {mode === "saving" && categoryId && (
-            <p className="text-xs text-muted">
-              Saved in {chips.find((c) => c.id === categoryId)?.name}: {formatRupiah(savingBalance(categoryId, txs))}
+            <p className="self-start rounded-xl bg-page px-3 py-2 text-xs text-muted">
+              Saved in {chips.find((c) => c.id === categoryId)?.name}:{" "}
+              <b className="font-bold text-ink">{formatRupiah(savingBalance(categoryId, txs))}</b>
             </p>
           )}
+          {mode === "expense" && categoryId && <BudgetNote line={budgetNote(categoryId)} />}
         </div>
       )}
 
@@ -380,6 +383,26 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         />
       )}
 
+
+      {/* When and what: after the accounts. The calendar opens upwards from here. */}
+      <div className="mt-3 flex gap-2">
+        <DatePopover value={date} onChange={setDate} up />
+        <input
+          type="text"
+          aria-label="Note"
+          placeholder="Note"
+          maxLength={NOTE_MAX}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+          className="h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-base placeholder:text-muted"
+        />
+      </div>
 
       {error && <ErrorNote>{error}</ErrorNote>}
 
@@ -580,5 +603,30 @@ function AccountPicker({
         </ul>
       )}
     </div>
+  );
+}
+
+type BudgetLineNote =
+  | { kind: "none"; name: string; period: string }
+  | { kind: "left" | "over"; amount: number; budget: number; name: string; period: string };
+
+/** Under the expense categories: what's left of the picked one's budget this period. */
+function BudgetNote({ line }: { line: BudgetLineNote }) {
+  if (line.kind === "none")
+    return (
+      <p className="self-start rounded-xl bg-page px-3 py-2 text-xs text-muted">
+        No budget for {line.name}
+        {line.period ? ` in ${line.period}` : ""}. Set one in Target.
+      </p>
+    );
+  return (
+    <p
+      className={`self-start rounded-xl px-3 py-2 text-xs ${line.kind === "over" ? "bg-ember text-white" : "bg-page text-muted"}`}
+    >
+      <b className={`font-bold ${line.kind === "over" ? "text-white" : "text-ink"}`}>{formatRupiah(line.amount)}</b>{" "}
+      {line.kind === "over"
+        ? `over the ${formatRupiah(line.budget)} budget`
+        : `left of ${formatRupiah(line.budget)} in ${line.period}`}
+    </p>
   );
 }
