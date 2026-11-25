@@ -24,7 +24,7 @@ export function DatePopover({
 }: {
   value: string;
   onChange: (date: string) => void;
-  /** Open above the pill (when it sits low on the screen). */
+  /** Float near the bottom of the screen instead of hanging off the pill (inside a scrolling area). */
   up?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -94,7 +94,7 @@ export function DatePopover({
         <div
           role="dialog"
           aria-label="Choose a date"
-          className={`calendar-in absolute left-0 z-30 w-[min(332px,calc(100vw-40px))] ${up ? "bottom-full mb-2 origin-bottom-left" : "top-full mt-2 origin-top-left"} rounded-3xl bg-card p-3 shadow-[0_12px_32px_rgba(17,17,17,0.18)] ring-1 ring-line`}
+          className={`calendar-in z-30 w-[min(332px,calc(100vw-40px))] ${up ? "fixed inset-x-0 bottom-[max(24px,env(safe-area-inset-bottom))] mx-auto origin-bottom" : "absolute top-full left-0 mt-2 origin-top-left"} rounded-3xl bg-card p-3 shadow-[0_12px_32px_rgba(17,17,17,0.18)] ring-1 ring-line`}
         >
           <div className="flex items-center justify-between">
             <button

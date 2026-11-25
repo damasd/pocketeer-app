@@ -274,15 +274,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         </output>
       </div>
 
-      {/* The middle scrolls on its own when it doesn't fit; amount above and keypad below stay put. */}
-      <div
-        className="no-scrollbar -mx-5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-5 pb-5"
-        // Fades out at the bottom edge, a hint that there's more to scroll.
-        style={{
-          maskImage: "linear-gradient(to bottom, black calc(100% - 20px), transparent)",
-          WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 20px), transparent)",
-        }}
-      >
+      {/* Type and amount stay at the top; everything below scrolls when it doesn't fit. */}
+      <div className="no-scrollbar -mx-5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-5 pb-1">
         {loadError && <ErrorNote>{loadError}</ErrorNote>}
 
         {kind && (
@@ -423,65 +416,64 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
             </button>
           ))}
 
-      </div>
+        {/* When and what: after the accounts. The calendar floats near the bottom of the screen. */}
+        <div className="flex flex-none gap-2">
+          <DatePopover value={date} onChange={setDate} up />
+          <input
+            type="text"
+            aria-label="Note"
+            placeholder="Note"
+            maxLength={NOTE_MAX}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            className="h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-base placeholder:text-muted"
+          />
+        </div>
 
-      {/* When and what: after the accounts. The calendar opens upwards from here. */}
-      <div className="flex flex-none gap-2">
-        <DatePopover value={date} onChange={setDate} up />
-        <input
-          type="text"
-          aria-label="Note"
-          placeholder="Note"
-          maxLength={NOTE_MAX}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-          className="h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-base placeholder:text-muted"
-        />
-      </div>
+        {error && <ErrorNote>{error}</ErrorNote>}
 
-      {error && <ErrorNote>{error}</ErrorNote>}
-
-      {/* Keys are 52 px tall, a little shorter on small screens (never under 44 px). */}
-      <div className="grid flex-none grid-cols-4 grid-rows-[repeat(4,clamp(44px,6.5dvh,52px))] gap-2 pt-1">
-        {(["1", "2", "3"] as const).map((k, i) => (
-          <Key key={k} col={i + 1} row={1} onPress={() => press(k)}>
-            {k}
+        {/* Keys are 52 px tall, a little shorter on small screens (never under 44 px). */}
+        <div className="mt-auto grid flex-none grid-cols-4 grid-rows-[repeat(4,clamp(44px,6.5dvh,52px))] gap-2 pt-1">
+          {(["1", "2", "3"] as const).map((k, i) => (
+            <Key key={k} col={i + 1} row={1} onPress={() => press(k)}>
+              {k}
+            </Key>
+          ))}
+          <Key col={4} row={1} label="Delete last digit" onPress={() => press("back")}>
+            <Delete aria-hidden size={22} strokeWidth={2} />
           </Key>
-        ))}
-        <Key col={4} row={1} label="Delete last digit" onPress={() => press("back")}>
-          <Delete aria-hidden size={22} strokeWidth={2} />
-        </Key>
-        {(["4", "5", "6"] as const).map((k, i) => (
-          <Key key={k} col={i + 1} row={2} onPress={() => press(k)}>
-            {k}
+          {(["4", "5", "6"] as const).map((k, i) => (
+            <Key key={k} col={i + 1} row={2} onPress={() => press(k)}>
+              {k}
+            </Key>
+          ))}
+          {(["7", "8", "9"] as const).map((k, i) => (
+            <Key key={k} col={i + 1} row={3} onPress={() => press(k)}>
+              {k}
+            </Key>
+          ))}
+          <Key col="1 / span 2" row={4} onPress={() => press("0")}>
+            0
           </Key>
-        ))}
-        {(["7", "8", "9"] as const).map((k, i) => (
-          <Key key={k} col={i + 1} row={3} onPress={() => press(k)}>
-            {k}
+          <Key col={3} row={4} onPress={() => press("000")} small>
+            000
           </Key>
-        ))}
-        <Key col="1 / span 2" row={4} onPress={() => press("0")}>
-          0
-        </Key>
-        <Key col={3} row={4} onPress={() => press("000")} small>
-          000
-        </Key>
-        <button
-          type="button"
-          onClick={save}
-          disabled={busy}
-          style={{ gridColumn: 4, gridRow: "2 / span 3" }}
-          className="rounded-2xl bg-lime text-[17px] font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97] disabled:opacity-60"
-        >
-          {busy ? "Saving…" : "Save"}
-        </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy}
+            style={{ gridColumn: 4, gridRow: "2 / span 3" }}
+            className="rounded-2xl bg-lime text-[17px] font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97] disabled:opacity-60"
+          >
+            {busy ? "Saving…" : "Save"}
+          </button>
+        </div>
       </div>
     </div>
   );
