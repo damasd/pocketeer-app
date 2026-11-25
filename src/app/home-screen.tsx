@@ -42,64 +42,103 @@ export function HomeScreen() {
     coverPeriodsFrom(oldest);
   }, [oldest]);
 
-  // The white part covers the header (scrolled to its top) or rests below it. Let go in between and
-  // it finishes the move: past a quarter of the way in the direction you were going, it goes all
-  // the way; otherwise it springs back. Further down, the list scrolls as usual.
+  // The white part covers the header (scrolled to its top) or rests below it. Between the two it
+  // follows the finger, and on letting go it finishes the move quickly, like a sheet: past a quarter
+  // of the way (or with a flick) in the direction you were going, it goes all the way; otherwise
+  // it springs back. Further down, the list scrolls as usual.
   const sheetRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const SETTLE_MS = 140;
     const SHARE = 0.25;
-    let touching = false;
-    let lastY = window.scrollY;
-    let dir = 0; // +1 pushing the white part up, −1 pulling it down
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let target: number | null = null; // our own smooth scroll in progress
+    const FLICK = 0.4; // px per ms
+    const MS = 260;
+    const SLOP = 6;
+    const ease = (t: number) => 1 - (1 - t) ** 4; // quick start, soft stop
+    let g: { x: number; y: number; from: number; t: number; v: number; on: boolean } | null = null;
+    let frame = 0;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const settle = () => {
+    const coverAt = () => {
       const sheet = sheetRef.current;
-      if (touching || !sheet || document.body.style.position === "fixed") return; // a sheet is open
-      const top = sheet.getBoundingClientRect().top + window.scrollY; // where "covered" is
-      const y = window.scrollY;
-      if (y <= 1 || y >= top - 1) return;
-      const to = dir > 0 ? (y > top * SHARE ? top : 0) : y < top * (1 - SHARE) ? 0 : top;
-      target = to;
-      window.scrollTo({
-        top: to,
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      });
+      return sheet ? sheet.getBoundingClientRect().top + window.scrollY : 0;
     };
-    const later = () => {
-      clearTimeout(timer);
-      timer = setTimeout(settle, SETTLE_MS);
+    const blocked = (e: Event) =>
+      document.body.style.position === "fixed" || (e.target as Element | null)?.closest?.("dialog") != null;
+
+    function glide(to: number) {
+      cancelAnimationFrame(frame);
+      const from = window.scrollY;
+      if (Math.abs(to - from) < 1) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return window.scrollTo(0, to);
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / MS);
+        window.scrollTo(0, from + (to - from) * ease(t));
+        if (t < 1) frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+    }
+    /** Where to go from y, moving in `dir` (+1 up over the header, −1 down) at speed v. */
+    function decide(y: number, dir: number, v: number) {
+      const top = coverAt();
+      if (y <= 0.5 || y >= top - 0.5) return;
+      if (Math.abs(v) > FLICK) return glide(v > 0 ? top : 0);
+      glide(dir > 0 ? (y > top * SHARE ? top : 0) : y < top * (1 - SHARE) ? 0 : top);
+    }
+
+    const onStart = (e: TouchEvent) => {
+      if (blocked(e) || e.touches.length !== 1) return (g = null);
+      cancelAnimationFrame(frame);
+      clearTimeout(settleTimer);
+      const t = e.touches[0];
+      // Only from the resting or covered position (or in between); deeper in the list, scroll natively.
+      g = window.scrollY <= coverAt() + 1 ? { x: t.clientX, y: t.clientY, from: window.scrollY, t: e.timeStamp, v: 0, on: false } : null;
     };
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (target !== null) {
-        if (Math.abs(y - target) < 2) target = null;
-        lastY = y;
-        return;
+    const onMove = (e: TouchEvent) => {
+      if (!g) return;
+      const t = e.touches[0];
+      const dx = t.clientX - g.x;
+      const dy = t.clientY - g.y;
+      if (!g.on) {
+        if (Math.abs(dx) < SLOP && Math.abs(dy) < SLOP) return;
+        // Sideways (the card pull) or pushing on into the list from the covered position: native.
+        if (Math.abs(dx) > Math.abs(dy) || (g.from >= coverAt() - 1 && dy < 0)) return (g = null);
+        g.on = true;
       }
-      if (y !== lastY) dir = y > lastY ? 1 : -1;
-      lastY = y;
-      later();
-    };
-    const onStart = () => {
-      touching = true;
-      target = null;
-      clearTimeout(timer);
+      e.preventDefault();
+      const top = coverAt();
+      const y = Math.min(top, Math.max(0, g.from - dy));
+      g.v = (y - window.scrollY) / Math.max(1, e.timeStamp - g.t);
+      g.t = e.timeStamp;
+      window.scrollTo(0, y);
     };
     const onEnd = () => {
-      touching = false;
-      later();
+      if (g?.on) decide(window.scrollY, g.v >= 0 ? 1 : -1, g.v);
+      else {
+        // A native scroll (e.g. from deep in the list) that comes to rest in between: finish it.
+        let last = window.scrollY;
+        let dir = 0;
+        const check = () => {
+          const y = window.scrollY;
+          if (y !== last) {
+            dir = y > last ? 1 : -1;
+            last = y;
+            settleTimer = setTimeout(check, 50);
+          } else decide(y, dir || -1, 0);
+        };
+        settleTimer = setTimeout(check, 50);
+      }
+      g = null;
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
+
     window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchmove", onMove, { passive: false });
     window.addEventListener("touchend", onEnd, { passive: true });
     window.addEventListener("touchcancel", onEnd, { passive: true });
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+      clearTimeout(settleTimer);
       window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend", onEnd);
       window.removeEventListener("touchcancel", onEnd);
     };
