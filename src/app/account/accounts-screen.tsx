@@ -1,20 +1,19 @@
 "use client";
 
 import { useLayoutEffect, useState } from "react";
-import Link from "next/link";
-import { ChevronRight, Pencil, Plus, Wallet as WalletIcon } from "lucide-react";
+import { ChevronRight, Plus, Wallet as WalletIcon } from "lucide-react";
 import { ArchivedSection } from "@/components/archived-section";
-import { AccountCardFace, CARD_STYLES } from "@/components/account-card";
+import { AccountCardFace } from "@/components/account-card";
 import { RevealButton, useMoney } from "@/components/amount";
 import { Sheet } from "@/components/sheet";
 import { Button, ErrorNote } from "@/components/ui";
 import { useAccounts, type Account, type AccountGroup } from "@/lib/accounts";
-import { accountBalance, savedInAccount, sumBalances } from "@/lib/balances";
+import { accountBalance, sumBalances } from "@/lib/balances";
 import { cardTransitionName, saveSlots, useHandoff, type CardSlot } from "@/lib/card-handoff";
 import { useTransactions } from "@/lib/transactions";
 import { AccountForm } from "./account-form";
 
-type WithBalance = Account & { balance: number; saved: number };
+type WithBalance = Account & { balance: number };
 
 const GROUPS: { id: AccountGroup; title: string }[] = [
   { id: "spending", title: "Spending" },
@@ -36,7 +35,6 @@ export function AccountsScreen() {
   const withBalance: WithBalance[] = all.map((a) => ({
     ...a,
     balance: accountBalance(a.id, a.startingBalance, txs),
-    saved: savedInAccount(a.id, txs),
   }));
   const active = withBalance.filter((a) => !a.archived);
   const archived = withBalance.filter((a) => a.archived);
@@ -131,34 +129,25 @@ export function AccountsScreen() {
                 <div
                   key={a.id}
                   data-slot={a.id}
-                  className="acct-card relative rounded-3xl transition-transform duration-150 ease-out has-[>a:active]:scale-[0.98]"
+                  className="acct-card relative rounded-3xl transition-transform duration-150 ease-out has-[>button:active]:scale-[0.98]"
                   style={arriving.includes(a.id) ? { viewTransitionName: cardTransitionName(a.id) } : undefined}
                 >
-                  {/* Card opens this account's transactions (link laid over the card, so the
-                      copy button inside it stays a separate button); the pencil edits the account. */}
+                  {/* Tapping the card edits the account (button laid over the card, so the
+                      copy button inside it stays a separate button). */}
                   <AccountCardFace
                     name={a.name}
                     accountNumber={a.accountNumber}
                     colour={a.colour}
                     balance={a.balance}
-                    saved={a.saved}
                     masked={hidden}
                     copyable
                   />
-                  <Link
-                    href={`/history?account=${a.id}`}
-                    aria-label={`${a.name}, balance ${money(a.balance)}. Show transactions`}
-                    className="absolute inset-0 rounded-3xl"
-                  />
                   <button
                     type="button"
-                    aria-label={`Edit ${a.name}`}
+                    aria-label={`${a.name}, balance ${money(a.balance)}. Edit account`}
                     onClick={() => setEditing(a)}
-                    className="absolute top-3 right-3 flex size-11 items-center justify-center rounded-full"
-                    style={{ color: CARD_STYLES[a.colour].fg, background: CARD_STYLES[a.colour].circle }}
-                  >
-                    <Pencil aria-hidden size={18} strokeWidth={2.25} />
-                  </button>
+                    className="absolute inset-0 rounded-3xl outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                  />
                 </div>
               ))}
               {!loading && list.length === 0 && (

@@ -318,9 +318,13 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         }}
         className="mt-3 flex flex-col items-center gap-0.5 rounded-2xl pb-1 outline-none focus-visible:outline-2 focus-visible:outline-lime"
       >
-        <span className="text-[13px] font-medium text-muted">{keypadOpen ? "Amount" : "Amount · tap to type"}</span>
-        <span className="flex w-full justify-center px-2">
+        <span className="text-[13px] leading-5 font-medium text-muted">Amount</span>
+        <span className="flex h-[51px] w-full items-center justify-center px-2">
           <FitText text={formatRupiah(amount)} max={42} min={24} className="leading-[1.2] font-bold tracking-[-0.03em]" />
+        </span>
+        {/* The hint keeps its line while the keypad is open, so the amount never moves. */}
+        <span aria-hidden className={`text-xs leading-4 font-medium text-muted ${keypadOpen ? "invisible" : ""}`}>
+          Tap to type
         </span>
       </button>
 
@@ -362,7 +366,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
                 {mode === "expense" && categoryId && <BudgetNote line={budgetNote(categoryId)} />}
               </span>
             </div>
-            <div role="group" aria-labelledby="category-label" className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
+            {/* 56 px row, the same as an account picker, so Expense, Income and Transfer are equally tall. */}
+            <div role="group" aria-labelledby="category-label" className="no-scrollbar -mx-5 flex h-14 items-center gap-2 overflow-x-auto px-5">
               {loading &&
                 [0, 1, 2].map((i) => <span key={i} aria-hidden className="h-11 w-24 flex-none rounded-full bg-page" />)}
               {chips.map((c) => {
@@ -576,7 +581,7 @@ function AccountPicker({
 }) {
   return (
     <div className="mt-3 flex flex-col gap-2">
-      <span id={`${id}-label`} className="text-[13px] font-medium text-muted">
+      <span id={`${id}-label`} className="h-5 text-[13px] leading-5 font-medium text-muted">
         {label}
       </span>
       <button
