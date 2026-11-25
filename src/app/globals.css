@@ -79,13 +79,16 @@ body {
   }
 }
 
-/* Log sheet: fixed height so the keypad sits at the bottom; scrolls on very short screens. */
+/* Log sheet: fixed height. The amount stays at the top and the keypad at the bottom; only the
+   middle of the form scrolls when it doesn't fit (log-sheet.tsx). */
 .sheet-tall {
   height: 92dvh;
+  overflow: hidden;
 }
 .sheet-tall > div {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 /* Toast slides down from the top. */

@@ -247,7 +247,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       <Segmented
         label="Transaction type"
         options={MODES}
@@ -274,118 +274,159 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         </output>
       </div>
 
-      {loadError && <ErrorNote>{loadError}</ErrorNote>}
-
-      {kind && (
-        <div className="mt-3 flex flex-col gap-2">
-          {mode === "saving" && (
-            <div className="mb-2 flex">
-              <div role="group" aria-label="Deposit or withdraw" className="flex rounded-full bg-page p-0.5">
-                {DIRECTIONS.map((d) => {
-                  const on = d.value === direction;
-                  return (
-                    <button
-                      key={d.value}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => {
-                        setDirection(d.value);
-                        setChosenToId(null);
-                        setError(null);
-                      }}
-                      className={`relative h-8 rounded-full px-3 text-xs font-semibold transition-colors duration-150 after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[""] ${
-                        on ? "bg-ink text-white" : "text-[#4A4A4A]"
-                      }`}
-                    >
-                      {d.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          <span id="category-label" className="text-[13px] font-medium text-muted">
-            {mode === "saving" ? "Saving category" : "Category"}
-          </span>
-          <div role="group" aria-labelledby="category-label" className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
-            {loading &&
-              [0, 1, 2].map((i) => <span key={i} aria-hidden className="h-11 w-24 flex-none rounded-full bg-page" />)}
-            {chips.map((c) => {
-              const on = c.id === categoryId;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => {
-                    setCategoryId(c.id);
-                    setError(null);
-                  }}
-                  className={`h-11 flex-none rounded-full border px-4 text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 ${
-                    on ? "border-lime bg-lime text-ink" : "border-line bg-card text-ink"
-                  }`}
-                >
-                  {c.name}
-                </button>
-              );
-            })}
-            {!loading && chips.length === 0 && (
-              <Link href="/settings/categories" onClick={onDone} className="flex h-11 items-center text-[13px] font-semibold underline">
-                Add a category
-              </Link>
-            )}
-          </div>
-          {mode === "saving" && categoryId && (
-            <p className="self-start rounded-xl bg-page px-3 py-2 text-xs text-muted">
-              Saved in {chips.find((c) => c.id === categoryId)?.name}:{" "}
-              <b className="font-bold text-ink">{formatRupiah(savingBalance(categoryId, txs))}</b>
-            </p>
-          )}
-          {mode === "expense" && categoryId && <BudgetNote line={budgetNote(categoryId)} />}
-        </div>
-      )}
-
-      <AccountPicker
-        id="from"
-        label={fromLabel}
-        accounts={fromList}
-        emptyText={groups.from === "saving" ? "No Saving accounts yet." : "No Spending accounts yet."}
-        onLeave={onDone}
-        value={from}
-        balanceOf={balanceOf}
-        open={openPicker === "from"}
-        onToggle={() => setOpenPicker((p) => (p === "from" ? null : "from"))}
-        onPick={(a) => {
-          setChosenFromId(a.id);
-          setOpenPicker(null);
-          setError(null);
+      {/* The middle scrolls on its own when it doesn't fit; amount above and keypad below stay put. */}
+      <div
+        className="no-scrollbar -mx-5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-5 pb-5"
+        // Fades out at the bottom edge, a hint that there's more to scroll.
+        style={{
+          maskImage: "linear-gradient(to bottom, black calc(100% - 20px), transparent)",
+          WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 20px), transparent)",
         }}
-        badge="ink"
-      />
+      >
+        {loadError && <ErrorNote>{loadError}</ErrorNote>}
 
-      {(mode === "transfer" || mode === "saving") && (
+        {kind && (
+          <div className="mt-3 flex flex-col gap-2">
+            {mode === "saving" && (
+              <div className="mb-2 flex">
+                <div role="group" aria-label="Deposit or withdraw" className="flex rounded-full bg-page p-0.5">
+                  {DIRECTIONS.map((d) => {
+                    const on = d.value === direction;
+                    return (
+                      <button
+                        key={d.value}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => {
+                          setDirection(d.value);
+                          setChosenToId(null);
+                          setError(null);
+                        }}
+                        className={`relative h-8 rounded-full px-3 text-xs font-semibold transition-colors duration-150 after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[""] ${
+                          on ? "bg-ink text-white" : "text-[#4A4A4A]"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <span id="category-label" className="text-[13px] font-medium text-muted">
+              {mode === "saving" ? "Saving category" : "Category"}
+            </span>
+            <div role="group" aria-labelledby="category-label" className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
+              {loading &&
+                [0, 1, 2].map((i) => <span key={i} aria-hidden className="h-11 w-24 flex-none rounded-full bg-page" />)}
+              {chips.map((c) => {
+                const on = c.id === categoryId;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => {
+                      setCategoryId(c.id);
+                      setError(null);
+                    }}
+                    className={`h-11 flex-none rounded-full border px-4 text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 ${
+                      on ? "border-lime bg-lime text-ink" : "border-line bg-card text-ink"
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                );
+              })}
+              {!loading && chips.length === 0 && (
+                <Link href="/settings/categories" onClick={onDone} className="flex h-11 items-center text-[13px] font-semibold underline">
+                  Add a category
+                </Link>
+              )}
+            </div>
+            {mode === "saving" && categoryId && (
+              <p className="self-start rounded-xl bg-page px-3 py-2 text-xs text-muted">
+                Saved in {chips.find((c) => c.id === categoryId)?.name}:{" "}
+                <b className="font-bold text-ink">{formatRupiah(savingBalance(categoryId, txs))}</b>
+              </p>
+            )}
+            {mode === "expense" && categoryId && <BudgetNote line={budgetNote(categoryId)} />}
+          </div>
+        )}
+
         <AccountPicker
-          id="to"
-          label="To"
-          accounts={toCandidates}
-          emptyText={groups.to === "saving" ? "No Saving accounts yet." : "No other Spending account yet."}
+          id="from"
+          label={fromLabel}
+          accounts={fromList}
+          emptyText={groups.from === "saving" ? "No Saving accounts yet." : "No Spending accounts yet."}
           onLeave={onDone}
-          value={to}
+          value={from}
           balanceOf={balanceOf}
-          open={openPicker === "to"}
-          onToggle={() => setOpenPicker((p) => (p === "to" ? null : "to"))}
+          open={openPicker === "from"}
+          onToggle={() => setOpenPicker((p) => (p === "from" ? null : "from"))}
           onPick={(a) => {
-            setChosenToId(a.id);
+            setChosenFromId(a.id);
             setOpenPicker(null);
             setError(null);
           }}
-          badge="lime"
+          badge="ink"
         />
-      )}
 
+        {(mode === "transfer" || mode === "saving") && (
+          <AccountPicker
+            id="to"
+            label="To"
+            accounts={toCandidates}
+            emptyText={groups.to === "saving" ? "No Saving accounts yet." : "No other Spending account yet."}
+            onLeave={onDone}
+            value={to}
+            balanceOf={balanceOf}
+            open={openPicker === "to"}
+            onToggle={() => setOpenPicker((p) => (p === "to" ? null : "to"))}
+            onPick={(a) => {
+              setChosenToId(a.id);
+              setOpenPicker(null);
+              setError(null);
+            }}
+            badge="lime"
+          />
+        )}
+
+
+        {editing &&
+          (confirmDelete ? (
+            <div role="group" aria-label="Confirm delete" className="flex items-center gap-2 rounded-2xl bg-page p-2 pl-4">
+              <span className="flex-1 text-[13px] font-semibold">Delete this transaction?</span>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="h-11 rounded-full px-3 text-[13px] font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={remove}
+                className="h-11 rounded-full bg-ember px-4 text-[13px] font-bold text-white disabled:opacity-60"
+              >
+                {busy ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="h-11 self-start rounded-full px-1 text-[13px] font-semibold underline-offset-4 hover:underline"
+            >
+              Delete transaction
+            </button>
+          ))}
+
+      </div>
 
       {/* When and what: after the accounts. The calendar opens upwards from here. */}
-      <div className="mt-3 flex gap-2">
+      <div className="flex flex-none gap-2">
         <DatePopover value={date} onChange={setDate} up />
         <input
           type="text"
@@ -406,37 +447,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
 
       {error && <ErrorNote>{error}</ErrorNote>}
 
-      {editing &&
-        (confirmDelete ? (
-          <div role="group" aria-label="Confirm delete" className="flex items-center gap-2 rounded-2xl bg-page p-2 pl-4">
-            <span className="flex-1 text-[13px] font-semibold">Delete this transaction?</span>
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(false)}
-              className="h-11 rounded-full px-3 text-[13px] font-semibold"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={remove}
-              className="h-11 rounded-full bg-ember px-4 text-[13px] font-bold text-white disabled:opacity-60"
-            >
-              {busy ? "Deleting…" : "Delete"}
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="h-11 self-start rounded-full px-1 text-[13px] font-semibold underline-offset-4 hover:underline"
-          >
-            Delete transaction
-          </button>
-        ))}
-
-      <div className="mt-auto grid grid-cols-4 grid-rows-[repeat(4,52px)] gap-2 pt-1">
+      {/* Keys are 52 px tall, a little shorter on small screens (never under 44 px). */}
+      <div className="grid flex-none grid-cols-4 grid-rows-[repeat(4,clamp(44px,6.5dvh,52px))] gap-2 pt-1">
         {(["1", "2", "3"] as const).map((k, i) => (
           <Key key={k} col={i + 1} row={1} onPress={() => press(k)}>
             {k}

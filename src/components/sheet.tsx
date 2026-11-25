@@ -94,7 +94,7 @@ export function Sheet({
         if (e.target === e.currentTarget) e.currentTarget.close();
       }}
     >
-      <div className={`flex flex-col gap-4 px-5 pb-[max(24px,env(safe-area-inset-bottom))] ${tall ? "min-h-full" : ""}`}>
+      <div className={`flex flex-col gap-4 px-5 pb-[max(24px,env(safe-area-inset-bottom))] ${tall ? "h-full min-h-0" : ""}`}>
         {/* Grab here and pull down to close. */}
         <div
           onPointerDown={onPointerDown}
