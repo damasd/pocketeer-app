@@ -220,7 +220,9 @@ export function HomeScreen() {
         masked={hidden}
         previewRef={previewRef}
       />
-      <main ref={pageRef} className="relative mx-auto flex h-dvh w-full max-w-[480px] flex-col overflow-hidden bg-ink">
+      {/* One screen tall and clipped top to bottom only, so the page never scrolls while the cards
+          of the card pull can still fly out sideways. */}
+      <main ref={pageRef} className="relative mx-auto flex h-dvh w-full max-w-[480px] flex-col overflow-y-clip bg-ink">
         {/* Swipe left anywhere on the header: the account cards slide and Accounts opens. */}
         <div
           ref={headerRef}
@@ -289,7 +291,8 @@ export function HomeScreen() {
         >
         <div
           ref={innerRef}
-          className={`no-scrollbar flex h-full flex-col gap-6 overscroll-contain px-5 pt-2.5 pb-36 ${
+          // Children never shrink (the grab bar would squash to nothing when the list is long).
+          className={`no-scrollbar flex h-full flex-col gap-6 overscroll-contain px-5 pt-2.5 pb-36 [&>*]:flex-none ${
             covered ? "overflow-y-auto" : "overflow-hidden"
           }`}
         >
