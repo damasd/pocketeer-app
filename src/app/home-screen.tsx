@@ -43,9 +43,9 @@ export function HomeScreen() {
   }, [oldest]);
 
   // The white part covers the header (scrolled to its top) or rests below it. Between the two it
-  // follows the finger, and on letting go it finishes the move quickly, like a sheet: past a quarter
-  // of the way (or with a flick) in the direction you were going, it goes all the way; otherwise
-  // it springs back. Further down, the list scrolls as usual.
+  // follows the finger, and on letting go it finishes the move quickly, like a sheet: pushed up
+  // past a quarter of the way (or flicked) it covers the header, otherwise it springs back; pulled
+  // down even a little, it opens the header fully. Further down, the list scrolls as usual.
   const sheetRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const SHARE = 0.25;
@@ -103,7 +103,9 @@ export function HomeScreen() {
       const top = coverAt();
       if (y <= 0.5 || y >= top - 0.5) return;
       if (Math.abs(v) > FLICK) return glide(v > 0 ? top : 0);
-      glide(dir > 0 ? (y > top * SHARE ? top : 0) : y < top * (1 - SHARE) ? 0 : top);
+      // Pushing up: past a quarter it covers the header, else back down. Pulling down: any pull
+      // opens the header fully.
+      glide(dir > 0 ? (y > top * SHARE ? top : 0) : 0);
     }
 
     const onStart = (e: TouchEvent) => {
