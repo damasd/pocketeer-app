@@ -3,7 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AccountStack, topCards, useAccountSwipe } from "@/components/account-stack";
 import { AccountsPreview } from "@/components/accounts-preview";
 import { RevealButton, useMoney } from "@/components/amount";
@@ -41,6 +41,69 @@ export function HomeScreen() {
   useEffect(() => {
     coverPeriodsFrom(oldest);
   }, [oldest]);
+
+  // The white part covers the header (scrolled to its top) or rests below it. Let go in between and
+  // it finishes the move: past a quarter of the way in the direction you were going, it goes all
+  // the way; otherwise it springs back. Further down, the list scrolls as usual.
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const SETTLE_MS = 140;
+    const SHARE = 0.25;
+    let touching = false;
+    let lastY = window.scrollY;
+    let dir = 0; // +1 pushing the white part up, −1 pulling it down
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let target: number | null = null; // our own smooth scroll in progress
+
+    const settle = () => {
+      const sheet = sheetRef.current;
+      if (touching || !sheet || document.body.style.position === "fixed") return; // a sheet is open
+      const top = sheet.getBoundingClientRect().top + window.scrollY; // where "covered" is
+      const y = window.scrollY;
+      if (y <= 1 || y >= top - 1) return;
+      const to = dir > 0 ? (y > top * SHARE ? top : 0) : y < top * (1 - SHARE) ? 0 : top;
+      target = to;
+      window.scrollTo({
+        top: to,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+    };
+    const later = () => {
+      clearTimeout(timer);
+      timer = setTimeout(settle, SETTLE_MS);
+    };
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (target !== null) {
+        if (Math.abs(y - target) < 2) target = null;
+        lastY = y;
+        return;
+      }
+      if (y !== lastY) dir = y > lastY ? 1 : -1;
+      lastY = y;
+      later();
+    };
+    const onStart = () => {
+      touching = true;
+      target = null;
+      clearTimeout(timer);
+    };
+    const onEnd = () => {
+      touching = false;
+      later();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchend", onEnd, { passive: true });
+    window.addEventListener("touchcancel", onEnd, { passive: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("touchcancel", onEnd);
+    };
+  }, []);
 
   // Pulling down past the top shows dark, not grey, above the dark header.
   useEffect(() => {
@@ -175,7 +238,7 @@ export function HomeScreen() {
         </div>
 
         {/* Tall enough to cover the header completely when pushed up. */}
-        <div className="relative z-10 flex min-h-dvh flex-1 flex-col gap-6 rounded-t-[28px] bg-card px-5 pt-2.5 pb-36 shadow-[0_-10px_30px_rgba(0,0,0,0.25)]">
+        <div ref={sheetRef} className="relative z-10 flex min-h-dvh flex-1 flex-col gap-6 rounded-t-[28px] bg-card px-5 pt-2.5 pb-36 shadow-[0_-10px_30px_rgba(0,0,0,0.25)]">
           <div aria-hidden className="h-[5px] w-10 self-center rounded-full bg-line" />
 
           <section aria-labelledby="tiles-title" className="flex flex-col gap-3">
@@ -248,23 +311,24 @@ export function HomeScreen() {
               </Link>
             </div>
             <div className="flex flex-col gap-1 rounded-3xl bg-ink p-5 text-white">
-              <span className="text-[13px] text-[#BDBDBD]">Saved this month{period ? ` · ${period.name}` : ""}</span>
+              <span className="text-[13px] text-[#BDBDBD]">Saved this month</span>
               {loading ? (
                 <span aria-hidden className="mt-1 block h-9 w-44 rounded-xl bg-nav-selected" />
               ) : (
                 <span className="text-[30px] leading-[1.25] font-bold tracking-[-0.03em]">{money(savedNow)}</span>
               )}
               {!loading && lastPeriod && (
-                <span
-                  className={`mt-2 self-start rounded-full px-2.5 py-1 text-xs font-bold ${
-                    saving.trend === "down" ? "bg-nav-selected text-white" : "bg-lime text-ink"
-                  }`}
-                >
-                  {saving.trend === "same"
-                    ? `Same as ${lastPeriod.name}`
-                    : `${saving.trend === "up" ? "▲" : "▼"} ${
-                        saving.percent !== null ? `${saving.percent}%` : money(saving.diff)
-                      } vs ${lastPeriod.name}`}
+                <span className="mt-2 flex items-center gap-1.5 text-xs text-[#BDBDBD]">
+                  <span
+                    className={`rounded-full px-2.5 py-1 font-bold ${
+                      saving.trend === "down" ? "bg-nav-selected text-white" : "bg-lime text-ink"
+                    }`}
+                  >
+                    {saving.trend === "same"
+                      ? "Same"
+                      : `${saving.trend === "up" ? "▲" : "▼"} ${saving.percent !== null ? `${saving.percent}%` : money(saving.diff)}`}
+                  </span>
+                  {saving.trend === "same" ? "as last month" : "vs last month"}
                 </span>
               )}
             </div>
