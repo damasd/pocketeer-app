@@ -297,11 +297,11 @@ export function HistoryScreen() {
         </div>
       )}
 
-      <Sheet open={adding} onClose={() => setAdding(false)} title="Log transaction" tall hideTitle>
+      <Sheet open={adding} onClose={() => setAdding(false)} title="Log transaction" hideTitle>
         <LogForm onDone={() => setAdding(false)} />
       </Sheet>
 
-      <Sheet open={editing !== null} onClose={() => setEditing(null)} title="Edit transaction" tall>
+      <Sheet open={editing !== null} onClose={() => setEditing(null)} title="Edit transaction">
         {editing && <LogForm key={editing.id} editing={editing} onDone={() => setEditing(null)} />}
       </Sheet>
     </div>

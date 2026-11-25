@@ -157,7 +157,7 @@ export function NavBar() {
           <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} linkRef={linkRef(tab.href)} />
         ))}
       </nav>
-      <Sheet open={logOpen} onClose={() => setLogOpen(false)} title="Log transaction" tall hideTitle>
+      <Sheet open={logOpen} onClose={() => setLogOpen(false)} title="Log transaction" hideTitle>
         <LogForm onDone={() => setLogOpen(false)} />
       </Sheet>
     </>

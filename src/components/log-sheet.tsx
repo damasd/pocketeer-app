@@ -76,6 +76,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
   const [note, setNote] = useState(editing?.note ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
+  // The keypad shows only after tapping the amount; then the sheet holds just type, amount and keys.
+  const [keypadOpen, setKeypadOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const type = storedType(mode, direction);
@@ -276,18 +278,17 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
       </Key>
       <button
         type="button"
-        onClick={save}
-        disabled={busy}
+        onClick={() => setKeypadOpen(false)}
         style={{ gridColumn: 4, gridRow: "2 / span 3" }}
-        className="rounded-2xl bg-lime text-[17px] font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97] disabled:opacity-60"
+        className="rounded-2xl bg-lime text-[17px] font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97]"
       >
-        {busy ? "Saving…" : "Save"}
+        Done
       </button>
     </div>
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <Segmented
         label="Transaction type"
         options={MODES}
@@ -301,28 +302,27 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         }}
       />
 
-      <div className="mt-3 flex items-center gap-3 pb-1">
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-0.5">
-          <span className="text-[13px] font-medium text-muted">Amount</span>
-          <output
-            aria-live="polite"
-            aria-label={`Amount ${formatRupiah(amount)}. Type digits, Enter to save`}
-            tabIndex={-1}
-            data-autofocus
-            className="flex w-full justify-center rounded-xl px-2 outline-none"
-          >
-            <FitText text={formatRupiah(amount)} max={42} min={24} className="leading-[1.2] font-bold tracking-[-0.03em]" />
-          </output>
-        </div>
-      </div>
-
-      {/* Type and amount stay at the top; everything below scrolls when it doesn't fit. */}
-      <div
-        className={`no-scrollbar -mx-5 flex min-h-0 flex-1 flex-col gap-3 px-5 pb-1 ${
-          // Saving holds the most (direction, category, From and To); the other tabs fit as they are.
-          mode === "saving" ? "overflow-y-auto overscroll-contain" : "overflow-hidden"
-        }`}
+      <button
+        type="button"
+        data-autofocus
+        aria-expanded={keypadOpen}
+        aria-controls="log-keypad"
+        aria-label={`Amount ${formatRupiah(amount)}. ${keypadOpen ? "Hide the keypad" : "Tap to type it"}`}
+        onClick={() => setKeypadOpen((o) => !o)}
+        className="mt-3 flex flex-col items-center gap-0.5 rounded-2xl pb-1 outline-none focus-visible:outline-2 focus-visible:outline-lime"
       >
+        <span className="text-[13px] font-medium text-muted">{keypadOpen ? "Amount" : "Amount · tap to type"}</span>
+        <span className="flex w-full justify-center px-2">
+          <FitText text={formatRupiah(amount)} max={42} min={24} className="leading-[1.2] font-bold tracking-[-0.03em]" />
+        </span>
+      </button>
+
+      {keypadOpen ? (
+        <div id="log-keypad" className="keypad-in mt-1">
+          {keypad}
+        </div>
+      ) : (
+      <>
         {loadError && <ErrorNote>{loadError}</ErrorNote>}
 
         {kind && (
@@ -430,6 +430,38 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         </div>
 
 
+
+        {/* When and what: right under the accounts. The calendar floats near the bottom of the screen. */}
+        <div className="flex flex-none gap-2">
+          <DatePopover value={date} onChange={setDate} up />
+          <input
+            type="text"
+            aria-label="Note"
+            placeholder="Note"
+            maxLength={NOTE_MAX}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            className="h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-base placeholder:text-muted"
+          />
+        </div>
+
+        {error && <ErrorNote>{error}</ErrorNote>}
+
+        <button
+          type="button"
+          onClick={save}
+          disabled={busy}
+          className="mt-1 h-14 rounded-full bg-lime text-[17px] font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.98] disabled:opacity-60"
+        >
+          {busy ? "Saving…" : "Save"}
+        </button>
+
         {editing &&
           (confirmDelete ? (
             <div role="group" aria-label="Confirm delete" className="flex items-center gap-2 rounded-2xl bg-page p-2 pl-4">
@@ -459,36 +491,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
               Delete transaction
             </button>
           ))}
-
-        {/* When and what: right under the accounts. The calendar floats near the bottom of the screen. */}
-        <div className="flex flex-none gap-2">
-          <DatePopover value={date} onChange={setDate} up />
-          <input
-            type="text"
-            aria-label="Note"
-            placeholder="Note"
-            maxLength={NOTE_MAX}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                (e.target as HTMLInputElement).blur();
-              }
-            }}
-            className="h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-base placeholder:text-muted"
-          />
-        </div>
-
-        {error && <ErrorNote>{error}</ErrorNote>}
-
-        {/* Saving scrolls, keypad included. */}
-        {mode === "saving" && <div className="mt-auto">{keypad}</div>}
-      </div>
-
-      {/* Expense, Income and Transfer: the keypad is pinned to the bottom of the sheet, so it sits in
-          exactly the same place on each of them whatever is above it. */}
-      {mode !== "saving" && keypad}
+      </>
+      )}
     </div>
   );
 }

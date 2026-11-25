@@ -281,3 +281,16 @@ html[data-locked] {
 .hatch-grey {
   background: repeating-linear-gradient(-45deg, #d6d6d6 0 2px, #efefef 2px 6px);
 }
+
+/* Log sheet: the keypad rises in when the amount is tapped (log-sheet.tsx). */
+@media (prefers-reduced-motion: no-preference) {
+  .keypad-in {
+    animation: keypad-in 200ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+@keyframes keypad-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
