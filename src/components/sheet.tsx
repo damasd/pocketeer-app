@@ -5,12 +5,45 @@ import { useEffect, useRef, type PointerEvent as ReactPointerEvent, type ReactNo
 /** Drag past this (px), or flick down faster than FLICK (px/ms), and the sheet closes. */
 const CLOSE_AT = 110;
 const FLICK = 0.6;
+/** Finger travel before a touch counts as a drag (taps stay taps). */
+const SLOP = 8;
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+
+// ---- Page behind an open sheet stays still. iPhone Safari keeps scrolling the page under a
+// modal <dialog>, so the body is pinned in place while any sheet is open and put back after.
+let locks = 0;
+let savedY = 0;
+function lockPage() {
+  if (locks++ > 0) return;
+  savedY = window.scrollY;
+  const b = document.body.style;
+  b.position = "fixed";
+  b.top = `-${savedY}px`;
+  b.left = "0";
+  b.right = "0";
+  document.documentElement.style.overflow = "hidden";
+}
+function unlockPage() {
+  if (--locks > 0) return;
+  const b = document.body.style;
+  b.position = b.top = b.left = b.right = "";
+  document.documentElement.style.overflow = "";
+  window.scrollTo(0, savedY);
+}
+
+/** The part under `el` that can scroll vertically (inside the sheet), if any. */
+function scrollerOf(el: Element | null, sheet: HTMLElement): HTMLElement | null {
+  for (let n = el as HTMLElement | null; n && n !== sheet; n = n.parentElement) {
+    if (/(auto|scroll)/.test(getComputedStyle(n).overflowY) && n.scrollHeight > n.clientHeight + 1) return n;
+  }
+  return sheet.scrollHeight > sheet.clientHeight + 1 ? sheet : null;
+}
 
 /**
  * Bottom sheet on a native <dialog>: Escape, focus trap and an inert page come free.
- * Controlled by `open`; calls onClose when dismissed: swipe the handle / title bar down, tap the
- * backdrop, or press Escape. Screen readers also get a Close button.
+ * Controlled by `open`; calls onClose when dismissed: drag the sheet down anywhere (a part that
+ * scrolls first scrolls back to its top), tap the backdrop, or press Escape. Screen readers also
+ * get a Close button.
  */
 export function Sheet({
   open,
@@ -45,9 +78,102 @@ export function Sheet({
     if (!open && d.open) d.close();
   }, [open]);
 
-  // ---- Swipe down to dismiss (on the handle and title bar).
+  // Freeze the page behind while open.
+  useEffect(() => {
+    if (!open) return;
+    lockPage();
+    return unlockPage;
+  }, [open]);
+
+  /** Let go: carry on down and close, or settle back. */
+  function finish(dy: number, v: number) {
+    const d = ref.current;
+    if (!d) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (dy > CLOSE_AT || v > FLICK) {
+      d.style.transition = reduce ? "none" : `transform 220ms ${EASE}`;
+      d.style.transform = "translateY(100%)";
+      setTimeout(() => d.close(), reduce ? 0 : 220);
+    } else {
+      d.style.transition = reduce ? "none" : `transform 260ms ${EASE}`;
+      d.style.transform = "";
+    }
+  }
+  function follow(dy: number) {
+    const d = ref.current;
+    if (!d) return;
+    d.style.transition = "none";
+    d.style.transform = `translateY(${dy}px)`;
+  }
+
+  // ---- Touch: drag down anywhere on the sheet to dismiss it. Starting on a part that is scrolled
+  // down, the finger scrolls it first; sideways swipes (category chips) are left alone.
+  useEffect(() => {
+    const d = ref.current;
+    if (!d || !open) return;
+    let g: { x: number; y: number; t: number; scroller: HTMLElement | null; dragging: boolean; dy: number; v: number } | null = null;
+    let swallowClick = false;
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return (g = null);
+      const t = e.touches[0];
+      g = { x: t.clientX, y: t.clientY, t: e.timeStamp, scroller: scrollerOf(e.target as Element, d), dragging: false, dy: 0, v: 0 };
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!g) return;
+      const t = e.touches[0];
+      if (!g.dragging) {
+        const dx = t.clientX - g.x;
+        const dy = t.clientY - g.y;
+        if (Math.abs(dx) < SLOP && Math.abs(dy) < SLOP) return;
+        // Sideways, upwards, or a part that can still scroll up: not ours.
+        if (Math.abs(dx) > Math.abs(dy) || dy < 0 || (g.scroller && g.scroller.scrollTop > 0)) {
+          g = null;
+          return;
+        }
+        g.dragging = true;
+        g.y = t.clientY;
+        g.t = e.timeStamp;
+      }
+      e.preventDefault(); // the sheet moves, nothing scrolls
+      const dy = Math.max(0, t.clientY - g.y);
+      g.v = (dy - g.dy) / Math.max(1, e.timeStamp - g.t);
+      g.dy = dy;
+      g.t = e.timeStamp;
+      follow(dy);
+    };
+    const onEnd = () => {
+      if (g?.dragging) {
+        swallowClick = true;
+        setTimeout(() => (swallowClick = false), 0);
+        finish(g.dy, g.v);
+      }
+      g = null;
+    };
+    // A drag is not a tap on whatever it started on.
+    const onClick = (e: MouseEvent) => {
+      if (!swallowClick) return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    d.addEventListener("touchstart", onStart, { passive: true });
+    d.addEventListener("touchmove", onMove, { passive: false });
+    d.addEventListener("touchend", onEnd);
+    d.addEventListener("touchcancel", onEnd);
+    d.addEventListener("click", onClick, true);
+    return () => {
+      d.removeEventListener("touchstart", onStart);
+      d.removeEventListener("touchmove", onMove);
+      d.removeEventListener("touchend", onEnd);
+      d.removeEventListener("touchcancel", onEnd);
+      d.removeEventListener("click", onClick, true);
+    };
+  }, [open]);
+
+  // ---- Mouse (laptop): drag the handle / title bar. Touch is handled above.
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (e.pointerType === "touch" || (e.pointerType === "mouse" && e.button !== 0)) return;
     drag.current = { id: e.pointerId, y: e.clientY, t: e.timeStamp, dy: 0, v: 0 };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -57,31 +183,18 @@ export function Sheet({
   };
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const g = drag.current;
-    const d = ref.current;
-    if (!g || g.id !== e.pointerId || !d) return;
+    if (!g || g.id !== e.pointerId) return;
     const dy = Math.max(0, e.clientY - g.y); // only downwards
-    const dt = Math.max(1, e.timeStamp - g.t);
-    g.v = (dy - g.dy) / dt;
+    g.v = (dy - g.dy) / Math.max(1, e.timeStamp - g.t);
     g.dy = dy;
     g.t = e.timeStamp;
-    d.style.transition = "none";
-    d.style.transform = `translateY(${dy}px)`;
+    follow(dy);
   };
   const onPointerEnd = (e: ReactPointerEvent<HTMLDivElement>) => {
     const g = drag.current;
-    const d = ref.current;
-    if (!g || g.id !== e.pointerId || !d) return;
+    if (!g || g.id !== e.pointerId) return;
     drag.current = null;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (g.dy > CLOSE_AT || g.v > FLICK) {
-      // Carry on down out of sight, then close.
-      d.style.transition = reduce ? "none" : `transform 220ms ${EASE}`;
-      d.style.transform = "translateY(100%)";
-      setTimeout(() => d.close(), reduce ? 0 : 220);
-    } else {
-      d.style.transition = reduce ? "none" : `transform 260ms ${EASE}`;
-      d.style.transform = "";
-    }
+    finish(g.dy, g.v);
   };
 
   return (
@@ -95,7 +208,7 @@ export function Sheet({
       }}
     >
       <div className={`flex flex-col gap-4 px-5 pb-[max(24px,env(safe-area-inset-bottom))] ${tall ? "h-full min-h-0" : ""}`}>
-        {/* Grab here and pull down to close. */}
+        {/* Handle; on a laptop, grab here and pull down to close. */}
         <div
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
