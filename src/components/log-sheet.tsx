@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, Delete } from "lucide-react";
+import { Camera, ChevronDown, Delete, Mic } from "lucide-react";
 import { DatePopover } from "@/components/date-popover";
 import { FitText } from "@/components/fit-text";
 import { Segmented } from "@/components/segmented";
@@ -323,7 +323,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
           <FitText text={formatRupiah(amount)} max={42} min={24} className="leading-[1.2] font-bold tracking-[-0.03em]" />
         </span>
         {/* The hint keeps its line while the keypad is open, so the amount never moves. */}
-        <span aria-hidden className={`text-xs leading-4 font-medium text-muted ${keypadOpen ? "invisible" : ""}`}>
+        <span aria-hidden className={`mt-2 text-xs leading-4 font-medium text-muted ${keypadOpen ? "invisible" : ""}`}>
           Tap to type
         </span>
       </button>
@@ -534,6 +534,37 @@ function Key({
     >
       {children}
     </button>
+  );
+}
+
+/**
+ * Log sheet title bar, right side (mockup Log.dc.html): speak a transaction, scan a receipt.
+ * Voice and receipt reading come with slices 12–13; until then a tap says so.
+ */
+export function LogInputButtons() {
+  const soon = (what: string) => () => {
+    haptic();
+    showToast({ message: `${what} is coming in a later update` });
+  };
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="Speak a transaction"
+        onClick={soon("Voice input")}
+        className="flex size-11 items-center justify-center rounded-full bg-page text-ink"
+      >
+        <Mic aria-hidden size={18} strokeWidth={2} />
+      </button>
+      <button
+        type="button"
+        aria-label="Scan a receipt"
+        onClick={soon("Receipt scanning")}
+        className="flex size-11 items-center justify-center rounded-full bg-page text-ink"
+      >
+        <Camera aria-hidden size={18} strokeWidth={2} />
+      </button>
+    </>
   );
 }
 

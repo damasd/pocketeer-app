@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { X } from "lucide-react";
 
 /** Drag past this (px), or flick down faster than FLICK (px/ms), and the sheet closes. */
 const CLOSE_AT = 110;
@@ -51,6 +52,8 @@ export function Sheet({
   title,
   tall = false,
   hideTitle = false,
+  closeButton = false,
+  actions,
   children,
 }: {
   open: boolean;
@@ -60,8 +63,13 @@ export function Sheet({
   tall?: boolean;
   /** Only the handle shows; the title is still read out (Log sheet starts with its type switch). */
   hideTitle?: boolean;
+  /** A visible ✕ on the left of the title (Log transaction). */
+  closeButton?: boolean;
+  /** Buttons on the right of the title (Log transaction: voice and receipt). */
+  actions?: ReactNode;
   children: ReactNode;
 }) {
+  const toolbar = closeButton || actions !== undefined;
   const ref = useRef<HTMLDialogElement>(null);
   const drag = useRef<{ id: number; y: number; t: number; dy: number; v: number } | null>(null);
 
@@ -174,6 +182,7 @@ export function Sheet({
   // ---- Mouse (laptop): drag the handle / title bar. Touch is handled above.
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "touch" || (e.pointerType === "mouse" && e.button !== 0)) return;
+    if ((e.target as Element).closest("button")) return; // buttons in the title bar stay clickable
     drag.current = { id: e.pointerId, y: e.clientY, t: e.timeStamp, dy: 0, v: 0 };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -217,15 +226,35 @@ export function Sheet({
           className={`-mx-5 flex cursor-grab touch-none flex-col items-center gap-3 px-5 pt-2.5 select-none active:cursor-grabbing ${hideTitle ? "-mb-1 pb-3" : ""}`}
         >
           <div aria-hidden className="h-[5px] w-10 rounded-full bg-line" />
-          {hideTitle ? (
+          {toolbar ? (
+            // Title centred on the sheet whatever sits either side of it.
+            <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2">
+              <div className="flex justify-start">
+                {closeButton && (
+                  <button
+                    type="button"
+                    aria-label="Close"
+                    onClick={() => ref.current?.close()}
+                    className="flex size-11 items-center justify-center rounded-full bg-page text-ink"
+                  >
+                    <X aria-hidden size={18} strokeWidth={2.25} />
+                  </button>
+                )}
+              </div>
+              <h2 className="text-center text-[17px] font-bold">{title}</h2>
+              <div className="flex justify-end gap-2">{actions}</div>
+            </div>
+          ) : hideTitle ? (
             <h2 className="sr-only">{title}</h2>
           ) : (
             <h2 className="flex min-h-11 items-center text-center text-[17px] font-bold">{title}</h2>
           )}
         </div>
-        <button type="button" onClick={() => ref.current?.close()} className="sr-only">
-          Close
-        </button>
+        {!closeButton && (
+          <button type="button" onClick={() => ref.current?.close()} className="sr-only">
+            Close
+          </button>
+        )}
         {open && children}
       </div>
     </dialog>

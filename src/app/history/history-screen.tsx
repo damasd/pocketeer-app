@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, Plus, Search, SlidersHorizontal } from "lucide-react";
-import { LogForm } from "@/components/log-sheet";
+import { LogForm, LogInputButtons } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
 import { ErrorNote } from "@/components/ui";
 import { useAccounts } from "@/lib/accounts";
@@ -297,7 +297,7 @@ export function HistoryScreen() {
         </div>
       )}
 
-      <Sheet open={adding} onClose={() => setAdding(false)} title="Log transaction" hideTitle>
+      <Sheet open={adding} onClose={() => setAdding(false)} title="Log transaction" closeButton actions={<LogInputButtons />}>
         <LogForm onDone={() => setAdding(false)} />
       </Sheet>
 
