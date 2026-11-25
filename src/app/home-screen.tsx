@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -184,12 +185,13 @@ export function HomeScreen() {
           <div aria-hidden className="h-[5px] w-10 self-center rounded-full bg-line" />
 
           <section aria-labelledby="tiles-title" className="flex flex-col gap-3">
-            <div className="flex items-baseline justify-between">
+            <div className="flex items-center justify-between">
               <h2 id="tiles-title" className="text-[17px] font-semibold">
                 Budget &amp; saving
               </h2>
-              <Link href="/plan" className="flex h-11 items-center text-[13px] font-semibold">
+              <Link href="/plan" aria-label="See all budgets and savings" className="relative flex h-8 items-center gap-0.5 rounded-full bg-page pr-2 pl-3 text-[13px] font-semibold after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']">
                 See all
+                <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>
             </div>
             {tiles.length === 0 && !loading ? (
@@ -244,12 +246,13 @@ export function HomeScreen() {
           </section>
 
           <section aria-labelledby="recent-title" className="flex flex-col gap-1">
-            <div className="flex items-baseline justify-between">
+            <div className="flex items-center justify-between">
               <h2 id="recent-title" className="text-[17px] font-semibold">
                 Transaction
               </h2>
-              <Link href="/history" className="flex h-11 items-center text-[13px] font-semibold">
-                View all
+              <Link href="/history" aria-label="See all transactions" className="relative flex h-8 items-center gap-0.5 rounded-full bg-page pr-2 pl-3 text-[13px] font-semibold after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']">
+                See all
+                <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>
             </div>
             {!loading && recent.length === 0 && (
