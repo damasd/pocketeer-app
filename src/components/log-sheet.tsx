@@ -345,7 +345,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
               )}
             </div>
             {mode === "saving" && categoryId && (
-              <p className="self-start rounded-xl bg-page px-3 py-2 text-xs text-muted">
+              <p className="text-xs text-muted">
                 Saved in {chips.find((c) => c.id === categoryId)?.name}:{" "}
                 <b className="font-bold text-ink">{formatRupiah(savingBalance(categoryId, txs))}</b>
               </p>
@@ -626,19 +626,21 @@ type BudgetLineNote =
 function BudgetNote({ line }: { line: BudgetLineNote }) {
   if (line.kind === "none")
     return (
-      <p className="self-start rounded-xl bg-page px-3 py-2 text-xs text-muted">
+      <p className="text-xs text-muted">
         No budget for {line.name}
         {line.period ? ` in ${line.period}` : ""}. Set one in Target.
       </p>
     );
   return (
-    <p
-      className={`self-start rounded-xl px-3 py-2 text-xs ${line.kind === "over" ? "bg-ember text-white" : "bg-page text-muted"}`}
-    >
-      <b className={`font-bold ${line.kind === "over" ? "text-white" : "text-ink"}`}>{formatRupiah(line.amount)}</b>{" "}
-      {line.kind === "over"
-        ? `over the ${formatRupiah(line.budget)} budget`
-        : `left of ${formatRupiah(line.budget)} in ${line.period}`}
+    <p className="flex items-center gap-1.5 text-xs text-muted">
+      {/* Over budget: a red dot (red text on white would be too faint to read). */}
+      {line.kind === "over" && <span aria-hidden className="size-1.5 flex-none rounded-full bg-ember" />}
+      <span>
+        <b className="font-bold text-ink">{formatRupiah(line.amount)}</b>{" "}
+        {line.kind === "over"
+          ? `over the ${formatRupiah(line.budget)} budget`
+          : `left of ${formatRupiah(line.budget)} in ${line.period}`}
+      </span>
     </p>
   );
 }
