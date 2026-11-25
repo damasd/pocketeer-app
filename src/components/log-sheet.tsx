@@ -299,9 +299,20 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
                 />
               </div>
             )}
-            <span id="category-label" className="text-[13px] font-medium text-muted">
-              {mode === "saving" ? "Saving category" : "Category"}
-            </span>
+            {/* The picked category's note sits on the label line, so showing it moves nothing. */}
+            <div className="flex items-baseline justify-between gap-3">
+              <span id="category-label" className="text-[13px] font-medium text-muted">
+                {mode === "saving" ? "Saving category" : "Category"}
+              </span>
+              <span aria-live="polite" className="text-right">
+                {mode === "saving" && categoryId && (
+                  <span className="text-xs text-muted">
+                    <b className="font-bold text-ink">{formatRupiah(savingBalance(categoryId, txs))}</b> saved
+                  </span>
+                )}
+                {mode === "expense" && categoryId && <BudgetNote line={budgetNote(categoryId)} />}
+              </span>
+            </div>
             <div role="group" aria-labelledby="category-label" className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
               {loading &&
                 [0, 1, 2].map((i) => <span key={i} aria-hidden className="h-11 w-24 flex-none rounded-full bg-page" />)}
@@ -330,12 +341,6 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
                 </Link>
               )}
             </div>
-            {mode === "saving" && categoryId && (
-              <p className="text-xs text-muted">
-                <b className="font-bold text-ink">{formatRupiah(savingBalance(categoryId, txs))}</b> saved
-              </p>
-            )}
-            {mode === "expense" && categoryId && <BudgetNote line={budgetNote(categoryId)} />}
           </div>
         )}
 
@@ -619,11 +624,11 @@ type BudgetLineNote =
  * the amount is ember (4.57:1 on white, bold: readable).
  */
 function BudgetNote({ line }: { line: BudgetLineNote }) {
-  if (line.kind === "none") return <p className="text-xs text-muted">No budget set</p>;
+  if (line.kind === "none") return <span className="text-xs text-muted">No budget set</span>;
   return (
-    <p className="text-xs text-muted">
+    <span className="text-xs text-muted">
       <b className={`font-bold ${line.kind === "over" ? "text-ember" : "text-ink"}`}>{formatRupiah(line.amount)}</b>{" "}
       {line.kind === "over" ? "over" : "left"}
-    </p>
+    </span>
   );
 }
