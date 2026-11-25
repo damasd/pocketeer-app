@@ -50,7 +50,7 @@ export function HomeScreen() {
   useEffect(() => {
     const SHARE = 0.25;
     const FLICK = 0.3; // px per ms
-    const MS = 160;
+    const MS = 40;
     const SLOP = 6;
     const ease = (t: number) => 1 - (1 - t) ** 4; // quick start, soft stop
     let g: { x: number; y: number; from: number; t: number; v: number; on: boolean } | null = null;

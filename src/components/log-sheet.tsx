@@ -278,7 +278,10 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
       </Key>
       <button
         type="button"
-        onClick={() => setKeypadOpen(false)}
+        onClick={() => {
+          haptic();
+          setKeypadOpen(false);
+        }}
         style={{ gridColumn: 4, gridRow: "2 / span 3" }}
         className="rounded-2xl bg-lime text-[17px] font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97]"
       >
@@ -295,6 +298,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         value={mode}
         onChange={(m) => {
           setMode(m);
+          setKeypadOpen(false); // another type: back to its details
           setCategoryId(null);
           setChosenToId(null);
           setOpenPicker(null);
@@ -308,7 +312,10 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         aria-expanded={keypadOpen}
         aria-controls="log-keypad"
         aria-label={`Amount ${formatRupiah(amount)}. ${keypadOpen ? "Hide the keypad" : "Tap to type it"}`}
-        onClick={() => setKeypadOpen((o) => !o)}
+        onClick={() => {
+          haptic();
+          setKeypadOpen((o) => !o);
+        }}
         className="mt-3 flex flex-col items-center gap-0.5 rounded-2xl pb-1 outline-none focus-visible:outline-2 focus-visible:outline-lime"
       >
         <span className="text-[13px] font-medium text-muted">{keypadOpen ? "Amount" : "Amount · tap to type"}</span>
@@ -386,8 +393,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
           </div>
         )}
 
-        {/* Transfer: From and To side by side. */}
-        <div className={mode === "transfer" ? "grid grid-cols-2 items-start gap-3" : "contents"}>
+        {/* From, then To (Transfer and Saving), each on its own row. */}
+        <div className="contents">
           <AccountPicker
             id="from"
             label={fromLabel}
@@ -404,7 +411,6 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
               setError(null);
             }}
             badge="ink"
-            compact={mode === "transfer"}
           />
 
           {(mode === "transfer" || mode === "saving") && (
@@ -424,7 +430,6 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
                 setError(null);
               }}
               badge="lime"
-              compact={mode === "transfer"}
             />
           )}
         </div>
