@@ -131,8 +131,10 @@ export function HomeScreen() {
           {/* The card stack sits beside the budget, its top level with it, reaching the right edge. */}
           <div className="relative">
             <section aria-label="Budget this period" className="mr-[92px] flex flex-col gap-1">
-              <span className="text-[13px] font-medium text-[#BDBDBD]">
+              {/* The eye sits in the label's own line height, so the block (and the cards beside it) keep their size. */}
+              <span className="flex h-5 items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
                 This month budget
+                <RevealButton tone="dark" />
               </span>
               {loading ? (
                 <span aria-hidden className="mt-1 block h-[46px] w-52 rounded-xl bg-nav-selected" />
@@ -140,7 +142,6 @@ export function HomeScreen() {
                 <>
                   <span className="mt-1 flex items-center gap-1">
                     <FitText text={money(head.remaining)} max={38} min={22} className="leading-[46px] font-bold tracking-[-0.03em]" />
-                    <RevealButton tone="dark" />
                   </span>
                   <div
                     role="progressbar"
@@ -164,7 +165,6 @@ export function HomeScreen() {
                   <span className="mt-1 text-[22px] leading-[1.3] font-bold">No budget yet</span>
                   <span className="flex items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
                     {money(spentTotal)} spent this period
-                    <RevealButton tone="dark" />
                   </span>
                   <Link
                     href="/plan"
