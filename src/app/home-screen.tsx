@@ -329,11 +329,9 @@ export function HomeScreen() {
                         <span className="truncate text-[13px] font-semibold">{c?.name}</span>
                       </span>
                       <span className="flex flex-col gap-0.5">
-                        <span className="text-[17px] font-bold">{money(t.amount)}</span>
-                        <span className="text-xs text-muted">
-                          of {money(t.of)}
-                          {t.kind === "saving" ? " target" : ""}
-                        </span>
+                        {/* What's left of the budget (Rp 0 once over; the pill below says by how much). */}
+                        <span className="text-[17px] font-bold">{money(Math.max(0, t.of - t.amount))}</span>
+                        <span className="text-xs text-muted">left of {money(t.of)}</span>
                       </span>
                       <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-card">
                         <span
