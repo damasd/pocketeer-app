@@ -42,83 +42,55 @@ export function HomeScreen() {
     coverPeriodsFrom(oldest);
   }, [oldest]);
 
-  // The white part covers the header (scrolled to its top) or rests below it. Between the two it
-  // follows the finger, and on letting go it finishes the move quickly, like a sheet: pushed up
-  // past a quarter of the way (or flicked) it covers the header, otherwise it springs back; pulled
-  // down even a little, it opens the header fully. Further down, the list scrolls as usual.
+  // The white part is a panel moved by the app (not the page scroll, which iPhone Safari fights
+  // with momentum and bounce). It rests below the header or covers it:
+  // - at rest, a vertical drag moves it; pushed up past a quarter of the way (or flicked) it covers
+  //   the header, otherwise it springs back;
+  // - covered, its list scrolls inside it; pulling down while the list is at its top opens the
+  //   header fully.
+  // The mouse wheel does the same on a laptop.
+  const headerRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [covered, setCovered] = useState(false);
+  const coveredRef = useRef(false);
   useEffect(() => {
-    const SHARE = 0.25;
-    const FLICK = 0.3; // px per ms
-    const MS = 40;
+    const sheet = sheetRef.current;
+    const main = sheet?.parentElement; // the page (<main>)
+    const inner = innerRef.current;
+    const header = headerRef.current;
+    if (!main || !sheet || !inner || !header) return;
+    const SNAP_MS = 280;
+    const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
     const SLOP = 6;
-    const ease = (t: number) => 1 - (1 - t) ** 4; // quick start, soft stop
-    let g: { x: number; y: number; from: number; t: number; v: number; on: boolean } | null = null;
-    let frame = 0;
-    let settleTimer: ReturnType<typeof setTimeout> | undefined;
-    let holding = false; // page scrolling held still during a snap
+    const FLICK = 0.3; // px per ms
+    const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const H = () => header.offsetHeight;
 
-    const coverAt = () => {
-      const sheet = sheetRef.current;
-      return sheet ? sheet.getBoundingClientRect().top + window.scrollY : 0;
+    /** Panel position: 0 = resting below the header, −H = covering it. */
+    const put = (y: number, ms: number) => {
+      sheet.style.transition = ms && !reduce() ? `transform ${ms}ms ${EASE}` : "none";
+      sheet.style.transform = y ? `translate3d(0, ${y}px, 0)` : "";
     };
-    const blocked = (e: Event) =>
-      document.body.style.position === "fixed" || (e.target as Element | null)?.closest?.("dialog") != null;
+    const settle = (cover: boolean) => {
+      put(cover ? -H() : 0, SNAP_MS);
+      coveredRef.current = cover;
+      setCovered(cover);
+      if (!cover) inner.scrollTop = 0;
+    };
 
-    /**
-     * Move to `to`. The page's own scrolling is held still meanwhile: on iPhone the momentum of a
-     * flick keeps going after the finger lifts and would otherwise carry the page past the snap,
-     * leaving it stuck halfway. It always ends exactly on `to`.
-     */
-    function glide(to: number) {
-      cancelAnimationFrame(frame);
-      const from = window.scrollY;
-      if (Math.abs(to - from) < 1) return;
-      const html = document.documentElement;
-      const hold = document.body.style.position !== "fixed"; // a sheet's lock owns it otherwise
-      if (hold) {
-        html.style.overflow = "hidden"; // stops momentum scrolling
-        holding = true;
-      }
-      const land = () => {
-        window.scrollTo(0, to);
-        if (hold) {
-          html.style.overflow = "";
-          holding = false;
-        }
-        window.scrollTo(0, to);
-      };
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return land();
-      const start = performance.now();
-      const step = (now: number) => {
-        const t = Math.min(1, (now - start) / MS);
-        if (t >= 1) return land();
-        window.scrollTo(0, from + (to - from) * ease(t));
-        frame = requestAnimationFrame(step);
-      };
-      frame = requestAnimationFrame(step);
-    }
-    /** Where to go from y, moving in `dir` (+1 up over the header, −1 down) at speed v. */
-    function decide(y: number, dir: number, v: number) {
-      const top = coverAt();
-      if (y <= 0.5 || y >= top - 0.5) return;
-      if (Math.abs(v) > FLICK) return glide(v > 0 ? top : 0);
-      // Pushing up: past a quarter it covers the header, else back down. Pulling down: any pull
-      // opens the header fully.
-      glide(dir > 0 ? (y > top * SHARE ? top : 0) : 0);
-    }
+    // Header height can change (data arriving): keep a covering panel exactly over it.
+    const ro = new ResizeObserver(() => {
+      if (coveredRef.current) put(-H(), 0);
+    });
+    ro.observe(header);
 
+    let g: { x: number; y: number; t: number; base: number; at: number; v: number; on: boolean } | null = null;
     const onStart = (e: TouchEvent) => {
-      if (blocked(e) || e.touches.length !== 1) return (g = null);
-      cancelAnimationFrame(frame);
-      clearTimeout(settleTimer);
-      if (holding) {
-        document.documentElement.style.overflow = ""; // touched again mid-snap: let go of the hold
-        holding = false;
-      }
+      if (e.touches.length !== 1 || (e.target as Element).closest?.("dialog")) return (g = null);
       const t = e.touches[0];
-      // Only from the resting or covered position (or in between); deeper in the list, scroll natively.
-      g = window.scrollY <= coverAt() + 1 ? { x: t.clientX, y: t.clientY, from: window.scrollY, t: e.timeStamp, v: 0, on: false } : null;
+      const base = coveredRef.current ? -H() : 0;
+      g = { x: t.clientX, y: t.clientY, t: e.timeStamp, base, at: base, v: 0, on: false };
     };
     const onMove = (e: TouchEvent) => {
       if (!g) return;
@@ -127,48 +99,52 @@ export function HomeScreen() {
       const dy = t.clientY - g.y;
       if (!g.on) {
         if (Math.abs(dx) < SLOP && Math.abs(dy) < SLOP) return;
-        // Sideways (the card pull) or pushing on into the list from the covered position: native.
-        if (Math.abs(dx) > Math.abs(dy) || (g.from >= coverAt() - 1 && dy < 0)) return (g = null);
+        // Sideways is the card pull; covered, only a pull down from the list's top moves the panel.
+        if (Math.abs(dx) > Math.abs(dy)) return (g = null);
+        if (coveredRef.current && !(dy > 0 && inner.scrollTop <= 0)) return (g = null);
         g.on = true;
+        g.y = t.clientY;
+        g.t = e.timeStamp;
       }
       e.preventDefault();
-      const top = coverAt();
-      const y = Math.min(top, Math.max(0, g.from - dy));
-      g.v = (y - window.scrollY) / Math.max(1, e.timeStamp - g.t);
+      const at = Math.min(0, Math.max(-H(), g.base + (t.clientY - g.y)));
+      g.v = (at - g.at) / Math.max(1, e.timeStamp - g.t);
+      g.at = at;
       g.t = e.timeStamp;
-      window.scrollTo(0, y);
+      put(at, 0);
     };
     const onEnd = () => {
-      if (g?.on) decide(window.scrollY, g.v >= 0 ? 1 : -1, g.v);
-      else {
-        // A native scroll (e.g. from deep in the list) that comes to rest in between: finish it.
-        let last = window.scrollY;
-        let dir = 0;
-        const check = () => {
-          const y = window.scrollY;
-          if (y !== last) {
-            dir = y > last ? 1 : -1;
-            last = y;
-            settleTimer = setTimeout(check, 50);
-          } else decide(y, dir || -1, 0);
-        };
-        settleTimer = setTimeout(check, 50);
-      }
+      if (!g?.on) return (g = null);
+      const h = H();
+      let cover: boolean;
+      if (Math.abs(g.v) > FLICK) cover = g.v < 0; // flicked up covers, flicked down opens
+      else if (g.at < g.base || (g.at === g.base && !coveredRef.current)) cover = g.at < -h * 0.25; // pushed up
+      else cover = false; // pulled down: open fully
+      settle(cover);
       g = null;
     };
+    const onWheel = (e: WheelEvent) => {
+      if (!coveredRef.current && e.deltaY > 0) {
+        e.preventDefault();
+        settle(true);
+      } else if (coveredRef.current && e.deltaY < 0 && inner.scrollTop <= 0) {
+        e.preventDefault();
+        settle(false);
+      }
+    };
 
-    window.addEventListener("touchstart", onStart, { passive: true });
-    window.addEventListener("touchmove", onMove, { passive: false });
-    window.addEventListener("touchend", onEnd, { passive: true });
-    window.addEventListener("touchcancel", onEnd, { passive: true });
+    main.addEventListener("touchstart", onStart, { passive: true });
+    main.addEventListener("touchmove", onMove, { passive: false });
+    main.addEventListener("touchend", onEnd, { passive: true });
+    main.addEventListener("touchcancel", onEnd, { passive: true });
+    main.addEventListener("wheel", onWheel, { passive: false });
     return () => {
-      cancelAnimationFrame(frame);
-      clearTimeout(settleTimer);
-      if (holding) document.documentElement.style.overflow = ""; // never leave the page stuck
-      window.removeEventListener("touchstart", onStart);
-      window.removeEventListener("touchmove", onMove);
-      window.removeEventListener("touchend", onEnd);
-      window.removeEventListener("touchcancel", onEnd);
+      ro.disconnect();
+      main.removeEventListener("touchstart", onStart);
+      main.removeEventListener("touchmove", onMove);
+      main.removeEventListener("touchend", onEnd);
+      main.removeEventListener("touchcancel", onEnd);
+      main.removeEventListener("wheel", onWheel);
     };
   }, []);
 
@@ -244,11 +220,12 @@ export function HomeScreen() {
         masked={hidden}
         previewRef={previewRef}
       />
-      <main ref={pageRef} className="relative mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-ink">
+      <main ref={pageRef} className="relative mx-auto flex h-dvh w-full max-w-[480px] flex-col overflow-hidden bg-ink">
         {/* Swipe left anywhere on the header: the account cards slide and Accounts opens. */}
         <div
-          // Stays where it is while the white part below slides up over it.
-          className="sticky top-0 z-0 flex touch-pan-y flex-col gap-6 px-5 pt-[max(32px,env(safe-area-inset-top))] pb-7 text-white select-none"
+          ref={headerRef}
+          data-home-header
+          className="relative flex flex-none touch-pan-y flex-col gap-6 px-5 pt-[max(32px,env(safe-area-inset-top))] pb-7 text-white select-none"
           {...swipeHandlers}
         >
           <Greeting />
@@ -305,8 +282,17 @@ export function HomeScreen() {
           </div>
         </div>
 
-        {/* Tall enough to cover the header completely when pushed up. */}
-        <div ref={sheetRef} className="relative z-10 flex min-h-dvh flex-1 flex-col gap-6 rounded-t-[28px] bg-card px-5 pt-2.5 pb-36 shadow-[0_-10px_30px_rgba(0,0,0,0.25)]">
+        {/* A screen tall, so it fills the screen when it covers the header. */}
+        <div
+          ref={sheetRef}
+          className="relative z-10 h-dvh flex-none rounded-t-[28px] bg-card shadow-[0_-10px_30px_rgba(0,0,0,0.25)] will-change-transform"
+        >
+        <div
+          ref={innerRef}
+          className={`no-scrollbar flex h-full flex-col gap-6 overscroll-contain px-5 pt-2.5 pb-36 ${
+            covered ? "overflow-y-auto" : "overflow-hidden"
+          }`}
+        >
           <div aria-hidden className="h-[5px] w-10 self-center rounded-full bg-line" />
 
           <section aria-labelledby="tiles-title" className="flex flex-col gap-3">
@@ -435,6 +421,7 @@ export function HomeScreen() {
               </section>
             ))}
           </section>
+        </div>
         </div>
 
         <Sheet open={editing !== null} onClose={() => setEditing(null)} title="Edit transaction">

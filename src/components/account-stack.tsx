@@ -163,7 +163,7 @@ export function useAccountSwipe(open: () => void, layout: StackLayout) {
     if (stack) stack.style.overflowX = pulled ? "visible" : "";
     // The header sits under Home's white part (which slides up over it); lift it while the cards
     // fly, so they pass over the white part instead of under it.
-    const header = stack?.closest<HTMLElement>(".sticky");
+    const header = stack?.closest<HTMLElement>("[data-home-header]");
     if (header) header.style.zIndex = pulled ? "20" : "";
     document.documentElement.style.overflowX = pulled ? "clip" : "";
     document.body.style.overflowX = pulled ? "clip" : "";
