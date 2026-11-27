@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Check, ChevronLeft } from "lucide-react";
+import { SubHeader } from "@/components/screen";
+import { Check } from "lucide-react";
 import { useMoney } from "@/components/amount";
 import { BudgetTileBody } from "@/components/budget-tile";
 import { showToast } from "@/components/toast";
@@ -55,23 +56,13 @@ export function BudgetsScreen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="grid grid-cols-[44px_1fr_44px] items-center gap-2 pt-3">
-        <Link
-          href="/"
-          aria-label="Back to Home"
-          className="flex size-11 items-center justify-center rounded-full border border-line bg-card"
-        >
-          <ChevronLeft aria-hidden size={18} strokeWidth={2.25} />
-        </Link>
-        <h1 className="text-center text-[17px] font-bold">Budget</h1>
-        <span aria-hidden />
-      </header>
+      <SubHeader title="Budget" back="/" backLabel="Back to Home" />
 
       <div className="flex flex-col gap-0.5">
-        <p className="text-[15px] font-semibold">
+        <p className="text-body font-semibold">
           {period ? `${period.name} · ${periodRangeLabel(period)}` : "This month"}
         </p>
-        <p className="text-[13px] text-muted" aria-live="polite">
+        <p className="text-meta text-muted" aria-live="polite">
           {chosen.length
             ? `${chosen.length} on Home. Tap a tile to add or remove it.`
             : "Tap a tile to show it on Home. Until you pick, Home shows the six used most."}
@@ -83,11 +74,11 @@ export function BudgetsScreen() {
       {loading ? (
         <ul aria-hidden className="grid grid-cols-2 gap-3">
           {[0, 1, 2, 3].map((i) => (
-            <li key={i} className="h-[150px] rounded-[20px] bg-card" />
+            <li key={i} className="h-[150px] rounded-tile bg-card" />
           ))}
         </ul>
       ) : list.length === 0 ? (
-        <p className="rounded-3xl bg-card px-5 py-4 text-[13px] font-medium text-muted">No expense categories yet.</p>
+        <p className="rounded-card bg-card px-5 py-4 text-meta font-medium text-muted">No expense categories yet.</p>
       ) : (
         <ul className="grid grid-cols-2 gap-3">
           {list.map((c) => {
@@ -99,7 +90,7 @@ export function BudgetsScreen() {
                   aria-pressed={on}
                   aria-label={`${c.name}. ${on ? "On Home, tap to remove" : "Not on Home, tap to add"}`}
                   onClick={() => toggle(c.id, c.name)}
-                  className={`relative flex w-full flex-col gap-2 rounded-[20px] bg-card p-3 text-left transition-shadow duration-150 ${
+                  className={`relative flex w-full flex-col gap-2 rounded-tile bg-card p-3 text-left transition-shadow duration-150 ${
                     on ? "ring-2 ring-ink" : "ring-1 ring-line"
                   }`}
                 >
@@ -121,7 +112,7 @@ export function BudgetsScreen() {
 
       <Link
         href="/plan"
-        className="flex h-12 items-center justify-center rounded-full border border-line bg-card text-sm font-semibold"
+        className="flex h-12 items-center justify-center rounded-full border border-line bg-card text-body font-semibold"
       >
         Change budgets in Target
       </Link>

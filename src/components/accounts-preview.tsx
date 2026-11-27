@@ -44,18 +44,18 @@ export function AccountsPreview({
     >
       <div className="px-5 pt-[max(8px,env(safe-area-inset-top))]">
         <header className="flex items-center justify-between pt-3">
-          <span className="text-2xl font-bold tracking-[-0.02em]">Accounts</span>
+          <span className="text-title font-bold tracking-[-0.02em]">Accounts</span>
           <span className="flex size-11 items-center justify-center rounded-full border border-line bg-card">
             <Plus size={18} strokeWidth={2.25} />
           </span>
         </header>
 
         <div className="mt-6 flex flex-col gap-1">
-          <span className="flex items-center gap-1 text-[13px] font-medium text-muted">
+          <span className="flex items-center gap-1 text-meta font-medium text-muted">
             Total balance
             <RevealButton />
           </span>
-          <span className="text-[38px] leading-[1.2] font-bold tracking-[-0.03em]">{money(sumBalances(active))}</span>
+          <span className="text-hero leading-[1.2] font-bold tracking-[-0.03em]">{money(sumBalances(active))}</span>
         </div>
 
         {GROUPS.map((g) => {
@@ -63,8 +63,8 @@ export function AccountsPreview({
           return (
             <div key={g.id} className="mt-8 flex flex-col gap-3">
               <div className="flex items-baseline justify-between">
-                <span className="text-[17px] font-semibold">{g.title}</span>
-                <span className="text-[13px] text-muted">
+                <span className="text-heading font-semibold">{g.title}</span>
+                <span className="text-meta text-muted">
                   {list.length} {list.length === 1 ? "account" : "accounts"} · {money(sumBalances(list))}
                 </span>
               </div>
@@ -93,7 +93,7 @@ export function AccountsPreview({
                   ),
                 )}
                 {list.length === 0 && (
-                  <p className="rounded-3xl bg-card p-5 text-[13px] font-medium text-muted">
+                  <p className="rounded-card bg-card p-5 text-meta font-medium text-muted">
                     No {g.title.toLowerCase()} accounts. Tap + to add one.
                   </p>
                 )}

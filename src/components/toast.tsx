@@ -57,7 +57,7 @@ export function Toaster() {
       {toast && (
         <div
           key={toast.id}
-          className={`toast-in pointer-events-auto flex min-h-11 w-full max-w-[440px] items-center justify-between gap-3 rounded-full py-1.5 pr-1.5 pl-4 text-[13px] font-semibold text-white shadow-[0_10px_30px_rgba(17,17,17,0.28)] ${
+          className={`toast-in pointer-events-auto flex min-h-11 w-full max-w-[440px] items-center justify-between gap-3 rounded-full py-1.5 pr-1.5 pl-4 text-meta font-semibold text-white shadow-[0_10px_30px_rgba(17,17,17,0.28)] ${
             toast.tone === "error" ? "bg-ember" : "bg-ink"
           }`}
         >
@@ -75,7 +75,7 @@ export function Toaster() {
                   dismiss(toast.id);
                 }
               }}
-              className="flex h-11 flex-none items-center rounded-full bg-lime px-4 text-[13px] font-bold text-ink disabled:opacity-60"
+              className="flex h-11 flex-none items-center rounded-full bg-lime px-4 text-meta font-bold text-ink disabled:opacity-60"
             >
               {busy ? "…" : toast.action.label}
             </button>

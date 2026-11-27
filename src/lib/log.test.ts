@@ -9,6 +9,7 @@ import {
   digitsToAmount,
   localDate,
   logProblem,
+  saveLabel,
   modeOf,
   pressKey,
   rankByUse,
@@ -187,5 +188,35 @@ describe("logProblem", () => {
 
   it("lets a saving stay in the same account", () => {
     expect(logProblem({ mode: "saving", amount: 500000, categoryId: "gold", fromId: "jago", toId: "jago" })).toBeNull();
+  });
+});
+
+describe("saveLabel", () => {
+  const ok = { mode: "expense" as const, amount: 35000, categoryId: "food", fromId: "bca", toId: null };
+  const notReady = (label: string) => ({ ready: false, label });
+
+  it("says Save when the transaction is complete", () => {
+    expect(saveLabel(ok)).toEqual({ ready: true, label: "Save" });
+  });
+
+  it("names what is missing, amount first", () => {
+    expect(saveLabel({ ...ok, amount: 0, categoryId: null })).toEqual(notReady("Enter an amount"));
+    expect(saveLabel({ ...ok, categoryId: null })).toEqual(notReady("Pick a category"));
+    expect(saveLabel({ ...ok, fromId: null })).toEqual(notReady("Pick an account"));
+  });
+
+  it("covers transfers and savings", () => {
+    const t = { mode: "transfer" as const, amount: 100000, categoryId: null, fromId: "bca", toId: null };
+    expect(saveLabel(t)).toEqual(notReady("Pick the To account"));
+    expect(saveLabel({ ...t, toId: "bca" })).toEqual(notReady("Pick two different accounts"));
+    expect(saveLabel({ ...t, toId: "jago" }).ready).toBe(true);
+    expect(saveLabel({ mode: "saving", amount: 500000, categoryId: "gold", fromId: "jago", toId: null })).toEqual(
+      notReady("Pick the To account"),
+    );
+  });
+
+  it("is ready exactly when logProblem finds nothing", () => {
+    const cases = [ok, { ...ok, amount: 0 }, { ...ok, categoryId: null }, { ...ok, fromId: null }];
+    for (const c of cases) expect(saveLabel(c).ready).toBe(logProblem(c) === null);
   });
 });

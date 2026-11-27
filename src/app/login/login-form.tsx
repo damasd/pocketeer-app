@@ -76,8 +76,8 @@ export function LoginForm() {
     return (
       <form onSubmit={sendCode} className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold tracking-[-0.02em]">Sign in</h1>
-          <p className="text-[15px] font-medium text-muted">We&apos;ll email you a 6-digit code.</p>
+          <h1 className="text-title font-bold tracking-[-0.02em]">Sign in</h1>
+          <p className="text-body font-medium text-muted">We&apos;ll email you a 6-digit code.</p>
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">Email</Label>
@@ -105,8 +105,8 @@ export function LoginForm() {
   return (
     <form onSubmit={verify} className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Enter the code</h1>
-        <p className="text-[15px] font-medium text-muted">
+        <h1 className="text-title font-bold tracking-[-0.02em]">Enter the code</h1>
+        <p className="text-body font-medium text-muted">
           Sent to <span className="font-semibold text-ink">{email.trim()}</span>
         </p>
       </div>
@@ -122,7 +122,7 @@ export function LoginForm() {
           required
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-          className="bg-card text-center !text-2xl tracking-[0.4em]"
+          className="bg-card text-center !text-title tracking-[0.4em]"
         />
       </div>
       {error && <ErrorNote>{error}</ErrorNote>}

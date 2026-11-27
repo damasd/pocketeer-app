@@ -88,7 +88,7 @@ export function AccountForm({
           className={`bg-page ${nameMissing ? "ring-2 ring-ember ring-inset" : ""}`}
         />
         {nameMissing && (
-          <p id="account-name-error" className="self-start rounded-full bg-ember px-3 py-1 text-[13px] font-semibold text-white">
+          <p id="account-name-error" className="self-start rounded-full bg-ember px-3 py-1 text-meta font-semibold text-white">
             Give the account a name first
           </p>
         )}
@@ -105,11 +105,11 @@ export function AccountForm({
           onChange={(e) => setNumber(e.target.value.replace(/\D/g, "").slice(0, 20))}
           className="bg-page tracking-[0.02em]"
         />
-        <p className="text-xs font-medium text-muted">Only the last 4 digits are shown on the card.</p>
+        <p className="text-caption font-medium text-muted">Only the last 4 digits are shown on the card.</p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-[13px] font-semibold text-muted">Type</span>
+        <span className="text-meta font-semibold text-muted">Type</span>
         <Segmented
           label="Account type"
           value={group}
@@ -122,7 +122,7 @@ export function AccountForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-[13px] font-semibold text-muted">Colour</span>
+        <span className="text-meta font-semibold text-muted">Colour</span>
         <div role="group" aria-label="Card colour" className="flex gap-2.5">
           {COLOURS.map((c) => {
             const on = c === colour;
@@ -152,8 +152,8 @@ export function AccountForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="starting-balance">Starting balance</Label>
-        <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
-          <span aria-hidden className="text-[15px] font-semibold text-muted">
+        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+          <span aria-hidden className="text-body font-semibold text-muted">
             Rp
           </span>
           <input
@@ -164,10 +164,10 @@ export function AccountForm({
             value={groupThousands(balance)}
             onChange={(e) => setBalance(parseRupiahInput(e.target.value))}
             onFocus={(e) => e.currentTarget.select()}
-            className="h-12 min-w-0 flex-1 border-0 bg-transparent text-base font-semibold text-ink outline-none"
+            className="h-12 min-w-0 flex-1 border-0 bg-transparent text-input font-semibold text-ink outline-none"
           />
         </div>
-        <p className="text-xs font-medium text-muted">What was in the account before you started logging here.</p>
+        <p className="text-caption font-medium text-muted">What was in the account before you started logging here.</p>
       </div>
 
       {error && <ErrorNote>{error}</ErrorNote>}
@@ -187,16 +187,16 @@ export function AccountForm({
         </Button>
       )}
       {account && !account.archived && (
-        <p className="-mt-2 text-center text-xs font-medium text-muted">
+        <p className="-mt-2 text-center text-caption font-medium text-muted">
           Archived accounts are hidden from lists and pickers. Nothing is deleted.
         </p>
       )}
 
       {account &&
         (confirmDelete ? (
-          <div role="group" aria-label="Confirm delete" className="flex flex-col gap-2 rounded-3xl bg-page p-4">
-            <p className="text-[15px] font-semibold">Delete {account.name} for good?</p>
-            <p className="text-[13px] font-medium text-muted">This can&apos;t be undone.</p>
+          <div role="group" aria-label="Confirm delete" className="flex flex-col gap-2 rounded-card bg-page p-4">
+            <p className="text-body font-semibold">Delete {account.name} for good?</p>
+            <p className="text-meta font-medium text-muted">This can&apos;t be undone.</p>
             <div className="mt-1 flex gap-2">
               <Button type="button" variant="secondary" size="md" className="flex-1" disabled={busy} onClick={() => setConfirmDelete(false)}>
                 Cancel

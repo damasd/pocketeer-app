@@ -1,13 +1,18 @@
 "use client";
 
+import { useCallback } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { MASK, toggleReveal, useAmounts } from "@/lib/amounts";
 import { formatRupiah } from "@/lib/money";
 
-/** Format money, or "Rp ••••••" while amounts are hidden (Home and Accounts). */
+/**
+ * Format money, or "Rp ••••••" while amounts are hidden (Home, Accounts, Budget, Analytics).
+ * `money` only changes when hidden flips.
+ */
 export function useMoney(): { money: (n: number) => string; hidden: boolean } {
   const { hidden } = useAmounts();
-  return { money: (n: number) => (hidden ? MASK : formatRupiah(n)), hidden };
+  const money = useCallback((n: number) => (hidden ? MASK : formatRupiah(n)), [hidden]);
+  return { money, hidden };
 }
 
 /** Eye button that shows or hides amounts. `tone` dark sits on the black Home header. */

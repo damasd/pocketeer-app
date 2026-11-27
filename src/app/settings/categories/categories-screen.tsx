@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { SubHeader } from "@/components/screen";
 import { useState, type FormEvent } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { ArchivedSection } from "@/components/archived-section";
 import { ArrangeButton, ArrangeList } from "@/components/arrange-list";
 import { DeleteCategoryConfirm } from "@/components/delete-category";
@@ -58,29 +58,28 @@ export function CategoriesScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center justify-between pt-3">
-        <div className="flex items-center gap-1">
-          <Link href="/settings" aria-label="Back to Settings" className="-ml-2.5 flex size-11 items-center justify-center rounded-full">
-            <ChevronLeft aria-hidden size={26} strokeWidth={2.25} />
-          </Link>
-          <h1 className="text-2xl font-bold tracking-[-0.02em]">Categories</h1>
-        </div>
-        <button
-          type="button"
-          aria-label={`Add ${kindLabel} category`}
-          onClick={() => setEditing("new")}
-          className="flex size-11 items-center justify-center rounded-full border border-line bg-card"
-        >
-          <Plus aria-hidden size={18} strokeWidth={2.25} />
-        </button>
-      </header>
+      <SubHeader
+        title="Categories"
+        back="/settings"
+        backLabel="Back to Settings"
+        action={
+          <button
+            type="button"
+            aria-label={`Add ${kindLabel} category`}
+            onClick={() => setEditing("new")}
+            className="flex size-11 items-center justify-center rounded-full border border-line bg-card"
+          >
+            <Plus aria-hidden size={18} strokeWidth={2.25} />
+          </button>
+        }
+      />
 
       <Segmented label="Category type" options={KINDS} value={kind} onChange={setKind} />
 
       {state.status === "error" && <ErrorNote>{state.message}</ErrorNote>}
 
       <div className="-mb-3 flex items-center justify-between gap-2">
-        <p className="text-[13px] text-muted">{arranging ? "Reorder with ↑ ↓, or archive to hide" : "Tap a category to edit it"}</p>
+        <p className="text-meta text-muted">{arranging ? "Reorder with ↑ ↓, or archive to hide" : "Tap a category to edit it"}</p>
         {active.length > 0 && (
           <ArrangeButton
             on={arranging}
@@ -93,25 +92,25 @@ export function CategoriesScreen() {
       {arranging ? (
         <ArrangeList items={active} empty={`No ${kindLabel} categories.`} />
       ) : (
-        <ul aria-label={`${KINDS.find((k) => k.value === kind)!.label} categories`} className="flex flex-col overflow-hidden rounded-3xl bg-card">
+        <ul aria-label={`${KINDS.find((k) => k.value === kind)!.label} categories`} className="flex flex-col overflow-hidden rounded-card bg-card">
           {loading &&
             [0, 1, 2, 3].map((i) => (
               <li key={i} aria-hidden className="flex items-center gap-3 border-b border-line px-5 py-3 last:border-0">
                 <span className="size-11 rounded-full bg-page" />
-                <span className="h-4 w-32 rounded bg-page" />
+                <span className="h-4 w-32 rounded-bar bg-page" />
               </li>
             ))}
           {active.map((c) => (
             <CategoryRow key={c.id} category={c} onOpen={() => setEditing(c)} />
           ))}
           {!loading && active.length === 0 && (
-            <li className="px-5 py-4 text-[13px] font-medium text-muted">No {kindLabel} categories. Tap + to add one.</li>
+            <li className="px-5 py-4 text-meta font-medium text-muted">No {kindLabel} categories. Tap + to add one.</li>
           )}
         </ul>
       )}
 
       <ArchivedSection key={kind} count={archived.length}>
-        <ul aria-label={`Archived ${kindLabel} categories`} className="flex flex-col overflow-hidden rounded-3xl bg-card">
+        <ul aria-label={`Archived ${kindLabel} categories`} className="flex flex-col overflow-hidden rounded-card bg-card">
           {archived.map((c) => (
             <CategoryRow key={c.id} category={c} onOpen={() => setEditing(c)} />
           ))}
@@ -141,8 +140,8 @@ function CategoryRow({ category, onOpen }: { category: Category; onOpen: () => v
       <button type="button" onClick={onOpen} className="flex min-h-16 w-full items-center gap-3 px-5 py-3 text-left">
         <IconBubble icon={category.icon} />
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-[15px] font-semibold">{category.name}</span>
-          {category.note && <span className="truncate text-[13px] font-medium text-muted">{category.note}</span>}
+          <span className="truncate text-body font-semibold">{category.name}</span>
+          {category.note && <span className="truncate text-meta font-medium text-muted">{category.note}</span>}
         </span>
         <ChevronRight aria-hidden size={20} className="flex-none text-muted" />
       </button>
@@ -194,13 +193,13 @@ function CategoryForm({
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-      <div className="flex items-center gap-3 rounded-3xl bg-page p-4">
+      <div className="flex items-center gap-3 rounded-card bg-page p-4">
         <span aria-hidden className="flex size-12 flex-none items-center justify-center rounded-full bg-card">
           <CategoryIcon name={icon} size={22} />
         </span>
         <span className="flex min-w-0 flex-col">
-          <span className={`truncate text-[17px] font-bold ${trimmed ? "" : "text-muted"}`}>{trimmed || "Category name"}</span>
-          {note.trim() && <span className="truncate text-[13px] font-medium text-muted">{note.trim()}</span>}
+          <span className={`truncate text-heading font-bold ${trimmed ? "" : "text-muted"}`}>{trimmed || "Category name"}</span>
+          {note.trim() && <span className="truncate text-meta font-medium text-muted">{note.trim()}</span>}
         </span>
       </div>
 
@@ -217,7 +216,7 @@ function CategoryForm({
           className={`bg-page ${nameMissing ? "ring-2 ring-ember ring-inset" : ""}`}
         />
         {nameMissing && (
-          <p className="self-start rounded-full bg-ember px-3 py-1 text-[13px] font-semibold text-white">Give the category a name first</p>
+          <p className="self-start rounded-full bg-ember px-3 py-1 text-meta font-semibold text-white">Give the category a name first</p>
         )}
       </div>
 
@@ -235,7 +234,7 @@ function CategoryForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-[13px] font-semibold text-muted">Icon</span>
+        <span className="text-meta font-semibold text-muted">Icon</span>
         <div role="group" aria-label="Category icon" className="grid grid-cols-6 gap-1.5">
           {ICON_KEYS.map((key) => {
             const Icon = CATEGORY_ICONS[key];

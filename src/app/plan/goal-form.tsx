@@ -79,13 +79,13 @@ export function GoalForm({
           onChange={(e) => setName(e.target.value)}
           className="bg-page"
         />
-        <p className="text-xs text-muted">This is also the saving category you pick in the Log sheet.</p>
+        <p className="text-caption text-muted">This is also the saving category you pick in the Log sheet.</p>
       </div>
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="goal-target">Target amount (optional)</Label>
-        <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
-          <span aria-hidden className="text-[15px] font-semibold text-muted">
+        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+          <span aria-hidden className="text-body font-semibold text-muted">
             Rp
           </span>
           <input
@@ -95,7 +95,7 @@ export function GoalForm({
             value={groupThousands(target)}
             onFocus={(e) => e.currentTarget.select()}
             onChange={(e) => setTarget(parseRupiahInput(e.target.value))}
-            className="h-12 min-w-0 flex-1 border-0 bg-transparent text-base font-semibold outline-none"
+            className="h-12 min-w-0 flex-1 border-0 bg-transparent text-input font-semibold outline-none"
           />
         </div>
       </div>
@@ -109,19 +109,19 @@ export function GoalForm({
             min={localDate()}
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="h-12 min-w-0 flex-1 rounded-2xl border-0 bg-page px-4 text-base font-semibold"
+            className="h-12 min-w-0 flex-1 rounded-tile border-0 bg-page px-4 text-input font-semibold"
           />
           {date && (
             <button
               type="button"
               onClick={() => setDate("")}
-              className="h-12 flex-none rounded-2xl bg-page px-4 text-sm font-semibold"
+              className="h-12 flex-none rounded-tile bg-page px-4 text-body font-semibold"
             >
               Clear date
             </button>
           )}
         </div>
-        <p className="text-xs text-muted">
+        <p className="text-caption text-muted">
           With a date, the app suggests how much to set aside each pay period. Without one, it just tracks progress.
         </p>
       </div>
@@ -134,7 +134,7 @@ export function GoalForm({
 
       {category &&
         (balance !== 0 ? (
-          <p className="rounded-2xl bg-page px-4 py-3 text-center text-[13px] font-medium text-muted">
+          <p className="rounded-tile bg-page px-4 py-3 text-center text-meta font-medium text-muted">
             {formatRupiah(balance)} is still saved here. Withdraw it to a Spending account before deleting this goal.
           </p>
         ) : confirmDelete ? (

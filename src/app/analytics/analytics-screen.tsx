@@ -1,9 +1,12 @@
 "use client";
 
+import { PageTitle } from "@/components/screen";
+
 import { useEffect, useId, useMemo, useState } from "react";
 import { CountUp, useEntrance } from "@/components/animated";
 import { Segmented } from "@/components/segmented";
 import { ErrorNote } from "@/components/ui";
+import { RevealButton, useMoney } from "@/components/amount";
 import {
   buckets,
   byCategory,
@@ -18,7 +21,6 @@ import {
 import { useBudgets } from "@/lib/budgets";
 import { useCategories } from "@/lib/categories";
 import { useGoals } from "@/lib/goals";
-import { formatRupiah } from "@/lib/money";
 import { coverPeriodsFrom, usePeriods } from "@/lib/periods-store";
 import { goalPlan, savingTargetFor } from "@/lib/plan";
 import { useTransactions } from "@/lib/transactions";
@@ -48,7 +50,7 @@ export function AnalyticsScreen() {
   if (!today) {
     return (
       <header className="flex h-14 items-center pt-3">
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Analytics</h1>
+        <PageTitle>Analytics</PageTitle>
       </header>
     );
   }
@@ -56,6 +58,7 @@ export function AnalyticsScreen() {
 }
 
 function AnalyticsBody({ today }: { today: string }) {
+  const { money } = useMoney();
   const transactions = useTransactions();
   const categories = useCategories();
   const periods = usePeriods();
@@ -113,23 +116,24 @@ function AnalyticsBody({ today }: { today: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex h-14 items-center pt-3">
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Analytics</h1>
+      <header className="flex h-14 items-center justify-between pt-3">
+        <PageTitle>Analytics</PageTitle>
+        <RevealButton />
       </header>
 
       <Segmented label="Show" surface="card" options={TYPES} value={type} onChange={setType} />
 
       {loadError && loadError.status === "error" && <ErrorNote>{loadError.message}</ErrorNote>}
 
-      <section aria-label="Over time" className="flex flex-col gap-1 rounded-3xl bg-card p-5">
-        <span className="text-[13px] font-medium text-muted">
+      <section aria-label="Over time" className="flex flex-col gap-1 rounded-card bg-card p-5">
+        <span className="text-meta font-medium text-muted">
           {VERB[type].label} · {selected.name}
         </span>
         <CountUp
           value={total}
-          format={formatRupiah}
+          format={money}
           replay={chartKey}
-          className="text-[34px] leading-[1.25] font-bold tracking-[-0.03em] tabular-nums"
+          className="text-amount leading-[1.25] font-bold tracking-[-0.03em] tabular-nums"
         />
 
         <div role="group" aria-label="Time range" className="mt-3 flex flex-wrap gap-1.5">
@@ -144,7 +148,7 @@ function AnalyticsBody({ today }: { today: string }) {
                   setRange(r.value);
                   setSelectedKey(null);
                 }}
-                className={`h-11 rounded-full border px-3.5 text-xs ${on ? "border-lime bg-lime font-bold" : "border-line bg-card font-semibold"}`}
+                className={`h-11 rounded-full border px-3.5 text-caption ${on ? "border-lime bg-lime font-bold" : "border-line bg-card font-semibold"}`}
               >
                 {r.label}
               </button>
@@ -162,26 +166,26 @@ function AnalyticsBody({ today }: { today: string }) {
           replay={chartKey}
         />
         {/* Legend for the bar picked: the light part is the plan, the dark part what really happened. */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs">
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-caption">
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="hatch-lime size-3 rounded-[3px]" />
+            <span aria-hidden className="hatch-lime size-3 rounded-bar" />
             <span className="text-muted">{PLAN_WORD[type]}</span>
-            <span className="font-bold tabular-nums">{formatRupiah(plan)}</span>
+            <span className="font-bold tabular-nums">{money(plan)}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="size-3 rounded-[3px] bg-lime" />
+            <span aria-hidden className="size-3 rounded-bar bg-lime" />
             <span className="text-muted">{VERB[type].label}</span>
-            <span className="font-bold tabular-nums">{formatRupiah(total)}</span>
+            <span className="font-bold tabular-nums">{money(total)}</span>
           </span>
         </div>
       </section>
 
-      <section aria-labelledby="split-title" className="flex flex-col gap-4 rounded-3xl bg-card p-5">
+      <section aria-labelledby="split-title" className="flex flex-col gap-4 rounded-card bg-card p-5">
         <div className="flex flex-col gap-0.5">
-          <h2 id="split-title" className="text-[17px] font-semibold">
+          <h2 id="split-title" className="text-heading font-semibold">
             {type === "income" ? "Income by category" : type === "saving" ? "Savings by category" : "Spending by category"}
           </h2>
-          <span className="text-[13px] text-muted">{selected.name}</span>
+          <span className="text-meta text-muted">{selected.name}</span>
         </div>
         {split.length ? (
           <Donut
@@ -192,12 +196,12 @@ function AnalyticsBody({ today }: { today: string }) {
             replay={splitKey}
           />
         ) : (
-          <p className="py-6 text-center text-[13px] font-medium text-muted">Nothing {VERB[type].sub} in {selected.name}.</p>
+          <p className="py-6 text-center text-meta font-medium text-muted">Nothing {VERB[type].sub} in {selected.name}.</p>
         )}
       </section>
 
       {split.length > 0 && (
-        <section aria-labelledby="split-list-title" className="rounded-3xl bg-card px-5 py-2">
+        <section aria-labelledby="split-list-title" className="rounded-card bg-card px-5 py-2">
           <h2 id="split-list-title" className="sr-only">
             Categories in {selected.name}
           </h2>
@@ -209,16 +213,16 @@ function AnalyticsBody({ today }: { today: string }) {
                   className="size-2.5 flex-none rounded-full shadow-[inset_0_0_0_1px_rgba(17,17,17,0.15)]"
                   style={{ background: s.colour }}
                 />
-                <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
+                <span className="min-w-0 flex-1 truncate text-body font-semibold">
                   {s.key === "other" ? `Other (${s.categoryIds.length})` : categoryName(s.key)}
                 </span>
                 <CountUp
                   value={s.amount}
-                  format={formatRupiah}
+                  format={money}
                   replay={splitKey}
-                  className="text-[15px] font-bold whitespace-nowrap tabular-nums"
+                  className="text-body font-bold whitespace-nowrap tabular-nums"
                 />
-                <span className="w-10 flex-none text-right text-xs font-semibold text-muted tabular-nums">{s.share}%</span>
+                <span className="w-10 flex-none text-right text-caption font-semibold text-muted tabular-nums">{s.share}%</span>
               </li>
             ))}
           </ul>
@@ -246,6 +250,7 @@ function Bars({
   verb: string;
   replay: string;
 }) {
+  const { money } = useMoney();
   const ref = useEntrance<HTMLUListElement>("[data-bar]", [{ transform: "scaleY(0)" }, { transform: "scaleY(1)" }], {
     replay,
     duration: 700,
@@ -268,21 +273,21 @@ function Bars({
               <button
                 type="button"
                 aria-pressed={on}
-                aria-label={`${b.name}: ${formatRupiah(totals[i])}${plans[i] > 0 ? ` of ${formatRupiah(plans[i])} planned` : ""}`}
+                aria-label={`${b.name}: ${money(totals[i])}${plans[i] > 0 ? ` of ${money(plans[i])} planned` : ""}`}
                 onClick={() => onSelect(b)}
                 className="flex h-full w-full flex-col items-center justify-end gap-1.5"
               >
                 <span aria-hidden data-bar className="relative block w-full origin-bottom" style={{ height: h }}>
                   <span
-                    className={`absolute inset-x-0 bottom-0 rounded-md transition-colors duration-150 ${on ? "hatch-lime" : "hatch-grey"}`}
+                    className={`absolute inset-x-0 bottom-0 rounded-bar transition-colors duration-150 ${on ? "hatch-lime" : "hatch-grey"}`}
                     style={{ height: planned }}
                   />
                   <span
-                    className={`absolute inset-x-0 bottom-0 rounded-md transition-colors duration-150 ${on ? "bg-lime" : "bg-[#C9C9C9]"}`}
+                    className={`absolute inset-x-0 bottom-0 rounded-bar transition-colors duration-150 ${on ? "bg-lime" : "bg-[#C9C9C9]"}`}
                     style={{ height: done || (planned ? 0 : 4) }}
                   />
                 </span>
-                <span aria-hidden className={`text-[11px] ${on ? "font-bold text-ink" : "font-medium text-muted"}`}>
+                <span aria-hidden className={`text-caption ${on ? "font-bold text-ink" : "font-medium text-muted"}`}>
                   {b.label}
                 </span>
               </button>
@@ -308,6 +313,7 @@ function Donut({
   name: (s: Segment) => string;
   replay: string;
 }) {
+  const { money } = useMoney();
   const R = 80;
   const C = 2 * Math.PI * R;
   // The coloured arcs show through a mask whose ring is drawn in, clockwise from the top.
@@ -370,10 +376,10 @@ function Donut({
         </g>
       </svg>
       <div aria-hidden className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        <span className={`max-w-[176px] text-center leading-tight font-bold ${formatRupiah(total).length > 13 ? "text-[18px]" : formatRupiah(total).length > 11 ? "text-[21px]" : "text-2xl"}`}>
-          <CountUp value={total} format={formatRupiah} replay={replay} duration={1000} className="tabular-nums" />
+        <span className={`max-w-[176px] text-center leading-tight font-bold ${money(total).length > 13 ? "text-heading" : "text-title"}`}>
+          <CountUp value={total} format={money} replay={replay} duration={1000} className="tabular-nums" />
         </span>
-        <span className="text-[13px] text-muted">{sub}</span>
+        <span className="text-meta text-muted">{sub}</span>
       </div>
     </div>
   );

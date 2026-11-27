@@ -75,7 +75,7 @@ export function PinPad({
   return (
     <div className="flex w-full max-w-[320px] flex-col items-center gap-6 self-center">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h2 className="text-[17px] font-semibold">{title}</h2>
+        <h2 className="text-heading font-semibold">{title}</h2>
         <div role="img" aria-label={`${digits.length} of ${PIN_LENGTH} digits entered`} className="flex gap-3.5 py-2">
           {Array.from({ length: PIN_LENGTH }, (_, i) => (
             <span
@@ -96,7 +96,7 @@ export function PinPad({
         <p
           role={error ? "alert" : "status"}
           aria-live="polite"
-          className={`min-h-6 text-[13px] font-semibold ${
+          className={`min-h-6 text-meta font-semibold ${
             error ? "rounded-full bg-ember px-3 py-0.5 text-white" : dark ? "text-[#BDBDBD]" : "text-muted"
           } ${message ? "" : "invisible"}`}
         >
@@ -111,7 +111,7 @@ export function PinPad({
             type="button"
             disabled={disabled}
             onClick={() => press(d)}
-            className={`h-16 rounded-full text-[26px] font-semibold transition-transform duration-100 ease-out select-none active:scale-[0.96] disabled:opacity-40 ${key}`}
+            className={`h-16 rounded-full text-title font-semibold transition-transform duration-100 ease-out select-none active:scale-[0.96] disabled:opacity-40 ${key}`}
           >
             {d}
           </button>
@@ -121,7 +121,7 @@ export function PinPad({
           type="button"
           disabled={disabled}
           onClick={() => press("0")}
-          className={`h-16 rounded-full text-[26px] font-semibold transition-transform duration-100 ease-out select-none active:scale-[0.96] disabled:opacity-40 ${key}`}
+          className={`h-16 rounded-full text-title font-semibold transition-transform duration-100 ease-out select-none active:scale-[0.96] disabled:opacity-40 ${key}`}
         >
           0
         </button>

@@ -42,6 +42,10 @@ export function CountUp({
   useLayoutEffect(() => {
     formatRef.current = format;
   });
+  // Format changed (amounts hidden or shown): redraw the number on screen right away.
+  useLayoutEffect(() => {
+    if (ref.current && !fresh.current) ref.current.textContent = format(Math.round(shown.current));
+  }, [format]);
 
   // Runs on first show and on every return to the page: start again from 0.
   useLayoutEffect(() => {

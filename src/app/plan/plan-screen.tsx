@@ -1,5 +1,7 @@
 "use client";
 
+import { PageTitle } from "@/components/screen";
+
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "lucide-react";
 import { ArrangeButton, ArrangeList } from "@/components/arrange-list";
@@ -85,7 +87,7 @@ export function PlanScreen() {
   if (!today) {
     return (
       <header className="flex h-14 items-center pt-3">
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">{TITLE}</h1>
+        <PageTitle>{TITLE}</PageTitle>
       </header>
     );
   }
@@ -224,16 +226,16 @@ function PlanBody({ today }: { today: string }) {
     arranging === kind ? (
       <ArrangeList items={activeOf(kind)} empty={empty} />
     ) : loading ? (
-      <ul aria-hidden className="rounded-3xl bg-card px-4 py-1">
+      <ul aria-hidden className="rounded-card bg-card px-4 py-1">
         {[0, 1, 2].map((i) => (
           <li key={i} className="flex items-center justify-between py-3">
-            <span className="h-4 w-28 rounded bg-page" />
+            <span className="h-4 w-28 rounded-bar bg-page" />
             <span className="h-11 w-36 rounded-full bg-page" />
           </li>
         ))}
       </ul>
     ) : rows.length > 0 && period ? (
-      <ul className="rounded-3xl bg-card px-4 py-1">
+      <ul className="rounded-card bg-card px-4 py-1">
         {rows.map((r, i) => (
           <AmountRow
             key={`${period.id}-${r.category.id}`}
@@ -246,7 +248,7 @@ function PlanBody({ today }: { today: string }) {
         ))}
       </ul>
     ) : (
-      <p className="rounded-3xl bg-card px-5 py-4 text-[13px] font-medium text-muted">{empty}</p>
+      <p className="rounded-card bg-card px-5 py-4 text-meta font-medium text-muted">{empty}</p>
     );
 
   const addButton = (label: string, onClick: () => void) =>
@@ -254,7 +256,7 @@ function PlanBody({ today }: { today: string }) {
       <button
         type="button"
         onClick={onClick}
-        className="flex h-12 items-center justify-center gap-2 rounded-full border border-dashed border-[#BDBDBD] text-sm font-semibold"
+        className="flex h-12 items-center justify-center gap-2 rounded-full border border-dashed border-[#BDBDBD] text-body font-semibold"
       >
         <Plus aria-hidden size={16} strokeWidth={2.5} />
         {label}
@@ -264,7 +266,7 @@ function PlanBody({ today }: { today: string }) {
   return (
     <div className="flex flex-col gap-4">
       <header className="flex h-14 items-center pt-3">
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">{TITLE}</h1>
+        <PageTitle>{TITLE}</PageTitle>
       </header>
 
       <Segmented
@@ -298,15 +300,15 @@ function PlanBody({ today }: { today: string }) {
               aria-label={`${period?.name ?? "Period"}. Pick a month`}
               disabled={!period}
               onClick={() => setPickerOpen(true)}
-              className="flex min-h-11 flex-col items-center gap-0.5 rounded-2xl px-3"
+              className="flex min-h-11 flex-col items-center gap-0.5 rounded-tile px-3"
               aria-live="polite"
             >
-              <span className="flex items-center gap-1 text-[15px] font-bold">
+              <span className="flex items-center gap-1 text-body font-bold">
                 {period?.name ?? "…"}
                 <ChevronDown aria-hidden size={14} strokeWidth={2.5} className="text-muted" />
               </span>
               {period && (
-                <span className="text-xs text-muted">
+                <span className="text-caption text-muted">
                   {periodRangeLabel(period)}
                   {daysLeft(period, today) !== null && ` · ${daysLeft(period, today)} days left`}
                 </span>
@@ -323,15 +325,15 @@ function PlanBody({ today }: { today: string }) {
             </button>
           </div>
 
-          <section aria-label="Plan for this period" className="flex flex-col gap-2.5 rounded-3xl bg-ink p-5 text-white">
+          <section aria-label="Plan for this period" className="flex flex-col gap-2.5 rounded-card bg-ink p-5 text-white">
             <SummaryLine label="Expected income" value={expectedIncome} />
             <SummaryLine label="Expense budget" value={expenseBudget} />
             <SummaryLine label="Saving target" value={savingTarget} />
             <div aria-hidden className="my-1 h-px bg-nav-selected" />
             <div className="flex items-center justify-between gap-2">
-              <span className="min-w-0 text-[13px] text-[#BDBDBD]">{left >= 0 ? "Left to plan" : "Over-planned by"}</span>
+              <span className="min-w-0 text-meta text-[#BDBDBD]">{left >= 0 ? "Left to plan" : "Over-planned by"}</span>
               <span
-                className={`flex-none rounded-full px-3 py-1 text-[17px] font-bold whitespace-nowrap ${left >= 0 ? "bg-lime text-ink" : "bg-ember text-white"}`}
+                className={`flex-none rounded-full px-3 py-1 text-heading font-bold whitespace-nowrap ${left >= 0 ? "bg-lime text-ink" : "bg-ember text-white"}`}
               >
                 {formatRupiah(Math.abs(left))}
               </span>
@@ -343,7 +345,7 @@ function PlanBody({ today }: { today: string }) {
               type="button"
               onClick={copyFromOlder}
               disabled={!olderHasBudgets}
-              className="flex h-12 items-center justify-center gap-2 rounded-full border border-line bg-card text-sm font-semibold disabled:opacity-50"
+              className="flex h-12 items-center justify-center gap-2 rounded-full border border-line bg-card text-body font-semibold disabled:opacity-50"
             >
               <Copy aria-hidden size={16} strokeWidth={2} />
               {olderHasBudgets ? `Copy amounts from ${older.name}` : `${older.name} has no amounts to copy`}
@@ -464,8 +466,8 @@ function PlanBody({ today }: { today: string }) {
 function SummaryLine({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-baseline justify-between">
-      <span className="text-[13px] text-[#BDBDBD]">{label}</span>
-      <span className="text-[15px] font-bold">{formatRupiah(value)}</span>
+      <span className="text-meta text-[#BDBDBD]">{label}</span>
+      <span className="text-body font-bold">{formatRupiah(value)}</span>
     </div>
   );
 }
@@ -502,15 +504,15 @@ function PlanSlides({ slides }: { slides: Slide[] }) {
         <div className="flex flex-col gap-0.5">
           {/* Title, total and the arrange icon on one line; the hint under it, full width. */}
           <div className="flex items-center justify-between gap-2">
-            <h2 id={`list-${slide.id}`} className="min-w-0 truncate text-[17px] font-semibold">
+            <h2 id={`list-${slide.id}`} className="min-w-0 truncate text-heading font-semibold">
               {slide.title}
             </h2>
             <span className="flex flex-none items-center gap-2.5">
-              <span className="text-[15px] font-bold whitespace-nowrap">{formatRupiah(slide.total)}</span>
+              <span className="text-body font-bold whitespace-nowrap">{formatRupiah(slide.total)}</span>
               {slide.action}
             </span>
           </div>
-          <p className="text-[13px] text-muted">
+          <p className="text-meta text-muted">
             {slide.arranging ? "Reorder with ↑ ↓, or archive to hide" : "Tap an amount to change it"}
           </p>
         </div>
@@ -600,7 +602,7 @@ function AmountRow({
     <li className={`flex flex-col gap-2 py-3 ${first ? "" : "border-t border-page"}`}>
       <div className="flex items-center justify-between gap-2">
         <span className="flex min-w-0 items-center gap-0.5">
-          <label htmlFor={`amount-${category.id}`} className="min-w-0 truncate text-[15px] font-semibold">
+          <label htmlFor={`amount-${category.id}`} className="min-w-0 truncate text-body font-semibold">
             {category.name}
           </label>
           {onDelete && (
@@ -615,7 +617,7 @@ function AmountRow({
           )}
         </span>
         <span className="flex h-11 w-[150px] flex-none items-center gap-1 rounded-full bg-page px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
-          <span aria-hidden className="text-[13px] font-semibold text-muted">
+          <span aria-hidden className="text-meta font-semibold text-muted">
             Rp
           </span>
           <input
@@ -631,7 +633,7 @@ function AmountRow({
             onKeyDown={(e) => {
               if (e.key === "Enter") e.currentTarget.blur();
             }}
-            className="min-w-0 flex-1 border-0 bg-transparent text-right text-base font-bold outline-none"
+            className="min-w-0 flex-1 border-0 bg-transparent text-right text-input font-bold outline-none"
           />
         </span>
       </div>
@@ -645,13 +647,13 @@ function AmountRow({
       >
         <div className={`h-full rounded-full ${barColour}`} style={{ width: `${bar}%` }} />
       </div>
-      <div className="flex items-center justify-between gap-2 text-xs">
+      <div className="flex items-center justify-between gap-2 text-caption">
         <span className="text-muted">
           {formatRupiah(kind === "saving" ? Math.max(0, actual) : actual)} {actualLabel}
         </span>
         {status}
       </div>
-      {hint && <span className="text-xs text-muted">{hint}</span>}
+      {hint && <span className="text-caption text-muted">{hint}</span>}
     </li>
   );
 }
@@ -683,9 +685,9 @@ function GoalsTab({
 
   return (
     <>
-      <section aria-label="All goals" className="flex flex-col gap-1 rounded-3xl bg-ink p-5 text-white">
-        <span className="text-[13px] text-[#BDBDBD]">Total saved</span>
-        <span className="text-[32px] leading-[1.25] font-bold tracking-[-0.03em]">{formatRupiah(savedTotal)}</span>
+      <section aria-label="All goals" className="flex flex-col gap-1 rounded-card bg-ink p-5 text-white">
+        <span className="text-meta text-[#BDBDBD]">Total saved</span>
+        <span className="text-amount leading-[1.25] font-bold tracking-[-0.03em]">{formatRupiah(savedTotal)}</span>
         <div
           role="progressbar"
           aria-label="Saved toward all goals"
@@ -696,7 +698,7 @@ function GoalsTab({
         >
           <div className="h-full rounded-full bg-lime" style={{ width: `${pct}%` }} />
         </div>
-        <span className="mt-1.5 flex items-baseline justify-between gap-2 text-[13px] text-[#BDBDBD]">
+        <span className="mt-1.5 flex items-baseline justify-between gap-2 text-meta text-[#BDBDBD]">
           {targeted.length ? (
             <>
               <span>
@@ -713,7 +715,7 @@ function GoalsTab({
       <button
         type="button"
         onClick={onNew}
-        className="flex h-12 items-center justify-center gap-2 rounded-full bg-lime text-sm font-bold text-ink"
+        className="flex h-12 items-center justify-center gap-2 rounded-full bg-lime text-body font-bold text-ink"
       >
         <Plus aria-hidden size={16} strokeWidth={2.5} />
         New goal
@@ -721,14 +723,14 @@ function GoalsTab({
 
       {rows.length > 0 && (
         <div className="-mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-[17px] font-semibold">Your goals</h2>
+          <h2 className="text-heading font-semibold">Your goals</h2>
           {arrange}
         </div>
       )}
       {arranging}
 
       {!arranging && rows.length === 0 && (
-        <p className="rounded-3xl bg-card px-5 py-4 text-[13px] font-medium text-muted">
+        <p className="rounded-card bg-card px-5 py-4 text-meta font-medium text-muted">
           No goals yet. Each goal is a saving category you can deposit into from the Log sheet.
         </p>
       )}
@@ -742,19 +744,19 @@ function GoalsTab({
             type="button"
             onClick={() => onOpen(category)}
             aria-label={`${category.name}, saved ${formatRupiah(saved)}${goal ? ` of ${formatRupiah(goal.target)}, ${percent}%` : ""}. Edit`}
-            className="flex flex-col gap-2 rounded-3xl bg-card p-4 text-left"
+            className="flex flex-col gap-2 rounded-card bg-card p-4 text-left"
           >
             <span className="flex w-full items-baseline justify-between gap-2">
-              <span className="text-[15px] font-semibold">{category.name}</span>
-              {goal?.targetDate && <span className="text-xs text-muted">{byDate(goal.targetDate)}</span>}
+              <span className="text-body font-semibold">{category.name}</span>
+              {goal?.targetDate && <span className="text-caption text-muted">{byDate(goal.targetDate)}</span>}
             </span>
-            <span className="text-2xl leading-[1.25] font-bold tracking-[-0.02em]">{formatRupiah(saved)}</span>
+            <span className="text-title leading-[1.25] font-bold tracking-[-0.02em]">{formatRupiah(saved)}</span>
             {goal ? (
               <>
                 <span aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-page">
                   <span className="block h-full rounded-full bg-ink" style={{ width: `${percent}%` }} />
                 </span>
-                <span className="mt-0.5 flex w-full items-center justify-between gap-2 text-xs">
+                <span className="mt-0.5 flex w-full items-center justify-between gap-2 text-caption">
                   <span className="text-muted">{toGo > 0 ? `${formatRupiah(toGo)} to go` : "Goal reached"}</span>
                   <span className={`rounded-full px-2 py-0.5 font-semibold ${percent >= 100 ? "bg-lime text-ink" : "bg-page"}`}>
                     {percent}% saved
@@ -762,7 +764,7 @@ function GoalsTab({
                 </span>
               </>
             ) : (
-              <span className="flex w-full items-center justify-end text-xs">
+              <span className="flex w-full items-center justify-end text-caption">
                 <span className="rounded-full bg-page px-2 py-0.5 font-semibold">Set a target</span>
               </span>
             )}
@@ -823,12 +825,12 @@ function NewCategory({
           onChange={(e) => setName(e.target.value)}
           className="bg-page"
         />
-        <p className="text-xs text-muted">It also appears in the Log sheet under {kind === "income" ? "Income" : "Expense"}. Change its icon in Settings › Categories.</p>
+        <p className="text-caption text-muted">It also appears in the Log sheet under {kind === "income" ? "Income" : "Expense"}. Change its icon in Settings › Categories.</p>
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor={`new-${kind}-amount`}>{kind === "income" ? "Expected this period" : "Budget this period"} (optional)</Label>
-        <div className="flex h-[52px] items-center gap-1.5 rounded-2xl bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
-          <span aria-hidden className="text-[15px] font-semibold text-muted">
+        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+          <span aria-hidden className="text-body font-semibold text-muted">
             Rp
           </span>
           <input
@@ -838,7 +840,7 @@ function NewCategory({
             value={groupThousands(amount)}
             onFocus={(e) => e.currentTarget.select()}
             onChange={(e) => setAmount(parseRupiahInput(e.target.value))}
-            className="h-12 min-w-0 flex-1 border-0 bg-transparent text-base font-semibold outline-none"
+            className="h-12 min-w-0 flex-1 border-0 bg-transparent text-input font-semibold outline-none"
           />
         </div>
       </div>

@@ -19,13 +19,13 @@ export function Greeting() {
         )}
       </Link>
       <div className="flex flex-col">
-        <span className="text-[13px] font-medium text-[#BDBDBD]">Welcome back,</span>
+        <span className="text-meta font-medium text-[#BDBDBD]">Welcome back,</span>
         {profile ? (
-          <h1 className="text-[13px] leading-[1.35] font-bold">{name}</h1>
+          <h1 className="text-meta leading-[1.35] font-bold">{name}</h1>
         ) : (
-          <h1 className="text-[13px] leading-[1.35] font-bold">
+          <h1 className="text-meta leading-[1.35] font-bold">
             <span className="sr-only">Home</span>
-            <span aria-hidden className="mt-0.5 block h-3.5 w-24 rounded bg-nav-selected" />
+            <span aria-hidden className="mt-0.5 block h-3.5 w-24 rounded-bar bg-nav-selected" />
           </h1>
         )}
       </div>

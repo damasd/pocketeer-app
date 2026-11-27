@@ -329,7 +329,7 @@ export function AccountStack({
               key={a.id}
               data-card={a.id}
               data-dark={dark}
-              className="acct-card absolute top-0 rounded-3xl will-change-transform"
+              className="acct-card absolute top-0 rounded-card will-change-transform"
               style={{
                 width: "calc(100% - 40px)",
                 height: CARD_H,
@@ -356,7 +356,7 @@ export function AccountStack({
       <Link
         href="/account"
         aria-label="Open accounts"
-        className="absolute top-0 -right-5 z-10 block rounded-l-[14px]"
+        className="absolute top-0 -right-5 z-10 block rounded-l-tile"
         style={{ width: PEEK_WIDTH, height: SMALL_H }}
       />
     </>

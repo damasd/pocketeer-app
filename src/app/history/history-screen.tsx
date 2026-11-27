@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { SubHeader } from "@/components/screen";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, Plus, Search, SlidersHorizontal } from "lucide-react";
-import { LogForm, LogInputButtons } from "@/components/log-sheet";
+import { ChevronDown, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { LogCloseButton, LogForm, LogInputButtons, LogTitle } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
 import { ErrorNote } from "@/components/ui";
 import { useAccounts } from "@/lib/accounts";
@@ -90,25 +90,22 @@ export function HistoryScreen() {
   return (
     <div className="flex flex-col gap-4">
       {/* Back, the title in the middle, and + to log a transaction (as the nav bar's Log button). */}
-      <header className="grid grid-cols-[44px_1fr_44px] items-center gap-2 pt-3">
-        <Link
-          href={fromAccount ? "/account" : "/"}
-          aria-label={fromAccount ? "Back to Accounts" : "Back to Home"}
-          className="flex size-11 items-center justify-center rounded-full border border-line bg-card"
-        >
-          <ChevronLeft aria-hidden size={18} strokeWidth={2.25} />
-        </Link>
-        <h1 className="text-center text-[17px] font-bold">Transactions</h1>
-        <button
-          type="button"
-          aria-label="Log transaction"
-          aria-haspopup="dialog"
-          onClick={() => setAdding(true)}
-          className="flex size-11 items-center justify-center rounded-full bg-lime text-ink"
-        >
-          <Plus aria-hidden size={20} strokeWidth={2.5} />
-        </button>
-      </header>
+      <SubHeader
+        title="Transactions"
+        back={fromAccount ? "/account" : "/"}
+        backLabel={fromAccount ? "Back to Accounts" : "Back to Home"}
+        action={
+          <button
+            type="button"
+            aria-label="Log transaction"
+            aria-haspopup="dialog"
+            onClick={() => setAdding(true)}
+            className="flex size-11 items-center justify-center rounded-full bg-lime text-ink"
+          >
+            <Plus aria-hidden size={20} strokeWidth={2.5} />
+          </button>
+        }
+      />
 
       <div className="flex items-center gap-2">
         <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-line bg-card px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
@@ -119,7 +116,7 @@ export function HistoryScreen() {
             placeholder="Search transactions"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="h-full min-w-0 flex-1 border-0 bg-transparent text-base outline-none placeholder:text-muted"
+            className="h-full min-w-0 flex-1 border-0 bg-transparent text-input outline-none placeholder:text-muted"
           />
         </label>
         <button
@@ -135,7 +132,7 @@ export function HistoryScreen() {
           {activeFilters > 0 && (
             <span
               aria-hidden
-              className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-lime text-[11px] font-bold text-ink ring-2 ring-page"
+              className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-lime text-caption font-bold text-ink ring-2 ring-page"
             >
               {activeFilters}
             </span>
@@ -196,7 +193,7 @@ export function HistoryScreen() {
           </FilterField>
 
           <div className="flex flex-col gap-2">
-            <span id="type-label" className="text-[13px] font-medium text-muted">
+            <span id="type-label" className="text-meta font-medium text-muted">
               Type
             </span>
             <div role="group" aria-labelledby="type-label" className="flex flex-wrap gap-2">
@@ -208,7 +205,7 @@ export function HistoryScreen() {
                     type="button"
                     aria-pressed={on}
                     onClick={() => setType(c.value)}
-                    className={`h-11 flex-none rounded-full border px-4 text-[13px] font-semibold transition-colors duration-150 ${
+                    className={`h-11 flex-none rounded-full border px-4 text-meta font-semibold transition-colors duration-150 ${
                       on ? "border-lime bg-lime" : "border-line bg-card"
                     }`}
                   >
@@ -229,14 +226,14 @@ export function HistoryScreen() {
                 setCategoryId(ALL);
                 setType("all");
               }}
-              className="h-12 flex-1 rounded-full border border-line bg-card text-sm font-semibold disabled:opacity-40"
+              className="h-12 flex-1 rounded-full border border-line bg-card text-body font-semibold disabled:opacity-40"
             >
               Clear
             </button>
             <button
               type="button"
               onClick={() => setFiltersOpen(false)}
-              className="h-12 flex-[2] rounded-full bg-lime text-sm font-bold text-ink"
+              className="h-12 flex-[2] rounded-full bg-lime text-body font-bold text-ink"
             >
               Show {shown.length} {shown.length === 1 ? "transaction" : "transactions"}
             </button>
@@ -244,7 +241,7 @@ export function HistoryScreen() {
         </div>
       </Sheet>
 
-      <p className="text-[13px] text-muted" aria-live="polite">
+      <p className="text-meta text-muted" aria-live="polite">
         {loading
           ? "Loading…"
           : [
@@ -261,24 +258,24 @@ export function HistoryScreen() {
       {loadError && loadError.status === "error" && <ErrorNote>{loadError.message}</ErrorNote>}
 
       {!loading && groups.length === 0 ? (
-        <div className="rounded-3xl bg-card px-5 py-8 text-center">
-          <p className="text-[15px] font-semibold">No transactions</p>
-          <p className="mt-1 text-[13px] font-medium text-muted">
+        <div className="rounded-card bg-card px-5 py-8 text-center">
+          <p className="text-body font-semibold">No transactions</p>
+          <p className="mt-1 text-meta font-medium text-muted">
             {txs.length === 0 ? "Tap + to log your first one." : "Nothing matches these filters."}
           </p>
         </div>
       ) : (
-        <div className="rounded-3xl bg-card px-4 pt-1 pb-2">
+        <div className="rounded-card bg-card px-4 pt-1 pb-2">
           {loading &&
             [0, 1, 2].map((i) => (
               <div key={i} aria-hidden className="flex items-center gap-3 py-2.5">
                 <span className="size-10 rounded-full bg-page" />
-                <span className="h-4 flex-1 rounded bg-page" />
+                <span className="h-4 flex-1 rounded-bar bg-page" />
               </div>
             ))}
           {groups.map((g) => (
             <section key={g.date} aria-label={g.label}>
-              <h2 className="pt-3 pb-0.5 text-xs font-semibold text-muted">{g.label}</h2>
+              <h2 className="pt-3 pb-0.5 text-caption font-semibold text-muted">{g.label}</h2>
               <ul>
                 {g.items.map((t) => (
                   <li key={t.id}>
@@ -297,7 +294,7 @@ export function HistoryScreen() {
         </div>
       )}
 
-      <Sheet open={adding} onClose={() => setAdding(false)} title="Log transaction" closeButton actions={<LogInputButtons />}>
+      <Sheet open={adding} onClose={() => setAdding(false)} title="Log transaction" heading={<LogTitle />} leading={<LogCloseButton />} actions={<LogInputButtons />}>
         <LogForm onDone={() => setAdding(false)} />
       </Sheet>
 
@@ -324,8 +321,8 @@ function FilterField({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-[13px] font-medium text-muted">{label}</span>
-      <span className="relative flex h-12 items-center justify-between gap-2 rounded-2xl bg-page px-4 text-[15px] font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+      <span className="text-meta font-medium text-muted">{label}</span>
+      <span className="relative flex h-12 items-center justify-between gap-2 rounded-tile bg-page px-4 text-body font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
         <span aria-hidden className="truncate">
           {display}
         </span>

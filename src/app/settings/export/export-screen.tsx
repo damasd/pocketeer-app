@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { SubHeader } from "@/components/screen";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, FileSpreadsheet, FileText } from "lucide-react";
+import { FileSpreadsheet, FileText } from "lucide-react";
 import { showToast } from "@/components/toast";
 import { ErrorNote, Label } from "@/components/ui";
 import { useAccounts } from "@/lib/accounts";
@@ -106,23 +106,18 @@ export function ExportScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-1 pt-3">
-        <Link href="/settings" aria-label="Back to Settings" className="-ml-2.5 flex size-11 items-center justify-center rounded-full">
-          <ChevronLeft aria-hidden size={26} strokeWidth={2.25} />
-        </Link>
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Export</h1>
-      </header>
+      <SubHeader title="Export" back="/settings" backLabel="Back to Settings" />
 
       {loadError && loadError.status === "error" && <ErrorNote>{loadError.message}</ErrorNote>}
 
-      <section className="flex flex-col gap-4 rounded-3xl bg-card p-5">
+      <section className="flex flex-col gap-4 rounded-card bg-card p-5">
         <div className="flex flex-col gap-2">
           <Label htmlFor="export-scope">Transactions from</Label>
           <select
             id="export-scope"
             value={selectedKey}
             onChange={(e) => setScope(e.target.value)}
-            className="h-12 rounded-2xl border-0 bg-page px-4 text-base font-semibold"
+            className="h-12 rounded-tile border-0 bg-page px-4 text-input font-semibold"
           >
             {choices.map((p) => (
               <option key={p.start} value={p.start}>
@@ -132,7 +127,7 @@ export function ExportScreen() {
             <option value={ALL}>All time</option>
           </select>
         </div>
-        <p className="text-[13px] font-medium text-muted" aria-live="polite">
+        <p className="text-meta font-medium text-muted" aria-live="polite">
           {ready
             ? `${selected.length} ${selected.length === 1 ? "transaction" : "transactions"} · one row each, oldest first`
             : "Loading…"}
@@ -142,7 +137,7 @@ export function ExportScreen() {
             type="button"
             disabled={!ready || busy !== null || selected.length === 0}
             onClick={() => run("xlsx")}
-            className="flex h-14 items-center justify-center gap-2 rounded-full bg-lime text-base font-bold text-ink disabled:opacity-50"
+            className="flex h-14 items-center justify-center gap-2 rounded-full bg-lime text-body font-bold text-ink disabled:opacity-50"
           >
             <FileSpreadsheet aria-hidden size={20} strokeWidth={2} />
             {busy === "xlsx" ? "Preparing…" : "Download .xlsx"}
@@ -151,13 +146,13 @@ export function ExportScreen() {
             type="button"
             disabled={!ready || busy !== null || selected.length === 0}
             onClick={() => run("csv")}
-            className="flex h-14 items-center justify-center gap-2 rounded-full bg-card text-base font-bold text-ink ring-1 ring-line ring-inset disabled:opacity-50"
+            className="flex h-14 items-center justify-center gap-2 rounded-full bg-card text-body font-bold text-ink ring-1 ring-line ring-inset disabled:opacity-50"
           >
             <FileText aria-hidden size={20} strokeWidth={2} />
             {busy === "csv" ? "Preparing…" : "Download .csv"}
           </button>
         </div>
-        <p className="text-xs text-muted">
+        <p className="text-caption text-muted">
           Columns: {HEADERS.join(", ")}. On iPhone the share sheet opens; choose Save to Files.
         </p>
       </section>

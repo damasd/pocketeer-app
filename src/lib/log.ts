@@ -157,3 +157,19 @@ export function logProblem(input: {
   if (input.mode === "saving" && !input.toId) return "Pick where the saved money goes.";
   return null;
 }
+
+/**
+ * Label for the Save button: "Save" when the transaction is ready, otherwise the next thing it
+ * still needs, short enough to fit the button. Same order as logProblem.
+ */
+export function saveLabel(input: Parameters<typeof logProblem>[0]): { ready: boolean; label: string } {
+  if (input.amount <= 0) return { ready: false, label: "Enter an amount" };
+  if (input.mode !== "transfer" && !input.categoryId) return { ready: false, label: "Pick a category" };
+  if (!input.fromId) return { ready: false, label: "Pick an account" };
+  if (input.mode === "transfer") {
+    if (!input.toId) return { ready: false, label: "Pick the To account" };
+    if (input.toId === input.fromId) return { ready: false, label: "Pick two different accounts" };
+  }
+  if (input.mode === "saving" && !input.toId) return { ready: false, label: "Pick the To account" };
+  return { ready: true, label: "Save" };
+}

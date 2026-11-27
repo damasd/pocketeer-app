@@ -11,7 +11,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { LogForm, LogInputButtons } from "@/components/log-sheet";
+import { LogCloseButton, LogForm, LogInputButtons, LogTitle } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
 
 type Tab = { href: string; label: string; Icon: LucideIcon };
@@ -157,7 +157,7 @@ export function NavBar() {
           <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} linkRef={linkRef(tab.href)} />
         ))}
       </nav>
-      <Sheet open={logOpen} onClose={() => setLogOpen(false)} title="Log transaction" closeButton actions={<LogInputButtons />}>
+      <Sheet open={logOpen} onClose={() => setLogOpen(false)} title="Log transaction" heading={<LogTitle />} leading={<LogCloseButton />} actions={<LogInputButtons />}>
         <LogForm onDone={() => setLogOpen(false)} />
       </Sheet>
     </>

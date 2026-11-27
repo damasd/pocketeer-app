@@ -52,7 +52,7 @@ export function AccountCardFace({
   const content = contentHidden ? { opacity: 0 } : undefined;
   return (
     <span
-      className="relative flex w-full flex-col justify-between overflow-hidden rounded-3xl border p-5 text-left"
+      className="relative flex w-full flex-col justify-between overflow-hidden rounded-card border p-5 text-left"
       style={{ height: compact ? 190 : 216, background: s.bg, color: s.fg, borderColor: s.border, boxShadow: CARD_SHADOW }}
     >
       <span
@@ -61,21 +61,21 @@ export function AccountCardFace({
         style={{ background: s.circle }}
       />
       <span className="card-content relative flex flex-col gap-1" style={content}>
-        <span className="text-[17px] font-bold" style={placeholderName ? { color: s.muted } : undefined}>
+        <span className="text-heading font-bold" style={placeholderName ? { color: s.muted } : undefined}>
           {name}
         </span>
-        <span className="flex items-center gap-1 text-[13px] font-medium tracking-[0.04em]" style={{ color: s.muted }}>
+        <span className="flex items-center gap-1 text-meta font-medium tracking-[0.04em]" style={{ color: s.muted }}>
           <span>{shownNumber ?? "No account number"}</span>
           {copyable && digits && <CopyNumberButton digits={digits} name={name} colour={s.muted} />}
         </span>
       </span>
       <span className="card-content relative flex flex-col gap-0.5" style={content}>
-        <span className="text-xs font-medium" style={{ color: s.muted }}>
+        <span className="text-caption font-medium" style={{ color: s.muted }}>
           Balance
         </span>
-        <span className="text-[28px] font-bold tracking-[-0.02em]">{masked ? MASK : formatRupiah(balance)}</span>
+        <span className="text-amount font-bold tracking-[-0.02em]">{masked ? MASK : formatRupiah(balance)}</span>
         {saved > 0 && !masked && (
-          <span className="text-xs font-semibold" style={{ color: s.muted }}>
+          <span className="text-caption font-semibold" style={{ color: s.muted }}>
             {formatRupiah(saved)} saved
           </span>
         )}

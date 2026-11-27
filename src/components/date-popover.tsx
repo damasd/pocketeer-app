@@ -82,7 +82,7 @@ export function DatePopover({
         aria-expanded={open}
         aria-label={`Date, ${dateLabel(value)}. Change`}
         onClick={toggle}
-        className={`flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold transition-colors duration-150 ${
+        className={`flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-meta font-semibold transition-colors duration-150 ${
           open ? "border-ink bg-ink text-white" : "border-line bg-card text-ink"
         }`}
       >
@@ -94,7 +94,7 @@ export function DatePopover({
         <div
           role="dialog"
           aria-label="Choose a date"
-          className={`calendar-in z-30 w-[min(332px,calc(100vw-40px))] ${up ? "fixed inset-x-0 bottom-[max(24px,env(safe-area-inset-bottom))] mx-auto origin-bottom" : "absolute top-full left-0 mt-2 origin-top-left"} rounded-3xl bg-card p-3 shadow-[0_12px_32px_rgba(17,17,17,0.18)] ring-1 ring-line`}
+          className={`calendar-in z-30 w-[min(332px,calc(100vw-40px))] ${up ? "fixed inset-x-0 bottom-[max(24px,env(safe-area-inset-bottom))] mx-auto origin-bottom" : "absolute top-full left-0 mt-2 origin-top-left"} rounded-card bg-card p-3 shadow-[0_12px_32px_rgba(17,17,17,0.18)] ring-1 ring-line`}
         >
           <div className="flex items-center justify-between">
             <button
@@ -105,7 +105,7 @@ export function DatePopover({
             >
               <ChevronLeft aria-hidden size={16} strokeWidth={2.25} />
             </button>
-            <span aria-live="polite" className="text-[15px] font-bold">
+            <span aria-live="polite" className="text-body font-bold">
               {MONTHS[view.m]} {view.y}
             </span>
             <button
@@ -118,7 +118,7 @@ export function DatePopover({
             </button>
           </div>
 
-          <div aria-hidden className="mt-2 grid grid-cols-7 text-center text-[11px] font-semibold text-muted">
+          <div aria-hidden className="mt-2 grid grid-cols-7 text-center text-caption font-semibold text-muted">
             {WEEKDAYS.map((d) => (
               <span key={d} className="py-1">
                 {d}
@@ -139,7 +139,7 @@ export function DatePopover({
                   aria-label={`${d} ${MONTHS[view.m]} ${view.y}${isToday ? ", today" : ""}`}
                   data-today={isToday ? "" : undefined}
                   onClick={() => pick(date)}
-                  className={`flex size-11 items-center justify-center rounded-full text-[15px] transition-colors duration-150 ${
+                  className={`flex size-11 items-center justify-center rounded-full text-body transition-colors duration-150 ${
                     on
                       ? "bg-lime font-bold text-ink"
                       : isToday
@@ -157,7 +157,7 @@ export function DatePopover({
             <button
               type="button"
               onClick={() => pick(today)}
-              className="h-11 rounded-full bg-page px-5 text-[13px] font-bold"
+              className="h-11 rounded-full bg-page px-5 text-meta font-bold"
             >
               Today
             </button>

@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { onLock } from "@/lib/app-lock";
 
-// Amounts on Home and Accounts start hidden ("Rp ••••••"). The eye button shows them until the
+// Amounts on Home, Accounts, Budget and Analytics start hidden ("Rp ••••••"). The eye button shows them until the
 // app locks or is closed. "Hide amounts" can be turned off in Settings > Security.
 
 const PREF_KEY = "pocketeer.hide-amounts.v1";

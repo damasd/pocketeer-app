@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { SubHeader } from "@/components/screen";
 import { useState, type FormEvent } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Sheet } from "@/components/sheet";
 import { showToast } from "@/components/toast";
 import { Button, ErrorNote, Label } from "@/components/ui";
@@ -21,35 +21,30 @@ export function PeriodsScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-1 pt-3">
-        <Link href="/settings" aria-label="Back to Settings" className="-ml-2.5 flex size-11 items-center justify-center rounded-full">
-          <ChevronLeft aria-hidden size={26} strokeWidth={2.25} />
-        </Link>
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Pay periods</h1>
-      </header>
+      <SubHeader title="Pay periods" back="/settings" backLabel="Back to Settings" />
 
-      <p className="text-[13px] font-medium text-muted">
+      <p className="text-meta font-medium text-muted">
         A period starts on the 25th, or the next Monday when the 25th is a weekend, and is named after the month it ends
         in. Public holidays aren&apos;t detected: tap a period to move its start day.
       </p>
 
       {periods.status === "error" && <ErrorNote>{periods.message}</ErrorNote>}
 
-      <ul className="flex flex-col overflow-hidden rounded-3xl bg-card">
+      <ul className="flex flex-col overflow-hidden rounded-card bg-card">
         {periods.status === "loading" && !periods.data && (
-          <li className="px-5 py-4 text-[13px] text-muted">Loading…</li>
+          <li className="px-5 py-4 text-meta text-muted">Loading…</li>
         )}
         {list.map((p) => (
           <li key={p.id} className="border-b border-line last:border-0">
             <button type="button" onClick={() => setEditing(p)} className="flex min-h-16 w-full items-center gap-3 px-5 py-3 text-left">
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[15px] font-semibold">
+                <span className="text-body font-semibold">
                   {p.name}
                   {today && today >= p.start && today <= p.end && (
-                    <span className="ml-2 rounded-full bg-lime px-2 py-0.5 text-xs font-semibold">Now</span>
+                    <span className="ml-2 rounded-full bg-lime px-2 py-0.5 text-caption font-semibold">Now</span>
                   )}
                 </span>
-                <span className="text-[13px] font-medium text-muted">{periodRangeLabel(p)}</span>
+                <span className="text-meta font-medium text-muted">{periodRangeLabel(p)}</span>
               </span>
               <ChevronRight aria-hidden size={20} className="flex-none text-muted" />
             </button>
@@ -108,7 +103,7 @@ function StartForm({
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-      <p className="text-[15px] font-medium">
+      <p className="text-body font-medium">
         {periodRangeLabel(period)}
         {prev && <span className="text-muted"> · {prev.name} ends the day before</span>}
       </p>
@@ -121,9 +116,9 @@ function StartForm({
           max={limits.max}
           value={start}
           onChange={(e) => e.target.value && setStart(e.target.value)}
-          className="h-12 rounded-2xl border-0 bg-page px-4 text-base font-semibold"
+          className="h-12 rounded-tile border-0 bg-page px-4 text-input font-semibold"
         />
-        <p className="text-xs text-muted">Stays within this month. Budgets and transactions follow the new dates.</p>
+        <p className="text-caption text-muted">Stays within this month. Budgets and transactions follow the new dates.</p>
       </div>
       {error && <ErrorNote>{error}</ErrorNote>}
       <Button type="submit" disabled={busy}>

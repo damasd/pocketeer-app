@@ -38,7 +38,7 @@ export function ArrangeButton({
       aria-pressed={on}
       aria-label={on ? `Done arranging ${what}` : `Arrange ${what}`}
       onClick={onToggle}
-      className={`flex h-11 flex-none items-center rounded-full px-4 text-[13px] font-bold transition-colors duration-150 ${
+      className={`flex h-11 flex-none items-center rounded-full px-4 text-meta font-bold transition-colors duration-150 ${
         on ? "bg-ink text-white" : "bg-card text-ink ring-1 ring-line ring-inset"
       }`}
     >
@@ -87,14 +87,14 @@ export function ArrangeList({ items, empty }: { items: Category[]; empty: string
     }
   }
 
-  if (!items.length) return <p className="rounded-3xl bg-card px-5 py-4 text-[13px] font-medium text-muted">{empty}</p>;
+  if (!items.length) return <p className="rounded-card bg-card px-5 py-4 text-meta font-medium text-muted">{empty}</p>;
 
   const iconButton = "flex size-11 flex-none items-center justify-center rounded-full disabled:opacity-30";
   return (
-    <ul className="rounded-3xl bg-card px-2 py-1">
+    <ul className="rounded-card bg-card px-2 py-1">
       {items.map((c, i) => (
         <li key={c.id} className={`flex items-center gap-1 py-1 pl-3 ${i ? "border-t border-page" : ""}`}>
-          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{c.name}</span>
+          <span className="min-w-0 flex-1 truncate text-body font-semibold">{c.name}</span>
           <button type="button" aria-label={`Move ${c.name} up`} disabled={i === 0} onClick={() => move(i, -1)} className={iconButton}>
             <ArrowUp aria-hidden size={18} strokeWidth={2.25} />
           </button>

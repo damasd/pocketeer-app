@@ -14,9 +14,9 @@ export function Button({ variant = "primary", size = "lg", className = "", ...pr
     danger: "bg-ember text-white",
   }[variant];
   const dims = {
-    lg: "h-14 px-6 text-base font-bold",
-    md: "h-12 px-5 text-[15px] font-bold",
-    sm: "h-11 px-3 text-[15px] font-semibold",
+    lg: "h-14 px-6 text-body font-bold",
+    md: "h-12 px-5 text-body font-bold",
+    sm: "h-11 px-3 text-body font-semibold",
   }[size];
   return (
     <button
@@ -31,14 +31,14 @@ export function Input({ className = "", ...props }: ComponentProps<"input">) {
   return (
     <input
       {...props}
-      className={`h-12 w-full rounded-2xl border-0 px-4 text-base font-semibold text-ink placeholder:font-medium placeholder:text-muted ${className}`}
+      className={`h-12 w-full rounded-tile border-0 px-4 text-input font-semibold text-ink placeholder:font-medium placeholder:text-muted ${className}`}
     />
   );
 }
 
 export function Label({ htmlFor, children }: { htmlFor: string; children: ReactNode }) {
   return (
-    <label htmlFor={htmlFor} className="text-[13px] font-semibold text-muted">
+    <label htmlFor={htmlFor} className="text-meta font-semibold text-muted">
       {children}
     </label>
   );
@@ -47,7 +47,7 @@ export function Label({ htmlFor, children }: { htmlFor: string; children: ReactN
 /** Error message: white text on an ember fill (ember text on white fails contrast). */
 export function ErrorNote({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="rounded-2xl bg-ember px-4 py-3 text-[13px] font-semibold text-white">
+    <p role="alert" className="rounded-tile bg-ember px-4 py-3 text-meta font-semibold text-white">
       {children}
     </p>
   );

@@ -125,7 +125,7 @@ export function LockScreen() {
             <path d="M12 5v14M5 12h14" />
           </svg>
         </span>
-        <h1 className="text-xl font-bold tracking-[-0.02em]">Pocketeer</h1>
+        <h1 className="text-title font-bold tracking-[-0.02em]">Pocketeer</h1>
       </div>
 
       <PinPad
@@ -138,7 +138,7 @@ export function LockScreen() {
         onComplete={onPin}
       />
 
-      <button type="button" onClick={forgot} className="flex h-11 items-center px-3 text-[13px] font-semibold text-[#BDBDBD] underline-offset-4 hover:underline">
+      <button type="button" onClick={forgot} className="flex h-11 items-center px-3 text-meta font-semibold text-[#BDBDBD] underline-offset-4 hover:underline">
         Forgot PIN? Sign out
       </button>
     </div>

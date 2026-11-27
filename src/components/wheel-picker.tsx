@@ -77,7 +77,7 @@ export function Wheel<T extends string | number>({
       tabIndex={0}
       onScroll={onScroll}
       onKeyDown={onKeyDown}
-      className="no-scrollbar relative z-10 flex-1 snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-xl focus-visible:outline-2 focus-visible:outline-lime"
+      className="no-scrollbar relative z-10 flex-1 snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-tile focus-visible:outline-2 focus-visible:outline-lime"
       style={{
         height: ROW * VISIBLE,
         paddingBlock: pad,
@@ -93,7 +93,7 @@ export function Wheel<T extends string | number>({
           role="option"
           aria-selected={i === index}
           onClick={() => go(i)}
-          className={`flex snap-center items-center px-4 text-[20px] transition-colors duration-150 ${
+          className={`flex snap-center items-center px-4 text-heading transition-colors duration-150 ${
             align === "left" ? "justify-start" : align === "right" ? "justify-end" : "justify-center"
           } ${i === index ? "font-semibold text-ink" : "font-medium text-muted"}`}
           style={{ height: ROW }}
@@ -111,7 +111,7 @@ export function WheelGroup({ children }: { children: React.ReactNode }) {
     <div className="relative flex gap-2">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 rounded-xl bg-page"
+        className="pointer-events-none absolute inset-x-0 rounded-tile bg-page"
         style={{ top: ((VISIBLE - 1) / 2) * ROW, height: ROW }}
       />
       {children}

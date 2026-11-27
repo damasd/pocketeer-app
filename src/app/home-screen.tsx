@@ -240,16 +240,16 @@ export function HomeScreen() {
           <div className="relative">
             <section aria-label="Budget this period" className="mr-[92px] flex flex-col gap-1">
               {/* The eye sits in the label's own line height, so the block (and the cards beside it) keep their size. */}
-              <span className="flex h-5 items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
+              <span className="flex h-5 items-center gap-1 text-meta font-medium text-[#BDBDBD]">
                 This month budget
                 <RevealButton tone="dark" />
               </span>
               {loading ? (
-                <span aria-hidden className="mt-1 block h-[46px] w-52 rounded-xl bg-nav-selected" />
+                <span aria-hidden className="mt-1 block h-[46px] w-52 rounded-tile bg-nav-selected" />
               ) : budgetTotal > 0 ? (
                 <>
                   <span className="mt-1 flex items-center gap-1">
-                    <FitText text={money(head.remaining)} max={38} min={22} className="leading-[46px] font-bold tracking-[-0.03em]" />
+                    <FitText text={money(head.remaining)} max={38} min={24} className="leading-[46px] font-bold tracking-[-0.03em]" />
                   </span>
                   <div
                     role="progressbar"
@@ -261,7 +261,7 @@ export function HomeScreen() {
                   >
                     <div className={`h-full rounded-full ${head.over ? "bg-ember" : "bg-lime"}`} style={{ width: `${head.barPercent}%` }} />
                   </div>
-                  <div className="mt-1.5 flex justify-between text-xs text-[#BDBDBD]">
+                  <div className="mt-1.5 flex justify-between text-caption text-[#BDBDBD]">
                     <span>
                       <b className="font-bold text-white">{head.percent}%</b> spent of
                     </span>
@@ -270,13 +270,13 @@ export function HomeScreen() {
                 </>
               ) : (
                 <>
-                  <span className="mt-1 text-[22px] leading-[1.3] font-bold">No budget yet</span>
-                  <span className="flex items-center gap-1 text-[13px] font-medium text-[#BDBDBD]">
+                  <span className="mt-1 text-title leading-[1.3] font-bold">No budget yet</span>
+                  <span className="flex items-center gap-1 text-meta font-medium text-[#BDBDBD]">
                     {money(spentTotal)} spent this period
                   </span>
                   <Link
                     href="/plan"
-                    className="mt-3 flex h-11 items-center self-start rounded-full bg-lime px-4 text-[13px] font-bold text-ink"
+                    className="mt-3 flex h-11 items-center self-start rounded-full bg-lime px-4 text-meta font-bold text-ink"
                   >
                     Set budgets
                   </Link>
@@ -291,7 +291,7 @@ export function HomeScreen() {
         {/* A screen tall, so it fills the screen when it covers the header. */}
         <div
           ref={sheetRef}
-          className="relative z-10 h-dvh flex-none rounded-t-[28px] bg-card shadow-[0_-10px_30px_rgba(0,0,0,0.25)] will-change-transform"
+          className="relative z-10 h-dvh flex-none rounded-t-card bg-card shadow-[0_-10px_30px_rgba(0,0,0,0.25)] will-change-transform"
         >
         <div
           ref={innerRef}
@@ -304,16 +304,16 @@ export function HomeScreen() {
 
           <section aria-labelledby="tiles-title" className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h2 id="tiles-title" className="text-[17px] font-semibold">
+              <h2 id="tiles-title" className="text-heading font-semibold">
                 Budget
               </h2>
-              <Link href="/budgets" aria-label="See all budgets" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-[13px] font-semibold">
+              <Link href="/budgets" aria-label="See all budgets" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-meta font-semibold">
                 See all
                 <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>
             </div>
             {tiles.length === 0 && !loading ? (
-              <p className="rounded-[20px] bg-page px-4 py-4 text-[13px] font-medium text-muted">
+              <p className="rounded-tile bg-page px-4 py-4 text-meta font-medium text-muted">
                 Set budgets in Target, or pick tiles in See all, to see them here.
               </p>
             ) : (
@@ -321,7 +321,7 @@ export function HomeScreen() {
                 {tiles.map((t) => {
                   const c = category(t.id);
                   return (
-                    <li key={`${t.kind}-${t.id}`} className="flex flex-col gap-2 rounded-[20px] bg-page p-3">
+                    <li key={`${t.kind}-${t.id}`} className="flex flex-col gap-2 rounded-tile bg-page p-3">
                       <BudgetTileBody name={c?.name ?? ""} icon={c?.icon ?? "ellipsis"} spent={t.amount} budget={t.of} money={money} />
                     </li>
                   );
@@ -332,23 +332,23 @@ export function HomeScreen() {
 
           <section aria-labelledby="saving-title" className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h2 id="saving-title" className="text-[17px] font-semibold">
+              <h2 id="saving-title" className="text-heading font-semibold">
                 Saving
               </h2>
-              <Link href="/plan" aria-label="See all goals" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-[13px] font-semibold">
+              <Link href="/plan" aria-label="See all goals" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-meta font-semibold">
                 See all
                 <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>
             </div>
-            <div className="flex flex-col gap-1 rounded-3xl bg-ink p-5 text-white">
-              <span className="text-[13px] text-[#BDBDBD]">Saved this month</span>
+            <div className="flex flex-col gap-1 rounded-card bg-ink p-5 text-white">
+              <span className="text-meta text-[#BDBDBD]">Saved this month</span>
               {loading ? (
-                <span aria-hidden className="mt-1 block h-9 w-44 rounded-xl bg-nav-selected" />
+                <span aria-hidden className="mt-1 block h-9 w-44 rounded-tile bg-nav-selected" />
               ) : (
-                <span className="text-[30px] leading-[1.25] font-bold tracking-[-0.03em]">{money(savedNow)}</span>
+                <span className="text-amount leading-[1.25] font-bold tracking-[-0.03em]">{money(savedNow)}</span>
               )}
               {!loading && lastPeriod && (
-                <span className="mt-2 flex items-center gap-1.5 text-xs text-[#BDBDBD]">
+                <span className="mt-2 flex items-center gap-1.5 text-caption text-[#BDBDBD]">
                   <span
                     className={`rounded-full px-2.5 py-1 font-bold ${
                       saving.trend === "down" ? "bg-nav-selected text-white" : "bg-lime text-ink"
@@ -366,20 +366,20 @@ export function HomeScreen() {
 
           <section aria-labelledby="recent-title" className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <h2 id="recent-title" className="text-[17px] font-semibold">
+              <h2 id="recent-title" className="text-heading font-semibold">
                 Transaction
               </h2>
-              <Link href="/history" aria-label="See all transactions" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-[13px] font-semibold">
+              <Link href="/history" aria-label="See all transactions" className="-mr-1 flex h-11 items-center gap-0.5 px-1 text-meta font-semibold">
                 See all
                 <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>
             </div>
             {!loading && recent.length === 0 && (
-              <p className="text-[13px] font-medium text-muted">No transactions yet. Tap + to log one.</p>
+              <p className="text-meta font-medium text-muted">No transactions yet. Tap + to log one.</p>
             )}
             {recent.map((g) => (
               <section key={g.date} aria-label={g.label}>
-                <h3 className="pt-3 pb-0.5 text-xs font-semibold text-muted">{g.label}</h3>
+                <h3 className="pt-3 pb-0.5 text-caption font-semibold text-muted">{g.label}</h3>
                 <ul>
                   {g.items.map((t) => (
                     <li key={t.id}>

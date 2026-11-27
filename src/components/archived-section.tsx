@@ -16,7 +16,7 @@ export function ArchivedSection({ count, children }: { count: number; children: 
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-11 items-center gap-1 self-center px-2 text-[13px] font-semibold text-muted"
+        className="flex h-11 items-center gap-1 self-center px-2 text-meta font-semibold text-muted"
       >
         {open ? "Hide archived" : `Show archived (${count})`}
         <ChevronDown aria-hidden size={16} strokeWidth={2.25} className={`transition-transform duration-150 ${open ? "rotate-180" : ""}`} />

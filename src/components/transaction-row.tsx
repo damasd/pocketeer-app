@@ -56,10 +56,10 @@ export function TransactionRow({
     <>
       {icon}
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-[15px] font-semibold">{title}</span>
-        <span className="truncate text-xs text-muted">{sub}</span>
+        <span className="truncate text-body font-semibold">{title}</span>
+        <span className="truncate text-caption text-muted">{sub}</span>
       </span>
-      <span className="text-[15px] font-semibold whitespace-nowrap">{masked ? MASK : signedAmount(tx.type, tx.amount)}</span>
+      <span className="text-body font-semibold whitespace-nowrap">{masked ? MASK : signedAmount(tx.type, tx.amount)}</span>
     </>
   );
 

@@ -53,6 +53,8 @@ export function Sheet({
   tall = false,
   hideTitle = false,
   closeButton = false,
+  leading,
+  heading,
   actions,
   children,
 }: {
@@ -65,11 +67,15 @@ export function Sheet({
   hideTitle?: boolean;
   /** A visible ✕ on the left of the title (Log transaction). */
   closeButton?: boolean;
+  /** Replaces the X on the left of the title and must close the sheet itself (Log: X or back). */
+  leading?: ReactNode;
+  /** What the title bar shows in place of `title` (Log: "Enter an amount" while typing). */
+  heading?: ReactNode;
   /** Buttons on the right of the title (Log transaction: voice and receipt). */
   actions?: ReactNode;
   children: ReactNode;
 }) {
-  const toolbar = closeButton || actions !== undefined;
+  const toolbar = closeButton || leading !== undefined || actions !== undefined;
   const ref = useRef<HTMLDialogElement>(null);
   const drag = useRef<{ id: number; y: number; t: number; dy: number; v: number } | null>(null);
 
@@ -230,7 +236,8 @@ export function Sheet({
             // Title centred on the sheet whatever sits either side of it.
             <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2">
               <div className="flex justify-start">
-                {closeButton && (
+                {leading}
+                {!leading && closeButton && (
                   <button
                     type="button"
                     aria-label="Close"
@@ -241,16 +248,16 @@ export function Sheet({
                   </button>
                 )}
               </div>
-              <h2 className="text-center text-[17px] font-bold">{title}</h2>
+              <h2 className="text-center text-heading font-bold">{heading ?? title}</h2>
               <div className="flex justify-end gap-2">{actions}</div>
             </div>
           ) : hideTitle ? (
             <h2 className="sr-only">{title}</h2>
           ) : (
-            <h2 className="flex min-h-11 items-center text-center text-[17px] font-bold">{title}</h2>
+            <h2 className="flex min-h-11 items-center text-center text-heading font-bold">{title}</h2>
           )}
         </div>
-        {!closeButton && (
+        {!closeButton && !leading && (
           <button type="button" onClick={() => ref.current?.close()} className="sr-only">
             Close
           </button>

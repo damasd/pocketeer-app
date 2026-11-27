@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { SubHeader } from "@/components/screen";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Camera,
-  ChevronLeft,
   ChevronRight,
   ImageIcon,
   Trash2,
@@ -121,22 +121,13 @@ export function ProfileSettings() {
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex items-center gap-1 pt-3">
-        <Link
-          href="/"
-          aria-label="Back to Home"
-          className="-ml-2.5 flex size-11 items-center justify-center rounded-full"
-        >
-          <ChevronLeft aria-hidden size={26} strokeWidth={2.25} />
-        </Link>
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Settings</h1>
-      </header>
+      <SubHeader title="Settings" back="/" backLabel="Back to Home" />
 
       <section
         aria-labelledby="profile-title"
-        className="flex flex-col gap-6 rounded-3xl bg-card p-5"
+        className="flex flex-col gap-6 rounded-card bg-card p-5"
       >
-        <h2 id="profile-title" className="text-[17px] font-semibold">
+        <h2 id="profile-title" className="text-heading font-semibold">
           Profile
         </h2>
 
@@ -174,7 +165,7 @@ export function ProfileSettings() {
               <div
                 role="menu"
                 aria-label="Profile photo"
-                className="absolute top-full left-0 z-10 mt-2 w-52 overflow-hidden rounded-2xl bg-card py-1 shadow-[0_12px_32px_rgba(17,17,17,0.18)] ring-1 ring-line"
+                className="absolute top-full left-0 z-10 mt-2 w-52 overflow-hidden rounded-tile bg-card py-1 shadow-[0_12px_32px_rgba(17,17,17,0.18)] ring-1 ring-line"
               >
                 <MenuItem
                   icon={<Camera aria-hidden size={18} strokeWidth={2} />}
@@ -200,10 +191,10 @@ export function ProfileSettings() {
             )}
           </div>
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-[15px] font-semibold">
+            <span className="text-body font-semibold">
               {busy === "photo" ? "Updating photo…" : "Profile photo"}
             </span>
-            <span className="truncate text-[13px] font-medium text-muted">
+            <span className="truncate text-meta font-medium text-muted">
               {profile?.email ?? " "}
             </span>
           </div>
@@ -252,7 +243,7 @@ export function ProfileSettings() {
           {saved && (
             <p
               aria-live="polite"
-              className="text-[13px] font-medium text-muted"
+              className="text-meta font-medium text-muted"
             >
               Saved. Home shows the new name.
             </p>
@@ -268,7 +259,7 @@ export function ProfileSettings() {
 
       <nav
         aria-label="Manage"
-        className="flex flex-col overflow-hidden rounded-3xl bg-card"
+        className="flex flex-col overflow-hidden rounded-card bg-card"
       >
         {[
           {
@@ -298,8 +289,8 @@ export function ProfileSettings() {
             className="flex min-h-16 items-center justify-between gap-3 border-b border-line px-5 py-3 last:border-0"
           >
             <span className="flex flex-col">
-              <span className="text-[15px] font-semibold">{item.label}</span>
-              <span className="text-[13px] font-medium text-muted">
+              <span className="text-body font-semibold">{item.label}</span>
+              <span className="text-meta font-medium text-muted">
                 {item.hint}
               </span>
             </span>
@@ -333,7 +324,7 @@ function MenuItem({
       type="button"
       role="menuitem"
       onClick={onSelect}
-      className="flex min-h-12 w-full items-center gap-3 px-4 text-left text-[15px] font-semibold hover:bg-page focus-visible:bg-page"
+      className="flex min-h-12 w-full items-center gap-3 px-4 text-left text-body font-semibold hover:bg-page focus-visible:bg-page"
     >
       {icon}
       {children}

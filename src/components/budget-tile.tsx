@@ -32,13 +32,13 @@ export function BudgetTileBody({
         <span aria-hidden className={`flex size-7 flex-none items-center justify-center rounded-full text-ink ${inner}`}>
           <CategoryIcon name={icon} size={16} />
         </span>
-        <span className="truncate text-[13px] font-semibold">{name}</span>
+        <span className="truncate text-meta font-semibold">{name}</span>
       </span>
       {budget > 0 ? (
         <>
           <span className="flex flex-col gap-0.5">
-            <span className="text-[17px] font-bold">{money(Math.max(0, budget - spent))}</span>
-            <span className="text-xs text-muted">left of {money(budget)}</span>
+            <span className="text-heading font-bold">{money(Math.max(0, budget - spent))}</span>
+            <span className="text-caption text-muted">left of {money(budget)}</span>
           </span>
           <span aria-hidden className={`h-1.5 overflow-hidden rounded-full ${inner}`}>
             <span
@@ -47,21 +47,21 @@ export function BudgetTileBody({
             />
           </span>
           {over ? (
-            <span className="self-start rounded-full bg-ember px-2 py-0.5 text-xs font-bold text-white">
+            <span className="self-start rounded-full bg-ember px-2 py-0.5 text-caption font-bold text-white">
               {money(spent - budget)} over
             </span>
           ) : (
-            <span className="text-xs text-muted">{percent}% used</span>
+            <span className="text-caption text-muted">{percent}% used</span>
           )}
         </>
       ) : (
         <>
           <span className="flex flex-col gap-0.5">
-            <span className="text-[17px] font-bold">{money(spent)}</span>
-            <span className="text-xs text-muted">spent</span>
+            <span className="text-heading font-bold">{money(spent)}</span>
+            <span className="text-caption text-muted">spent</span>
           </span>
           <span aria-hidden className={`h-1.5 rounded-full ${inner}`} />
-          <span className="text-xs text-muted">No budget set</span>
+          <span className="text-caption text-muted">No budget set</span>
         </>
       )}
     </>

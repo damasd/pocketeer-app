@@ -93,7 +93,7 @@ export function Segmented<T extends string>({
           type="button"
           aria-pressed={o.value === value}
           onClick={() => onChange(o.value)}
-          className="relative h-11 flex-1 rounded-full text-[13px] font-semibold text-[#4A4A4A]"
+          className="relative h-11 flex-1 rounded-full text-meta font-semibold text-[#4A4A4A]"
         >
           {o.label}
         </button>
@@ -102,7 +102,7 @@ export function Segmented<T extends string>({
       <span
         ref={cut}
         aria-hidden
-        className="pointer-events-none absolute inset-0 flex gap-1 p-1 text-[13px] font-semibold text-white"
+        className="pointer-events-none absolute inset-0 flex gap-1 p-1 text-meta font-semibold text-white"
         style={{ clipPath: clipOf(leftOf(index), rightOf(index)) }}
       >
         {options.map((o) => (

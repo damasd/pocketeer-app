@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { SubHeader } from "@/components/screen";
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { PinPad } from "@/components/pin-pad";
 import { Segmented } from "@/components/segmented";
 import { Sheet } from "@/components/sheet";
@@ -44,18 +44,13 @@ export function SecurityScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-1 pt-3">
-        <Link href="/settings" aria-label="Back to Settings" className="-ml-2.5 flex size-11 items-center justify-center rounded-full">
-          <ChevronLeft aria-hidden size={26} strokeWidth={2.25} />
-        </Link>
-        <h1 className="text-2xl font-bold tracking-[-0.02em]">Security</h1>
-      </header>
+      <SubHeader title="Security" back="/settings" backLabel="Back to Settings" />
 
-      <section aria-labelledby="lock-title" className="flex flex-col rounded-3xl bg-card">
-        <h2 id="lock-title" className="px-5 pt-5 pb-1 text-[17px] font-semibold">
+      <section aria-labelledby="lock-title" className="flex flex-col rounded-card bg-card">
+        <h2 id="lock-title" className="px-5 pt-5 pb-1 text-heading font-semibold">
           App lock
         </h2>
-        <p className="px-5 pb-2 text-[13px] font-medium text-muted">
+        <p className="px-5 pb-2 text-meta font-medium text-muted">
           Asks for a PIN or {biometricName()} before Pocketeer opens on this device.
         </p>
 
@@ -90,11 +85,11 @@ export function SecurityScreen() {
               onClick={() => setFlow("change")}
               className="flex min-h-16 items-center justify-between gap-3 border-t border-line px-5 py-3 text-left"
             >
-              <span className="text-[15px] font-semibold">Change PIN</span>
+              <span className="text-body font-semibold">Change PIN</span>
               <ChevronRight aria-hidden size={20} className="text-muted" />
             </button>
             <div className="flex flex-col gap-2 border-t border-line px-5 py-4">
-              <span id="lock-after" className="text-[15px] font-semibold">
+              <span id="lock-after" className="text-body font-semibold">
                 Lock after leaving the app
               </span>
               <Segmented
@@ -108,24 +103,24 @@ export function SecurityScreen() {
         )}
       </section>
 
-      <section aria-labelledby="privacy-title" className="flex flex-col rounded-3xl bg-card">
-        <h2 id="privacy-title" className="px-5 pt-5 pb-2 text-[17px] font-semibold">
+      <section aria-labelledby="privacy-title" className="flex flex-col rounded-card bg-card">
+        <h2 id="privacy-title" className="px-5 pt-5 pb-2 text-heading font-semibold">
           Privacy
         </h2>
         <Row
-          label="Hide amounts on Home and Accounts"
+          label="Hide amounts on Home, Accounts and Analytics"
           hint="Shows Rp •••••• until you tap the eye"
           control={
             <Switch
               checked={amounts.hideByDefault}
-              label="Hide amounts on Home and Accounts"
+              label="Hide amounts on Home, Accounts and Analytics"
               onChange={() => setHideByDefault(!amounts.hideByDefault)}
             />
           }
         />
       </section>
 
-      <p className="px-1 text-xs font-medium text-muted">
+      <p className="px-1 text-caption font-medium text-muted">
         The PIN and {biometricName()} stay on this device. Forgot your PIN? Sign out on the lock screen and sign in again
         with your email code; then set a new PIN here.
       </p>
@@ -145,8 +140,8 @@ function Row({ label, hint, control }: { label: string; hint: string; control: R
   return (
     <div className="flex min-h-16 items-center justify-between gap-3 border-t border-line px-5 py-3 first-of-type:border-t-0">
       <span className="flex min-w-0 flex-col">
-        <span className="text-[15px] font-semibold">{label}</span>
-        <span className="text-[13px] font-medium text-muted">{hint}</span>
+        <span className="text-body font-semibold">{label}</span>
+        <span className="text-meta font-medium text-muted">{hint}</span>
       </span>
       {control}
     </div>
