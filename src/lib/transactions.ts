@@ -21,6 +21,8 @@ export type NewTransaction = {
   toAccountId: string | null;
   categoryId: string | null;
   note: string | null;
+  /** Where it came from; new transactions default to "manual". Not changed on update. */
+  source?: Transaction["source"];
 };
 
 export const NOTE_MAX = 120;
@@ -88,7 +90,7 @@ export async function createTransaction(input: NewTransaction): Promise<Transact
       to_account_id: input.toAccountId,
       category_id: input.categoryId,
       note: input.note?.trim().slice(0, NOTE_MAX) || null,
-      source: "manual",
+      source: input.source ?? "manual",
     })
     .select(COLUMNS)
     .single();
@@ -135,5 +137,6 @@ export function toNewTransaction(t: Transaction): NewTransaction {
     toAccountId: t.toAccountId,
     categoryId: t.categoryId,
     note: t.note,
+    source: t.source,
   };
 }
