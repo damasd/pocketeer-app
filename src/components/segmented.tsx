@@ -28,6 +28,7 @@ export function Segmented<T extends string>({
   value,
   onChange,
   surface = "page",
+  weights,
 }: {
   label: string;
   options: { value: T; label: string }[];
@@ -35,6 +36,8 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void;
   /** "page" on white sheets; "card" (white with a line) on the grey page background. */
   surface?: "page" | "card";
+  /** Relative widths when one label is much longer (Security: "Immediately" next to "1 min"). Default: equal. */
+  weights?: number[];
 }) {
   const n = options.length;
   const index = Math.max(0, options.findIndex((o) => o.value === value));
@@ -43,9 +46,12 @@ export function Segmented<T extends string>({
   const last = useRef(index);
 
   // Edges of option i, as distances from the row's left and right sides (4 px padding, 4 px gaps).
-  const width = `((100% - 8px - ${(n - 1) * 4}px) / ${n})`;
-  const leftOf = (i: number) => `calc(4px + ${i} * (${width} + 4px))`;
-  const rightOf = (i: number) => `calc(4px + ${n - 1 - i} * (${width} + 4px))`;
+  const w = options.map((_, i) => weights?.[i] ?? 1);
+  const total = w.reduce((a, b) => a + b, 0);
+  const before = (i: number) => w.slice(0, i).reduce((a, b) => a + b, 0);
+  const unit = `((100% - 8px - ${(n - 1) * 4}px) / ${total})`;
+  const leftOf = (i: number) => `calc(4px + ${before(i)} * ${unit} + ${i * 4}px)`;
+  const rightOf = (i: number) => `calc(4px + ${total - before(i) - w[i]} * ${unit} + ${(n - 1 - i) * 4}px)`;
   const clipOf = (l: string, r: string) => `inset(4px ${r} 4px ${l} round 9999px)`;
 
   useLayoutEffect(() => {
@@ -73,7 +79,7 @@ export function Segmented<T extends string>({
       b?.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the choice changes
-  }, [index, n]);
+  }, [index, n, weights?.join()]);
 
   return (
     <div
@@ -87,13 +93,14 @@ export function Segmented<T extends string>({
         className="absolute top-1 bottom-1 rounded-full bg-ink"
         style={{ left: leftOf(index), right: rightOf(index) }}
       />
-      {options.map((o) => (
+      {options.map((o, i) => (
         <button
           key={o.value}
           type="button"
           aria-pressed={o.value === value}
           onClick={() => onChange(o.value)}
-          className="relative h-11 flex-1 rounded-full text-meta font-semibold text-[#4A4A4A]"
+          style={{ flex: `${w[i]} 1 0` }}
+          className="relative h-11 min-w-0 rounded-full text-meta font-semibold whitespace-nowrap text-[#4A4A4A]"
         >
           {o.label}
         </button>
@@ -105,12 +112,50 @@ export function Segmented<T extends string>({
         className="pointer-events-none absolute inset-0 flex gap-1 p-1 text-meta font-semibold text-white"
         style={{ clipPath: clipOf(leftOf(index), rightOf(index)) }}
       >
-        {options.map((o) => (
-          <span key={o.value} className="flex h-11 flex-1 items-center justify-center">
+        {options.map((o, i) => (
+          <span key={o.value} style={{ flex: `${w[i]} 1 0` }} className="flex h-11 min-w-0 items-center justify-center whitespace-nowrap">
             {o.label}
           </span>
         ))}
       </span>
+    </div>
+  );
+}
+
+/**
+ * Second-level tabs (Target: Expense / Income / Saving under Plan / Goals): plain labels on a
+ * hairline, the chosen one in ink with a 2.5 px ink underline. Lighter than Segmented, so the
+ * page reads as one main switch with a list filter inside it.
+ */
+export function UnderlineTabs<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div role="group" aria-label={label} className="flex gap-6 border-b border-line">
+      {options.map((o) => {
+        const on = o.value === value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(o.value)}
+            className={`-mb-px flex h-11 items-center border-b-[2.5px] text-body font-semibold transition-colors duration-150 ${
+              on ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

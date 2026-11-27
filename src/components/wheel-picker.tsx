@@ -15,12 +15,16 @@ export function Wheel<T extends string | number>({
   value,
   onChange,
   align = "center",
+  fit,
 }: {
   label: string;
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
   align?: "left" | "center" | "right";
+  /** As wide as its longest option, with almost no padding on the given side (the side facing the
+   *  next wheel), so two wheels sit together like written text ("December 2026"). */
+  fit?: "left" | "right";
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const index = Math.max(0, options.findIndex((o) => o.value === value));
@@ -77,7 +81,7 @@ export function Wheel<T extends string | number>({
       tabIndex={0}
       onScroll={onScroll}
       onKeyDown={onKeyDown}
-      className="no-scrollbar relative z-10 flex-1 snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-tile focus-visible:outline-2 focus-visible:outline-lime"
+      className={`no-scrollbar relative z-10 ${fit ? "flex-none" : "flex-1"} snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-tile focus-visible:outline-2 focus-visible:outline-lime`}
       style={{
         height: ROW * VISIBLE,
         paddingBlock: pad,
@@ -93,7 +97,9 @@ export function Wheel<T extends string | number>({
           role="option"
           aria-selected={i === index}
           onClick={() => go(i)}
-          className={`flex snap-center items-center px-4 text-heading transition-colors duration-150 ${
+          className={`flex snap-center items-center ${
+            !fit ? "px-4" : fit === "right" ? "pr-[3px] pl-4" : "pr-4 pl-[3px]"
+          } text-heading whitespace-nowrap transition-colors duration-150 ${
             align === "left" ? "justify-start" : align === "right" ? "justify-end" : "justify-center"
           } ${i === index ? "font-semibold text-ink" : "font-medium text-muted"}`}
           style={{ height: ROW }}
@@ -106,9 +112,9 @@ export function Wheel<T extends string | number>({
 }
 
 /** Wheels side by side over one highlighted middle band. */
-export function WheelGroup({ children }: { children: React.ReactNode }) {
+export function WheelGroup({ children, centered = false }: { children: React.ReactNode; centered?: boolean }) {
   return (
-    <div className="relative flex gap-2">
+    <div className={`relative flex ${centered ? "justify-center" : "gap-2"}`}>
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 rounded-tile bg-page"

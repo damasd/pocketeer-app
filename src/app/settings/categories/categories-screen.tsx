@@ -74,7 +74,7 @@ export function CategoriesScreen() {
         }
       />
 
-      <Segmented label="Category type" options={KINDS} value={kind} onChange={setKind} />
+      <Segmented label="Category type" surface="card" options={KINDS} value={kind} onChange={setKind} />
 
       {state.status === "error" && <ErrorNote>{state.message}</ErrorNote>}
 

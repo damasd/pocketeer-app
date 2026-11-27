@@ -97,6 +97,7 @@ export function SecurityScreen() {
                 options={LOCK_AFTER_CHOICES.map((c) => ({ value: String(c.ms), label: c.label }))}
                 value={String(lock.config?.lockAfterMs ?? 60_000)}
                 onChange={(v) => setLockAfter(Number(v))}
+                weights={LOCK_AFTER_CHOICES.map((c) => (c.label.length > 6 ? 1.7 : 1))}
               />
             </div>
           </>

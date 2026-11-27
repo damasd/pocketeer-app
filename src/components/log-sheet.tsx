@@ -6,6 +6,7 @@ import { Camera, ChevronDown, ChevronLeft, Delete, Loader2, Mic, X } from "lucid
 import { DatePopover } from "@/components/date-popover";
 import { FitText } from "@/components/fit-text";
 import { Segmented } from "@/components/segmented";
+import { DISMISS_EVENT } from "@/components/sheet";
 import { showToast } from "@/components/toast";
 import { ErrorNote } from "@/components/ui";
 import { useAccounts, type Account } from "@/lib/accounts";
@@ -86,8 +87,23 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
   const [keypadOpen, setKeypadOpen] = useState(false);
   // Tell the title bar (outside this form) so its close button turns into a back arrow while typing.
   useEffect(() => setKeypadShown(keypadOpen), [keypadOpen]);
+  // Leaving the keypad (back, Done, or the amount again): it drops away first, then the details return.
+  const [keypadClosing, setKeypadClosing] = useState(false);
+  const closeKeypadRef = useRef<() => void>(() => {});
+  function closeKeypad() {
+    if (keypadClosing) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setKeypadOpen(false);
+    setKeypadClosing(true);
+    setTimeout(() => {
+      setKeypadOpen(false);
+      setKeypadClosing(false);
+    }, KEYPAD_OUT_MS);
+  }
   useEffect(() => {
-    const back = () => setKeypadOpen(false);
+    closeKeypadRef.current = closeKeypad;
+  });
+  useEffect(() => {
+    const back = () => closeKeypadRef.current();
     keypadBus.addEventListener("back", back);
     return () => {
       keypadBus.removeEventListener("back", back);
@@ -371,7 +387,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         type="button"
         onClick={() => {
           haptic();
-          setKeypadOpen(false);
+          closeKeypad();
         }}
         style={{ gridColumn: 4, gridRow: "2 / span 3" }}
         className="rounded-tile bg-lime text-heading font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97]"
@@ -410,13 +426,15 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         onClick={() => {
           haptic();
           setPops((n) => n + 1);
-          setKeypadOpen((o) => !o);
+          if (keypadOpen) closeKeypad();
+          else setKeypadOpen(true);
         }}
         className={`mt-3 flex flex-col items-center gap-0.5 rounded-tile pb-1 outline-none focus-visible:outline-2 focus-visible:outline-lime ${
           filled.has("amount") ? "ring-2 ring-lime" : ""
         }`}
       >
-        <span className="text-meta leading-5 font-medium text-muted">Amount</span>
+        {/* While typing, the title bar already says "Enter an amount". */}
+        {!keypadOpen && <span className="text-meta leading-5 font-medium text-muted">Amount</span>}
         {/* Grey while nothing is typed, so it reads as a field waiting to be tapped. */}
         <span key={pops} className={`flex h-[51px] w-full items-center justify-center px-2 ${pops ? "amount-pop" : ""}`}>
           <FitText
@@ -435,7 +453,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
       </button>
 
       {keypadOpen ? (
-        <div id="log-keypad" className="keypad-in mt-1">
+        <div id="log-keypad" className={`mt-1 ${keypadClosing ? "keypad-out" : "keypad-in"}`}>
           {keypad}
         </div>
       ) : (
@@ -664,6 +682,9 @@ function Key({
 /** The title bar sits in the Sheet, outside LogForm: a picked receipt photo is handed over here. */
 const receiptPicked = new EventTarget();
 
+/** Length of the keypad's drop-away (globals.css .keypad-out). */
+const KEYPAD_OUT_MS = 150;
+
 // Whether the keypad is open, for the title bar's close / back button. One Log form is open at a time.
 const keypadBus = new EventTarget();
 let keypadShown = false;
@@ -698,7 +719,7 @@ export function LogCloseButton() {
           haptic();
           keypadBus.dispatchEvent(new Event("back"));
         } else {
-          e.currentTarget.closest("dialog")?.close();
+          e.currentTarget.closest("dialog")?.dispatchEvent(new Event(DISMISS_EVENT));
         }
       }}
       className="flex size-11 items-center justify-center rounded-full bg-page text-ink"

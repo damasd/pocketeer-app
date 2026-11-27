@@ -7,7 +7,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, Copy, Plus, Trash2 } from "luci
 import { ArrangeButton, ArrangeList } from "@/components/arrange-list";
 import { DeleteCategoryConfirm } from "@/components/delete-category";
 import { Wheel, WheelGroup } from "@/components/wheel-picker";
-import { Segmented } from "@/components/segmented";
+import { Segmented, UnderlineTabs } from "@/components/segmented";
 import { Sheet } from "@/components/sheet";
 import { showToast } from "@/components/toast";
 import { Button, ErrorNote, Input, Label } from "@/components/ui";
@@ -64,15 +64,24 @@ function MonthPicker({ today, start, onDone }: { today: string; start: string; o
   const years = Array.from({ length: LAST_YEAR(today) - FIRST_YEAR(today) + 1 }, (_, i) => FIRST_YEAR(today) + i);
   return (
     <div className="flex flex-col gap-5">
-      <WheelGroup>
+      {/* Month and year read as one date ("December 2026"), centred. */}
+      <WheelGroup centered>
         <Wheel
           label="Month"
           options={MONTH_NAMES.map((name, i) => ({ value: i, label: name }))}
           value={month}
           onChange={setMonth}
           align="left"
+          fit="right"
         />
-        <Wheel label="Year" options={years.map((y) => ({ value: y, label: String(y) }))} value={year} onChange={setYear} />
+        <Wheel
+          label="Year"
+          options={years.map((y) => ({ value: y, label: String(y) }))}
+          value={year}
+          onChange={setYear}
+          align="left"
+          fit="left"
+        />
       </WheelGroup>
       <Button type="button" onClick={() => onDone(`${year}-${String(month + 1).padStart(2, "0")}-15`)}>
         Show {MONTH_NAMES[month]} {year}
@@ -493,13 +502,7 @@ function PlanSlides({ slides }: { slides: Slide[] }) {
 
   return (
     <section aria-labelledby={`list-${slide.id}`} className="flex flex-col gap-3">
-      <Segmented
-        label="Show list"
-        surface="card"
-        options={slides.map((s) => ({ value: s.id, label: s.label }))}
-        value={active}
-        onChange={pick}
-      />
+      <UnderlineTabs label="Show list" options={slides.map((s) => ({ value: s.id, label: s.label }))} value={active} onChange={pick} />
       <div key={slide.id} className={`mt-3 flex flex-col gap-3 ${from ? `slide-in-${from}` : ""}`}>
         <div className="flex flex-col gap-0.5">
           {/* Title, total and the arrange icon on one line; the hint under it, full width. */}

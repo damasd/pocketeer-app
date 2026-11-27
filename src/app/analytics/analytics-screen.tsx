@@ -116,9 +116,8 @@ function AnalyticsBody({ today }: { today: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex h-14 items-center justify-between pt-3">
+      <header className="flex h-14 items-center pt-3">
         <PageTitle>Analytics</PageTitle>
-        <RevealButton />
       </header>
 
       <Segmented label="Show" surface="card" options={TYPES} value={type} onChange={setType} />
@@ -126,8 +125,9 @@ function AnalyticsBody({ today }: { today: string }) {
       {loadError && loadError.status === "error" && <ErrorNote>{loadError.message}</ErrorNote>}
 
       <section aria-label="Over time" className="flex flex-col gap-1 rounded-card bg-card p-5">
-        <span className="text-meta font-medium text-muted">
-          {VERB[type].label} · {selected.name}
+        <span className="flex items-center gap-1 text-meta font-medium text-muted">
+          {VERB[type].label}
+          <RevealButton />
         </span>
         <CountUp
           value={total}
@@ -155,6 +155,8 @@ function AnalyticsBody({ today }: { today: string }) {
             );
           })}
         </div>
+        {/* The period the number and the picked bar refer to. */}
+        <span className="mt-2 text-meta font-medium text-muted">{selected.name}</span>
 
         <Bars
           list={list}

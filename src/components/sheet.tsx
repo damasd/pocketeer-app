@@ -9,6 +9,10 @@ const FLICK = 0.6;
 /** Finger travel before a touch counts as a drag (taps stay taps). */
 const SLOP = 8;
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+/** Closing slide; the backdrop fades over the same time (.sheet-closing in globals.css). */
+const DISMISS_MS = 220;
+/** Dispatch on a sheet's <dialog> to close it with the slide: `dialog.dispatchEvent(new Event(DISMISS_EVENT))`. */
+export const DISMISS_EVENT = "sheet-dismiss";
 
 // ---- Page behind an open sheet stays still. iPhone Safari keeps scrolling the page under a
 // modal <dialog>, so the body is pinned in place while any sheet is open and put back after.
@@ -30,6 +34,19 @@ function unlockPage() {
   b.position = b.top = b.left = b.right = "";
   document.documentElement.style.overflow = "";
   window.scrollTo(0, savedY);
+}
+
+/** Slide a sheet down and fade its backdrop, then close it (X, backdrop, Escape, a drag past the line). */
+function slideClose(d: HTMLDialogElement | null) {
+  if (!d || !d.open || d.classList.contains("sheet-closing")) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return d.close();
+  d.classList.add("sheet-closing");
+  d.style.transition = `transform ${DISMISS_MS}ms ${EASE}`;
+  d.style.transform = "translateY(100%)";
+  setTimeout(() => {
+    d.close();
+    d.classList.remove("sheet-closing");
+  }, DISMISS_MS);
 }
 
 /** The part under `el` that can scroll vertically (inside the sheet), if any. */
@@ -99,15 +116,24 @@ export function Sheet({
     return unlockPage;
   }, [open]);
 
+  const dismiss = () => slideClose(ref.current);
+
+  // Something outside this component (the Log sheet's own ✕) asks to close: same animation.
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    const onDismiss = () => slideClose(d);
+    d.addEventListener(DISMISS_EVENT, onDismiss);
+    return () => d.removeEventListener(DISMISS_EVENT, onDismiss);
+  }, []);
+
   /** Let go: carry on down and close, or settle back. */
   function finish(dy: number, v: number) {
     const d = ref.current;
     if (!d) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (dy > CLOSE_AT || v > FLICK) {
-      d.style.transition = reduce ? "none" : `transform 220ms ${EASE}`;
-      d.style.transform = "translateY(100%)";
-      setTimeout(() => d.close(), reduce ? 0 : 220);
+      slideClose(d);
     } else {
       d.style.transition = reduce ? "none" : `transform 260ms ${EASE}`;
       d.style.transform = "";
@@ -218,8 +244,13 @@ export function Sheet({
       aria-label={title}
       className={tall ? "sheet sheet-tall" : "sheet"}
       onClose={onClose}
+      onCancel={(e) => {
+        // Escape: slide away instead of vanishing.
+        e.preventDefault();
+        dismiss();
+      }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) e.currentTarget.close();
+        if (e.target === e.currentTarget) dismiss();
       }}
     >
       <div className={`flex flex-col gap-4 px-5 pb-[max(24px,env(safe-area-inset-bottom))] ${tall ? "h-full min-h-0" : ""}`}>
@@ -241,7 +272,7 @@ export function Sheet({
                   <button
                     type="button"
                     aria-label="Close"
-                    onClick={() => ref.current?.close()}
+                    onClick={dismiss}
                     className="flex size-11 items-center justify-center rounded-full bg-page text-ink"
                   >
                     <X aria-hidden size={18} strokeWidth={2.25} />
@@ -258,7 +289,7 @@ export function Sheet({
           )}
         </div>
         {!closeButton && !leading && (
-          <button type="button" onClick={() => ref.current?.close()} className="sr-only">
+          <button type="button" onClick={dismiss} className="sr-only">
             Close
           </button>
         )}
