@@ -24,17 +24,28 @@ describe("topTiles", () => {
     percent,
   });
 
-  it("keeps the six with the highest share used", () => {
-    const tiles = [t("a", 10), t("b", 112), t("c", 95), t("d", 81), t("e", 76), t("f", 60), t("g", 50, 0, 100, "saving")];
+  it("keeps the six with the most spent", () => {
+    const tiles = [
+      t("a", 10, 100),
+      t("b", 20, 900),
+      t("c", 90, 800),
+      t("d", 5, 700),
+      t("e", 70, 600),
+      t("f", 60, 500),
+      t("g", 99, 400),
+    ];
     expect(topTiles(tiles).map((x) => x.id)).toEqual(["b", "c", "d", "e", "f", "g"]);
   });
 
-  it("leaves out anything with nothing planned", () => {
-    expect(topTiles([t("a", 0, 0, 0), t("b", 20)]).map((x) => x.id)).toEqual(["b"]);
+  it("keeps spending with no budget, leaves out nothing spent and nothing planned", () => {
+    expect(topTiles([t("empty", 0, 0, 0), t("noBudget", 0, 300, 0), t("planned", 0, 0, 100)]).map((x) => x.id)).toEqual([
+      "noBudget",
+      "planned",
+    ]);
   });
 
-  it("breaks ties by the bigger amount", () => {
-    expect(topTiles([t("small", 50, 100), t("big", 50, 900)]).map((x) => x.id)).toEqual(["big", "small"]);
+  it("breaks ties by the higher share used", () => {
+    expect(topTiles([t("low", 10, 500), t("high", 80, 500)]).map((x) => x.id)).toEqual(["high", "low"]);
   });
 });
 

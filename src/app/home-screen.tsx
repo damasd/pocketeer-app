@@ -14,6 +14,7 @@ import { LogForm } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
 import { TransactionRow } from "@/components/transaction-row";
 import { useAccounts } from "@/lib/accounts";
+import { onLock } from "@/lib/app-lock";
 import { accountBalance, savedInAccount } from "@/lib/balances";
 import { useBudgets } from "@/lib/budgets";
 import { useCategories } from "@/lib/categories";
@@ -139,7 +140,18 @@ export function HomeScreen() {
     main.addEventListener("touchend", onEnd, { passive: true });
     main.addEventListener("touchcancel", onEnd, { passive: true });
     main.addEventListener("wheel", onWheel, { passive: false });
+    // The app locks (after a while away): next time it opens, Home starts from the top, with the
+    // greeting and this month's budget showing and the list scrolled back up.
+    const offLock = onLock(() => {
+      g = null;
+      put(0, 0);
+      coveredRef.current = false;
+      setCovered(false);
+      inner.scrollTop = 0;
+      window.scrollTo(0, 0);
+    });
     return () => {
+      offLock();
       ro.disconnect();
       main.removeEventListener("touchstart", onStart);
       main.removeEventListener("touchmove", onMove);
@@ -170,7 +182,7 @@ export function HomeScreen() {
     .reduce((s, b) => s + b.amount, 0);
   const spentTotal = periodTxs.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
   const head = remainingBudget(budgetTotal, spentTotal);
-  // Tiles: expense budgets, the six with the highest share used.
+  // Tiles: the ones picked on the Budget page, or else the six with the most spent this period.
   const spentBy = (id: string) => periodTxs.filter((t) => t.type === "expense" && t.categoryId === id).reduce((s, t) => s + t.amount, 0);
   const expenseTiles: Tile[] = expenseCategories.map((c) => {
     const of = budgetRows.find((b) => b.categoryId === c.id)?.amount ?? 0;

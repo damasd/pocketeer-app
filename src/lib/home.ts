@@ -18,13 +18,13 @@ export type Tile = {
 };
 
 /**
- * The tiles Home shows: the `count` with the highest share used (expense budgets and saving
- * targets together), ties by the bigger amount. Items with nothing planned are left out.
+ * The tiles Home shows when none are picked: the `count` with the most spent so far this period,
+ * ties by the higher share used. Items with nothing spent and nothing planned are left out.
  */
 export function topTiles(items: readonly Tile[], count = 6): Tile[] {
   return items
-    .filter((t) => t.of > 0)
-    .sort((a, b) => b.percent - a.percent || b.amount - a.amount)
+    .filter((t) => t.amount > 0 || t.of > 0)
+    .sort((a, b) => b.amount - a.amount || b.percent - a.percent)
     .slice(0, count);
 }
 
