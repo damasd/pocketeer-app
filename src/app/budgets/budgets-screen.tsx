@@ -117,18 +117,18 @@ export function BudgetsScreen() {
       {loadError && loadError.status === "error" && <ErrorNote>{loadError.message}</ErrorNote>}
 
       {loading ? (
-        <ul aria-hidden className="grid grid-cols-2 gap-3">
+        <ul aria-hidden className="grid grid-cols-2 gap-5">
           {[0, 1, 2, 3].map((i) => (
-            <li key={i} className="h-[150px] rounded-tile bg-card" />
+            <li key={i} className="aspect-square rounded-tile bg-card" />
           ))}
         </ul>
       ) : list.length === 0 ? (
         <p className="rounded-card bg-card px-5 py-4 text-meta font-medium text-muted">No expense categories yet.</p>
       ) : (
-        <ul className="grid grid-cols-2 gap-3">
+        <ul className="grid grid-cols-2 gap-5">
           {list.map((c) => {
             const on = onHome.includes(c.id);
-            const tile = `relative flex w-full flex-col gap-2 rounded-tile bg-card p-3 text-left transition-shadow duration-150 ${
+            const tile = `relative flex aspect-square w-full min-w-0 flex-col rounded-tile bg-card p-4 text-left transition-shadow duration-150 ${
               on ? "ring-[3px] ring-lime" : "ring-1 ring-line"
             }`;
             const body = (

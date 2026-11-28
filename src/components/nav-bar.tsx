@@ -26,8 +26,8 @@ const RIGHT: Tab[] = [
 ];
 
 function isActive(pathname: string, href: string) {
-  // History opens from Home, so Home stays selected there (mockup).
-  if (href === "/") return pathname === "/" || pathname.startsWith("/history");
+  // History and Budget open from Home, so Home stays selected there (mockup).
+  if (href === "/") return pathname === "/" || pathname.startsWith("/history") || pathname.startsWith("/budgets");
   return pathname.startsWith(href);
 }
 

@@ -8,6 +8,7 @@ import { AccountStack, topCards, useAccountSwipe } from "@/components/account-st
 import { AccountsPreview } from "@/components/accounts-preview";
 import { RevealButton, useMoney } from "@/components/amount";
 import { BudgetTileBody } from "@/components/budget-tile";
+import { TilePager } from "@/components/tile-pager";
 import { FitText } from "@/components/fit-text";
 import { Greeting } from "@/components/greeting";
 import { LogForm } from "@/components/log-sheet";
@@ -329,16 +330,16 @@ export function HomeScreen() {
                 Set budgets in Target, or pick tiles in See all, to see them here.
               </p>
             ) : (
-              <ul className="grid grid-cols-2 gap-3">
+              <TilePager label="Budget tiles" count={tiles.length}>
                 {tiles.map((t) => {
                   const c = category(t.id);
                   return (
-                    <li key={`${t.kind}-${t.id}`} className="flex flex-col gap-2 rounded-tile bg-page p-3">
+                    <li key={`${t.kind}-${t.id}`} className="flex aspect-square min-w-0 flex-col rounded-tile bg-page p-4">
                       <BudgetTileBody name={c?.name ?? ""} icon={c?.icon ?? "ellipsis"} spent={t.amount} budget={t.of} money={money} />
                     </li>
                   );
                 })}
-              </ul>
+              </TilePager>
             )}
           </section>
 
