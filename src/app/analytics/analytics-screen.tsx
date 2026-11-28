@@ -116,7 +116,8 @@ function AnalyticsBody({ today }: { today: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex h-14 items-center pt-3">
+      {/* −4 px so the Expenses/Income/Saving switch lines up with Target's Plan/Goals (16 px under the title). */}
+      <header className="-mb-1 flex h-14 items-center pt-3">
         <PageTitle>Analytics</PageTitle>
       </header>
 

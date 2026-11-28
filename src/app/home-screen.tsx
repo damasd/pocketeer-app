@@ -345,7 +345,7 @@ export function HomeScreen() {
             )}
           </section>
 
-          <section aria-labelledby="saving-title" className="flex flex-col gap-3">
+          <section aria-labelledby="saving-title" className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <h2 id="saving-title" className="text-heading font-semibold">
                 Saving
@@ -393,7 +393,8 @@ export function HomeScreen() {
               <p className="text-meta font-medium text-muted">No transactions yet. Tap + to log one.</p>
             )}
             {recent.map((g) => (
-              <section key={g.date} aria-label={g.label}>
+              // The first day sits right under the title (same gap as Budget and Saving); later days keep their space.
+              <section key={g.date} aria-label={g.label} className="[&:first-of-type>h3]:pt-0">
                 <h3 className="pt-3 pb-0.5 text-caption font-semibold text-muted">{g.label}</h3>
                 <ul>
                   {g.items.map((t) => (
