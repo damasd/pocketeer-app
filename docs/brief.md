@@ -179,7 +179,7 @@ Light, bold and minimal: white and light-grey surfaces, black type and black her
 
 **Components**
 
-- **Floating nav bar:** a compact black pill (320 × 56 px) centred above the iPhone home bar, icons only. Unselected icons are grey (#9A9A9A); the selected one is white on a dark grey (#2E2E2E) circle. The centre Log button is a 68 px lime circle with a black +, taller than the bar so it sticks out above and below. Every icon keeps a 44 px tap area and a screen-reader label.
+- **Floating nav bar:** a compact black pill (336 × 64 px) centred above the iPhone home bar, icons only. Unselected icons are grey (#9A9A9A); the selected one is white on a dark grey (#2E2E2E) 48 px circle. The centre Log button is a 48 px lime circle with a black +, sitting inside the bar like the selected circle (no shadow). Every icon keeps a 44 px tap area and a screen-reader label.
 - **Cards:** 20–24 px corners, no heavy shadows; one black hero card per screen at most.
 - **Chips and buttons:** pill shaped; a selected chip is filled lime.
 - **Keypad:** large rounded grey keys; Save is lime and two rows tall.

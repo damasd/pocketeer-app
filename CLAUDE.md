@@ -42,5 +42,5 @@ If something is unclear or the brief and mockup disagree, ask before building.
 | Ember | #D63F22 | Needs attention (over budget, errors). Always a fill with **white** on it |
 
 - Never lime or ember as text on white (fails contrast).
-- Nav bar: compact black pill, icons only, selected icon white on a #2E2E2E circle, centre Log button is a 68 px lime circle that sticks out of the bar. Every icon has a 44 px tap area and an aria-label.
+- Nav bar: compact black pill, icons only, selected icon white on a #2E2E2E circle, centre Log button is a 48 px lime circle with a black + that sits inside the bar (same size as the selected circle, no shadow). Every icon has a 44 px tap area and an aria-label.
 - WCAG AA: 4.5:1 text contrast, keyboard access, real buttons and labels, touch targets ≥ 44 px.
