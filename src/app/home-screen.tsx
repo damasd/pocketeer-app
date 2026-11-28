@@ -317,7 +317,7 @@ export function HomeScreen() {
               tiles and their dots clear the nav bar. */}
           <div aria-hidden className="-mb-6 h-[5px] w-10 self-center rounded-full bg-line" />
 
-          <section aria-labelledby="tiles-title" className="flex flex-col gap-3">
+          <section aria-labelledby="tiles-title" className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <h2 id="tiles-title" className="text-heading font-semibold">
                 Budget
