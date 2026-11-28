@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OTHER_COLOUR, buckets, byCategory, plannedIn, segments, totalIn } from "./analytics";
+import { OTHER_COLOUR, SEGMENT_COLOURS, buckets, byCategory, plannedIn, segments, totalIn } from "./analytics";
 
 const stored = [
   { start: "2026-10-26", end: "2026-11-24", name: "November" },
@@ -69,7 +69,7 @@ describe("segments", () => {
     const items = ["a", "b", "c", "d", "e", "f", "g"].map((id, i) => ({ categoryId: id, amount: 700 - i * 100 }));
     const s = segments(items);
     expect(s).toHaveLength(6);
-    expect(s[0]).toMatchObject({ key: "a", colour: "#D1FC00" });
+    expect(s[0]).toMatchObject({ key: "a", colour: SEGMENT_COLOURS[0] });
     expect(s[5]).toMatchObject({ key: "other", categoryIds: ["f", "g"], amount: 300, colour: OTHER_COLOUR });
     expect(s.reduce((n, x) => n + x.amount, 0)).toBe(2800);
   });

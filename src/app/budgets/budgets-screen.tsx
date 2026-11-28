@@ -98,7 +98,7 @@ export function BudgetsScreen() {
         onClick={() => setChoosing((c) => !c)}
         disabled={loading || list.length === 0}
         className={`flex h-12 items-center justify-center gap-2 rounded-full text-body font-semibold transition-colors duration-150 disabled:opacity-50 ${
-          choosing ? "bg-lime font-bold text-ink" : "border border-line bg-card text-ink"
+          choosing ? "bg-accent font-bold text-on-accent" : "border border-line bg-card text-ink"
         }`}
       >
         {choosing ? (
@@ -129,7 +129,7 @@ export function BudgetsScreen() {
           {list.map((c) => {
             const on = onHome.includes(c.id);
             const tile = `relative flex aspect-square w-full min-w-0 flex-col rounded-tile bg-card p-4 text-left transition-shadow duration-150 ${
-              on ? "ring-[3px] ring-lime" : "ring-1 ring-line"
+              on ? "ring-[3px] ring-accent" : "ring-1 ring-line"
             }`;
             const body = (
               <>
@@ -139,7 +139,7 @@ export function BudgetsScreen() {
                   <span
                     aria-hidden
                     className={`absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full ${
-                      on ? "bg-lime text-ink" : "border-2 border-line bg-card"
+                      on ? "bg-accent text-on-accent" : "border-2 border-line bg-card"
                     }`}
                   >
                     {on && <Check size={14} strokeWidth={3} />}

@@ -36,7 +36,7 @@ export function TransactionRow({
 
   const icon =
     tx.type === "income" ? (
-      <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-full bg-ink text-white">
+      <span aria-hidden className="flex size-10 flex-none items-center justify-center rounded-full bg-ink text-card">
         <ArrowDownLeft size={18} strokeWidth={2} />
       </span>
     ) : tx.type === "transfer" ? (
@@ -46,7 +46,7 @@ export function TransactionRow({
     ) : (
       <span
         aria-hidden
-        className={`flex size-10 flex-none items-center justify-center rounded-full ${saving ? "bg-lime" : "bg-page"}`}
+        className={`flex size-10 flex-none items-center justify-center rounded-full ${saving ? "bg-accent text-on-accent" : "bg-page"}`}
       >
         <CategoryIcon name={categoryIcon} size={18} />
       </span>

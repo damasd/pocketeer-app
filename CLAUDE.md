@@ -31,16 +31,23 @@ If something is unclear or the brief and mockup disagree, ask before building.
 
 ## Design tokens
 
-| Token | Hex | Rule |
-| --- | --- | --- |
-| Ink | #111111 | Text, icons, dark header, nav bar |
-| Page | #F2F2F2 | Screen background |
-| Card | #FFFFFF | Cards, sheets |
-| Muted | #6B6B6B | Secondary text (passes 4.5:1 on white) |
-| Line | #E4E4E4 | Dividers, tracks |
-| Lime | #D1FC00 | Main action, selected, positive. Always a fill with **black** on it |
-| Ember | #D63F22 | Needs attention (over budget, errors). Always a fill with **white** on it |
+Palette 05 (Off-White · Yellow · Violet, see `docs/design/palette-study-2026-11-28/`). Light and dark themes; the toggle sits top right on Home. Tokens live in `src/app/globals.css` (`@theme` for light, `[data-theme="dark"]` for dark). Use the token classes, never raw hex.
 
-- Never lime or ember as text on white (fails contrast).
-- Nav bar: compact black pill, icons only, selected icon white on a #2E2E2E circle, centre Log button is a 48 px lime circle with a black + that sits inside the bar (same size as the selected circle, no shadow). Every icon has a 44 px tap area and an aria-label.
+| Token | Light | Dark | Rule |
+| --- | --- | --- | --- |
+| `ink` | #060316 | #F4F4F6 | Text, icons |
+| `muted` | #5C5A66 | #A1A1A2 | Secondary text (4.5:1 on its surfaces) |
+| `screen` | #F3F3F2 | #111111 | Page background |
+| `card` | #FFFFFF | #2A2A2A | Cards, sheets, Home's panel |
+| `page` | #F3F3F2 | #383838 | Fills inside a card: tiles, inputs, keys |
+| `line` | #E3E3E1 | #444444 | Dividers, tracks |
+| `night` | #060316 | #111111 | Home header, lock screen (stays dark in both themes; white text on it) |
+| `night-raised` | #060316 | #383838 | Nav bar, dark summary cards, toasts (white text on it) |
+| `accent` | #FFBC01 | #FFBC01 | Main action, positive. Always a fill with `on-accent` (#060316) on it |
+| `alert` | #F75C03 | #F75C03 | Needs attention (over budget, errors). Always a fill with `on-alert` (#060316) on it |
+| `select` | #500DCE | #A47CF3 | Selected states (switch thumb, nav circle, filters) and progress bars. `on-select` is white in light, #060316 in dark |
+
+- Never `accent` or `alert` as text on white (fails contrast): use them as fills. Amber text is fine on the dark `night` surfaces.
+- Account card colours keep their stored names: `lime` shows amber, `black` shows violet, plus white and grey (`src/components/account-card.tsx`).
+- Nav bar: compact `night-raised` pill, icons only, selected icon on a 48 px `select` circle, centre Log button is a 48 px `accent` circle with a near-black + that sits inside the bar (same size as the selected circle, no shadow). Every icon has a 44 px tap area and an aria-label.
 - WCAG AA: 4.5:1 text contrast, keyboard access, real buttons and labels, touch targets ≥ 44 px.

@@ -78,6 +78,6 @@ export const COVER_ATTR = "data-locked";
  */
 export const PRE_HIDE_SCRIPT =
   `try{if(localStorage.getItem("${LOCK_CONFIG_KEY}")){document.documentElement.setAttribute("${COVER_ATTR}","");` +
-  // Black band behind the status bar from the first paint (see src/lib/status-bar.ts).
-  `var d=function(){var m=document.querySelector('meta[name="theme-color"]');if(m&&m.dataset.base===undefined){m.dataset.base=m.content;m.content="#111111"}};` +
+  // Dark band behind the status bar from the first paint, the lock screen's colour (see src/lib/status-bar.ts).
+  `var d=function(){var m=document.querySelector('meta[name="theme-color"]');if(m&&m.dataset.base===undefined){m.dataset.base=m.content;m.content=document.documentElement.getAttribute("data-theme")==="dark"?"#111111":"#060316"}};` +
   `d();document.addEventListener("DOMContentLoaded",d)}}catch(e){}`;

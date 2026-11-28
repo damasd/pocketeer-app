@@ -14,7 +14,7 @@ export function Avatar({
   return (
     <span
       aria-hidden
-      className="flex flex-none items-center justify-center overflow-hidden rounded-full bg-lime font-bold text-ink"
+      className="flex flex-none items-center justify-center overflow-hidden rounded-full bg-accent font-bold text-on-accent"
       style={{ width: size, height: size, fontSize: Math.round(size * 0.375) }}
     >
       {photoUrl ? (

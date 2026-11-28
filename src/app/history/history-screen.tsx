@@ -100,7 +100,7 @@ export function HistoryScreen() {
             aria-label="Log transaction"
             aria-haspopup="dialog"
             onClick={() => setAdding(true)}
-            className="flex size-11 items-center justify-center rounded-full bg-lime text-ink"
+            className="flex size-11 items-center justify-center rounded-full bg-accent text-on-accent"
           >
             <Plus aria-hidden size={20} strokeWidth={2.5} />
           </button>
@@ -108,7 +108,7 @@ export function HistoryScreen() {
       />
 
       <div className="flex items-center gap-2">
-        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-line bg-card px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-line bg-card px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
           <Search aria-hidden size={18} strokeWidth={2.25} className="flex-none text-muted" />
           <input
             type="search"
@@ -125,14 +125,14 @@ export function HistoryScreen() {
           aria-haspopup="dialog"
           onClick={() => setFiltersOpen(true)}
           className={`relative flex size-11 flex-none items-center justify-center rounded-full border ${
-            activeFilters ? "border-ink bg-ink text-white" : "border-line bg-card"
+            activeFilters ? "border-select bg-select text-on-select" : "border-line bg-card"
           }`}
         >
           <SlidersHorizontal aria-hidden size={18} strokeWidth={2.25} />
           {activeFilters > 0 && (
             <span
               aria-hidden
-              className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-lime text-caption font-bold text-ink ring-2 ring-page"
+              className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-accent text-caption font-bold text-on-accent ring-2 ring-page"
             >
               {activeFilters}
             </span>
@@ -206,7 +206,7 @@ export function HistoryScreen() {
                     aria-pressed={on}
                     onClick={() => setType(c.value)}
                     className={`h-11 flex-none rounded-full border px-4 text-meta font-semibold transition-colors duration-150 ${
-                      on ? "border-lime bg-lime" : "border-line bg-card"
+                      on ? "border-accent bg-accent text-on-accent" : "border-line bg-card"
                     }`}
                   >
                     {c.label}
@@ -233,7 +233,7 @@ export function HistoryScreen() {
             <button
               type="button"
               onClick={() => setFiltersOpen(false)}
-              className="h-12 flex-[2] rounded-full bg-lime text-body font-bold text-ink"
+              className="h-12 flex-[2] rounded-full bg-accent text-body font-bold text-on-accent"
             >
               Show {shown.length} {shown.length === 1 ? "transaction" : "transactions"}
             </button>
@@ -322,7 +322,7 @@ function FilterField({
   return (
     <label className="flex flex-col gap-2">
       <span className="text-meta font-medium text-muted">{label}</span>
-      <span className="relative flex h-12 items-center justify-between gap-2 rounded-tile bg-page px-4 text-body font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+      <span className="relative flex h-12 items-center justify-between gap-2 rounded-tile bg-page px-4 text-body font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
         <span aria-hidden className="truncate">
           {display}
         </span>

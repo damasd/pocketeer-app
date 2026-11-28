@@ -4,6 +4,7 @@ import { NavBar } from "@/components/nav-bar";
 import { LockScreen } from "@/components/lock-screen";
 import { Toaster } from "@/components/toast";
 import { PRE_HIDE_SCRIPT } from "@/lib/lock-rules";
+import { THEME_SCRIPT } from "@/lib/theme-script";
 import "./globals.css";
 
 const inter = Inter({
@@ -27,14 +28,16 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#F2F2F2",
+  themeColor: "#F3F3F2",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // suppressHydrationWarning: the inline script may add data-locked to <html> before React loads.
+    // suppressHydrationWarning: the inline scripts may add data-theme / data-locked to <html> before React loads.
     <html lang="en" className={`${inter.variable} antialiased`} suppressHydrationWarning>
       <head>
+        {/* Dark theme before first paint, so it never flashes light. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {/* Hide the app before first paint when an app lock is set, so no numbers flash. */}
         <script dangerouslySetInnerHTML={{ __html: PRE_HIDE_SCRIPT }} />
       </head>

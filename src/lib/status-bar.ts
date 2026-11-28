@@ -6,7 +6,21 @@
  */
 const SELECTOR = 'meta[name="theme-color"]';
 
-export const STATUS_BAR = { dark: "#111111", light: "#F2F2F2" } as const;
+/** A colour token's current value (light or dark theme), read when needed. */
+function token(name: string, fallback: string) {
+  if (typeof document === "undefined") return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+/** Dark = Home's header and the lock screen; light = every other page. Both follow the theme. */
+export const STATUS_BAR = {
+  get dark() {
+    return token("--color-night", "#060316");
+  },
+  get light() {
+    return token("--color-screen", "#F3F3F2");
+  },
+};
 
 /** Show `colour` behind the status bar; null puts the page's own colour back. */
 export function setStatusBarColour(colour: string | null) {
@@ -26,7 +40,7 @@ export function setStatusBarColour(colour: string | null) {
   }
 }
 
-/** Band colour for a route: Home's header is black, every other page light grey. */
+/** Band colour for a route: Home's header is dark, every other page the screen colour. */
 export const pageStatusBarColour = (pathname: string) => (pathname === "/" ? STATUS_BAR.dark : STATUS_BAR.light);
 
 /**

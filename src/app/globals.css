@@ -1,19 +1,37 @@
 @import "tailwindcss";
 
-/* Design tokens: see CLAUDE.md and docs/brief.md (Design system). */
+/* Design tokens: see CLAUDE.md and docs/brief.md (Design system).
+   Colours are palette 05 (docs/design/palette-study-2026-11-28). Light values here; the dark theme
+   ([data-theme="dark"] on <html>, set by the toggle on Home) overrides the same variables below. */
 @theme {
-  --color-ink: #111111;
-  --color-page: #f2f2f2;
+  /* Text and icons. */
+  --color-ink: #060316;
+  --color-muted: #5c5a66;
+  /* Surfaces: screen = page background; card = cards, sheets, Home's panel; page = fills inside a
+     card (tiles, inputs, keys); line = dividers and tracks. */
+  --color-screen: #f3f3f2;
   --color-card: #ffffff;
-  --color-muted: #6b6b6b;
-  --color-line: #e4e4e4;
-  --color-lime: #d1fc00;
-  --color-lime-soft: #edfe99; /* lime at 40% on white: planned amounts in Analytics */
-  --color-ember: #d63f22;
+  --color-page: #f3f3f2;
+  --color-line: #e3e3e1;
+  /* Dark surfaces that stay dark in both themes: night = Home header and lock screen; night-raised =
+     nav bar, the dark summary cards and toasts. Text on them is white, secondary text #BDBDBD. */
+  --color-night: #060316;
+  --color-night-raised: #060316;
+  /* Main action (amber) and needs attention (orange): always a fill, with near-black on it. */
+  --color-accent: #ffbc01;
+  --color-accent-soft: #ffe499; /* planned amounts in Analytics */
+  --color-on-accent: #060316;
+  --color-alert: #f75c03;
+  --color-on-alert: #060316;
+  /* Selected states (switch thumb, nav circle, filters) and progress bars. */
+  --color-select: #500dce;
+  --color-on-select: #ffffff;
+  /* Chart bars with nothing picked. */
+  --color-chart-idle: #d3d3d0;
 
-  /* Nav bar only */
-  --color-nav-idle: #9a9a9a;
-  --color-nav-selected: #2e2e2e;
+  /* On dark surfaces: idle nav icons, and skeletons / tracks. */
+  --color-nav-idle: #9895a6;
+  --color-nav-selected: #2a2740;
 
   --font-sans: var(--font-inter), system-ui, sans-serif;
 
@@ -49,24 +67,43 @@
   --radius-card: 24px;
 }
 
+/* Dark theme (palette 05 dark): set on <html> by src/lib/theme.ts before first paint. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #f4f4f6;
+  --color-muted: #a1a1a2; /* 4.5:1 on the #383838 fills */
+  --color-screen: #111111;
+  --color-card: #2a2a2a;
+  --color-page: #383838;
+  --color-line: #444444;
+  --color-night: #111111;
+  --color-night-raised: #383838;
+  --color-accent-soft: #6b5520;
+  --color-select: #a47cf3; /* lighter violet so bars and the selected switch show on grey */
+  --color-on-select: #060316;
+  --color-chart-idle: #555555;
+  --color-nav-idle: #a1a1a2;
+  --color-nav-selected: #4a4a4a;
+}
+
 html {
-  background: var(--color-page);
+  background: var(--color-screen);
   -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--color-page);
+  background: var(--color-screen);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Keyboard focus: lime ring reads on both the black nav and light pages.
+/* Keyboard focus: amber ring reads on both the dark nav and light pages.
    In the base layer so a utility like outline-none can switch it off. */
 @layer base {
   :focus-visible {
-    outline: 2px solid var(--color-lime);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 }
@@ -171,7 +208,7 @@ nav a {
 }
 html.dark-top {
   /* Home: the rubber-band above the dark header stays dark. */
-  background: var(--color-ink);
+  background: var(--color-night);
 }
 .sheet::-webkit-scrollbar {
   display: none;
@@ -285,7 +322,7 @@ html[data-locked] body > :not(#app-lock-root) {
   visibility: hidden !important;
 }
 html[data-locked] {
-  background: var(--color-ink);
+  background: var(--color-night);
 }
 
 /* Target > Plan: the list slides in from the side of the option picked (plan-screen.tsx). */
@@ -315,11 +352,11 @@ html[data-locked] {
 }
 
 /* Planned amounts in the Analytics bars: light colour with diagonal hatching (analytics-screen.tsx). */
-.hatch-lime {
-  background: repeating-linear-gradient(-45deg, #d9fd4d 0 2px, var(--color-lime-soft) 2px 6px);
+.hatch-accent {
+  background: repeating-linear-gradient(-45deg, var(--color-accent) 0 2px, var(--color-accent-soft) 2px 6px);
 }
 .hatch-grey {
-  background: repeating-linear-gradient(-45deg, #d6d6d6 0 2px, #efefef 2px 6px);
+  background: repeating-linear-gradient(-45deg, var(--color-chart-idle) 0 2px, var(--color-line) 2px 6px);
 }
 
 /* Log sheet (log-sheet.tsx): tapping the amount pops it, the keypad pops up under it, and the

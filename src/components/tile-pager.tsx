@@ -30,7 +30,7 @@ export function TilePager({ label, count, children }: { label: string; count: nu
         aria-label={`${label}, scroll sideways for more`}
         tabIndex={0}
         onScroll={onScroll}
-        className="no-scrollbar -mx-5 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-px-5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-lime"
+        className="no-scrollbar -mx-5 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-px-5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
       >
         {/* Column width: half the panel's inner width (screen − 40 px padding − 20 px gap). The gap
             equals the page margin, so the next column starts exactly at the screen edge. */}

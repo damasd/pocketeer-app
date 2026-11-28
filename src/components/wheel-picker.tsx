@@ -81,7 +81,7 @@ export function Wheel<T extends string | number>({
       tabIndex={0}
       onScroll={onScroll}
       onKeyDown={onKeyDown}
-      className={`no-scrollbar relative z-10 ${fit ? "flex-none" : "flex-1"} snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-tile focus-visible:outline-2 focus-visible:outline-lime`}
+      className={`no-scrollbar relative z-10 ${fit ? "flex-none" : "flex-1"} snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-tile focus-visible:outline-2 focus-visible:outline-accent`}
       style={{
         height: ROW * VISIBLE,
         paddingBlock: pad,

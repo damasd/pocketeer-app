@@ -137,7 +137,7 @@ export function ExportScreen() {
             type="button"
             disabled={!ready || busy !== null || selected.length === 0}
             onClick={() => run("xlsx")}
-            className="flex h-14 items-center justify-center gap-2 rounded-full bg-lime text-body font-bold text-ink disabled:opacity-50"
+            className="flex h-14 items-center justify-center gap-2 rounded-full bg-accent text-body font-bold text-on-accent disabled:opacity-50"
           >
             <FileSpreadsheet aria-hidden size={20} strokeWidth={2} />
             {busy === "xlsx" ? "Preparing…" : "Download .xlsx"}

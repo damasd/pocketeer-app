@@ -346,7 +346,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
         <Link
           href="/account"
           onClick={onDone}
-          className="mt-2 flex h-12 items-center rounded-full bg-lime px-5 text-body font-bold text-ink"
+          className="mt-2 flex h-12 items-center rounded-full bg-accent px-5 text-body font-bold text-on-accent"
         >
           Go to Accounts
         </Link>
@@ -390,7 +390,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
           closeKeypad();
         }}
         style={{ gridColumn: 4, gridRow: "2 / span 3" }}
-        className="rounded-tile bg-lime text-heading font-bold text-ink transition-transform duration-100 ease-out active:scale-[0.97]"
+        className="rounded-tile bg-accent text-heading font-bold text-on-accent transition-transform duration-100 ease-out active:scale-[0.97]"
       >
         Done
       </button>
@@ -429,8 +429,8 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
           if (keypadOpen) closeKeypad();
           else setKeypadOpen(true);
         }}
-        className={`mt-3 flex flex-col items-center gap-0.5 rounded-tile pb-1 outline-none focus-visible:outline-2 focus-visible:outline-lime ${
-          filled.has("amount") ? "ring-2 ring-lime" : ""
+        className={`mt-3 flex flex-col items-center gap-0.5 rounded-tile pb-1 outline-none focus-visible:outline-2 focus-visible:outline-accent ${
+          filled.has("amount") ? "ring-2 ring-accent" : ""
         }`}
       >
         {/* While typing, the title bar already says "Enter an amount". */}
@@ -507,7 +507,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
                       setError(null);
                     }}
                     className={`h-11 flex-none rounded-full border px-4 text-meta font-semibold whitespace-nowrap transition-colors duration-150 ${
-                      on ? "border-lime bg-lime text-ink" : "border-line bg-card text-ink"
+                      on ? "border-accent bg-accent text-on-accent" : "border-line bg-card text-ink"
                     } ${on && filled.has("category") ? "ring-2 ring-ink ring-offset-2" : ""}`}
                   >
                     {c.name}
@@ -568,7 +568,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
 
         {/* When and what: right under the accounts. The calendar floats near the bottom of the screen. */}
         <div className="flex flex-none gap-2">
-          <span className={`flex-none rounded-full ${filled.has("date") ? "ring-2 ring-lime ring-offset-1" : ""}`}>
+          <span className={`flex-none rounded-full ${filled.has("date") ? "ring-2 ring-accent ring-offset-1" : ""}`}>
             <DatePopover
               value={date}
               onChange={(d) => {
@@ -595,7 +595,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
               }
             }}
             className={`h-11 min-w-0 flex-1 rounded-full border-0 bg-page px-4 text-input placeholder:text-muted ${
-              filled.has("note") ? "ring-2 ring-lime" : ""
+              filled.has("note") ? "ring-2 ring-accent" : ""
             }`}
           />
         </div>
@@ -608,7 +608,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
           onClick={save}
           disabled={busy || !ready.ready}
           className={`mt-1 h-14 rounded-full text-heading font-bold transition-[transform,background-color,color] duration-150 ease-out ${
-            ready.ready ? "bg-lime text-ink active:scale-[0.98] disabled:opacity-60" : "bg-page text-muted"
+            ready.ready ? "bg-accent text-on-accent active:scale-[0.98] disabled:opacity-60" : "bg-page text-muted"
           }`}
         >
           {busy ? "Saving…" : ready.label}
@@ -629,7 +629,7 @@ export function LogForm({ onDone, editing = null }: { onDone: () => void; editin
                 type="button"
                 disabled={busy}
                 onClick={remove}
-                className="h-11 rounded-full bg-ember px-4 text-meta font-bold text-white disabled:opacity-60"
+                className="h-11 rounded-full bg-alert px-4 text-meta font-bold text-on-alert disabled:opacity-60"
               >
                 {busy ? "Deleting…" : "Delete"}
               </button>
@@ -838,7 +838,7 @@ function AccountPicker({
         <span
           aria-hidden
           className={`flex size-8 flex-none items-center justify-center rounded-full text-caption font-bold ${
-            badge === "ink" ? "bg-ink text-lime" : "bg-lime text-ink"
+            badge === "ink" ? "bg-night-raised text-accent" : "bg-accent text-on-accent"
           }`}
         >
           {value ? accountBadge(value.name) : "…"}
@@ -890,13 +890,13 @@ type BudgetLineNote =
 
 /**
  * Under the expense categories: what's left of the picked one's budget this period. Over budget,
- * the amount is ember (4.57:1 on white, bold: readable).
+ * the amount sits on an orange pill (orange as text on white fails contrast).
  */
 function BudgetNote({ line }: { line: BudgetLineNote }) {
   if (line.kind === "none") return <span className="text-caption text-muted">No budget set</span>;
   return (
     <span className="text-caption text-muted">
-      <b className={`font-bold ${line.kind === "over" ? "text-ember" : "text-ink"}`}>{formatRupiah(line.amount)}</b>{" "}
+      <b className={`font-bold ${line.kind === "over" ? "rounded-full bg-alert px-1.5 text-on-alert" : "text-ink"}`}>{formatRupiah(line.amount)}</b>{" "}
       {line.kind === "over" ? "over" : "left"}
     </span>
   );

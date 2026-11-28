@@ -156,7 +156,7 @@ export function ProfileSettings() {
               )}
               <span
                 aria-hidden
-                className="absolute -right-0.5 -bottom-0.5 flex size-7 items-center justify-center rounded-full bg-ink text-white ring-2 ring-card"
+                className="absolute -right-0.5 -bottom-0.5 flex size-7 items-center justify-center rounded-full bg-ink text-card ring-2 ring-card"
               >
                 <Camera size={15} strokeWidth={2.25} />
               </span>

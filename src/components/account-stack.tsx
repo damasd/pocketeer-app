@@ -323,7 +323,8 @@ export function AccountStack({
         style={{ height: SMALL_H }}
       >
         {accounts.map((a, i) => {
-          const dark = CARD_STYLES[a.colour].bg === "#111111";
+          // A card the colour of the header gets a thin edge; no card colour matches it at the moment.
+          const dark = CARD_STYLES[a.colour].bg === "var(--color-night)";
           return (
             <div
               key={a.id}

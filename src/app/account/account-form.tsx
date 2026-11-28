@@ -85,10 +85,10 @@ export function AccountForm({
           aria-invalid={nameMissing}
           aria-describedby={nameMissing ? "account-name-error" : undefined}
           onChange={(e) => setName(e.target.value)}
-          className={`bg-page ${nameMissing ? "ring-2 ring-ember ring-inset" : ""}`}
+          className={`bg-page ${nameMissing ? "ring-2 ring-alert ring-inset" : ""}`}
         />
         {nameMissing && (
-          <p id="account-name-error" className="self-start rounded-full bg-ember px-3 py-1 text-meta font-semibold text-white">
+          <p id="account-name-error" className="self-start rounded-full bg-alert px-3 py-1 text-meta font-semibold text-on-alert">
             Give the account a name first
           </p>
         )}
@@ -140,8 +140,8 @@ export function AccountForm({
                   className="size-10 rounded-full border"
                   style={{
                     background: CARD_STYLES[c].bg,
-                    borderColor: c === "white" ? "#E4E4E4" : "transparent",
-                    boxShadow: on ? "0 0 0 3px #FFFFFF, 0 0 0 5px #111111" : "none",
+                    borderColor: c === "white" ? "var(--color-line)" : "transparent",
+                    boxShadow: on ? "0 0 0 3px var(--color-card), 0 0 0 5px var(--color-ink)" : "none",
                   }}
                 />
               </button>
@@ -152,7 +152,7 @@ export function AccountForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="starting-balance">Starting balance</Label>
-        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
           <span aria-hidden className="text-body font-semibold text-muted">
             Rp
           </span>

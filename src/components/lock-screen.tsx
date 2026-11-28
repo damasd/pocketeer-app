@@ -105,7 +105,7 @@ export function LockScreen() {
           setMessage(`${biometricName()} didn't unlock. Use your PIN.`);
         }
       }}
-      className="flex size-16 items-center justify-center rounded-full text-lime"
+      className="flex size-16 items-center justify-center rounded-full text-accent"
     >
       <ScanFace aria-hidden size={30} strokeWidth={1.75} />
     </button>
@@ -117,10 +117,10 @@ export function LockScreen() {
       role="dialog"
       aria-modal="true"
       aria-label="Pocketeer is locked"
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-between overflow-y-auto bg-ink px-6 pt-[max(56px,env(safe-area-inset-top))] pb-[max(28px,env(safe-area-inset-bottom))] text-white"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-between overflow-y-auto bg-night px-6 pt-[max(56px,env(safe-area-inset-top))] pb-[max(28px,env(safe-area-inset-bottom))] text-white"
     >
       <div className="flex flex-col items-center gap-3">
-        <span aria-hidden className="flex size-14 items-center justify-center rounded-full bg-lime text-ink">
+        <span aria-hidden className="flex size-14 items-center justify-center rounded-full bg-accent text-on-accent">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <path d="M12 5v14M5 12h14" />
           </svg>

@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 
 /**
- * Pill toggle (mockup "Type" control): the selected option sits on a black pill with white text.
+ * Pill toggle (mockup "Type" control): the selected option sits on a violet pill (select colour).
  *
  * Moving to another option, the pill stretches: its leading edge sets off first and the trailing
  * edge follows a moment later, catching up while the pill is still travelling (both ease in and
@@ -90,7 +90,7 @@ export function Segmented<T extends string>({
       <span
         ref={pill}
         aria-hidden
-        className="absolute top-1 bottom-1 rounded-full bg-ink"
+        className="absolute top-1 bottom-1 rounded-full bg-select"
         style={{ left: leftOf(index), right: rightOf(index) }}
       />
       {options.map((o, i) => (
@@ -100,7 +100,7 @@ export function Segmented<T extends string>({
           aria-pressed={o.value === value}
           onClick={() => onChange(o.value)}
           style={{ flex: `${w[i]} 1 0` }}
-          className="relative h-11 min-w-0 rounded-full text-meta font-semibold whitespace-nowrap text-[#4A4A4A]"
+          className="relative h-11 min-w-0 rounded-full text-meta font-semibold whitespace-nowrap text-muted"
         >
           {o.label}
         </button>
@@ -109,7 +109,7 @@ export function Segmented<T extends string>({
       <span
         ref={cut}
         aria-hidden
-        className="pointer-events-none absolute inset-0 flex gap-1 p-1 text-meta font-semibold text-white"
+        className="pointer-events-none absolute inset-0 flex gap-1 p-1 text-meta font-semibold text-on-select"
         style={{ clipPath: clipOf(leftOf(index), rightOf(index)) }}
       >
         {options.map((o, i) => (

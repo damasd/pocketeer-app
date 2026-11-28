@@ -97,7 +97,7 @@ export function PinPad({
           role={error ? "alert" : "status"}
           aria-live="polite"
           className={`min-h-6 text-meta font-semibold ${
-            error ? "rounded-full bg-ember px-3 py-0.5 text-white" : dark ? "text-[#BDBDBD]" : "text-muted"
+            error ? "rounded-full bg-alert px-3 py-0.5 text-on-alert" : dark ? "text-[#BDBDBD]" : "text-muted"
           } ${message ? "" : "invisible"}`}
         >
           {message || "."}

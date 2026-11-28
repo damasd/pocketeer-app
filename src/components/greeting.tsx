@@ -10,7 +10,7 @@ export function Greeting() {
   const name = profile?.displayName ?? "";
 
   return (
-    <header className="mb-2 flex items-center gap-2.5">
+    <header className="flex min-w-0 items-center gap-2.5">
       <Link href="/settings" aria-label="Profile and settings" className="rounded-full">
         {profile ? (
           <Avatar name={name} photoUrl={profile.photoUrl} size={36} />

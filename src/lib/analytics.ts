@@ -109,8 +109,9 @@ export function byCategory(
 }
 
 /** Donut colours: lime for the biggest, then black to light grey; "Other" is the lightest. */
-export const SEGMENT_COLOURS = ["#D1FC00", "#111111", "#4A4A4A", "#7A7A7A", "#A8A8A8"];
-export const OTHER_COLOUR = "#D4D4D4";
+// CSS variables so the donut follows light and dark mode (used through style, not SVG attributes).
+export const SEGMENT_COLOURS = ["var(--color-accent)", "var(--color-select)", "var(--color-ink)", "var(--color-muted)", "var(--color-chart-idle)"];
+export const OTHER_COLOUR = "var(--color-line)";
 
 export type Segment = { key: string; categoryIds: string[]; amount: number; colour: string; share: number };
 

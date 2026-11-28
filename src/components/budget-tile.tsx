@@ -37,7 +37,7 @@ export function BudgetTileBody({
       <span className="mt-auto truncate pt-3 text-heading leading-tight font-semibold">{name}</span>
       <span className="mt-1 flex h-5 min-w-0 items-center">
         {over ? (
-          <span className="truncate rounded-full bg-ember px-2 text-caption leading-5 font-bold text-white">
+          <span className="truncate rounded-full bg-alert px-2 text-caption leading-5 font-bold text-on-alert">
             {money(spent - budget)} over
           </span>
         ) : (
@@ -53,7 +53,7 @@ export function BudgetTileBody({
       >
         {budget > 0 && (
           <span
-            className={`block h-full rounded-full ${over ? "bg-ember" : "bg-ink"}`}
+            className={`block h-full rounded-full ${over ? "bg-alert" : "bg-select"}`}
             style={{ width: `${Math.min(100, percent)}%` }}
           />
         )}

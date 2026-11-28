@@ -3,15 +3,33 @@ import { accountDigits, formatAccountNumber, formatRupiah } from "@/lib/money";
 import { MASK } from "@/lib/amounts";
 import { CopyNumberButton } from "@/components/copy-number-button";
 
-/** Card colours from the mockup (Wallet.dc.html / NewWallet.dc.html). Palette colours only. */
+/**
+ * Card colours, from the colour tokens so they follow light and dark mode. The stored values keep
+ * their old names (lime, black) so existing accounts need no data change: "lime" shows amber (the
+ * main-action colour) and "black" shows violet (the selected colour). White and grey stay neutral.
+ */
 export const CARD_STYLES: Record<
   AccountColour,
   { label: string; bg: string; fg: string; muted: string; circle: string; border: string }
 > = {
-  black: { label: "Black", bg: "#111111", fg: "#FFFFFF", muted: "#BDBDBD", circle: "rgba(255,255,255,0.06)", border: "transparent" },
-  lime: { label: "Lime", bg: "#D1FC00", fg: "#111111", muted: "#333333", circle: "rgba(17,17,17,0.06)", border: "transparent" },
-  white: { label: "White", bg: "#FFFFFF", fg: "#111111", muted: "#6B6B6B", circle: "rgba(17,17,17,0.04)", border: "#E4E4E4" },
-  grey: { label: "Grey", bg: "#E4E4E4", fg: "#111111", muted: "#4A4A4A", circle: "rgba(255,255,255,0.4)", border: "transparent" },
+  black: {
+    label: "Violet",
+    bg: "var(--color-select)",
+    fg: "var(--color-on-select)",
+    muted: "color-mix(in srgb, var(--color-on-select) 78%, transparent)",
+    circle: "color-mix(in srgb, var(--color-on-select) 8%, transparent)",
+    border: "transparent",
+  },
+  lime: {
+    label: "Amber",
+    bg: "var(--color-accent)",
+    fg: "var(--color-on-accent)",
+    muted: "color-mix(in srgb, var(--color-on-accent) 78%, transparent)",
+    circle: "rgba(6,3,22,0.06)",
+    border: "transparent",
+  },
+  white: { label: "White", bg: "#FFFFFF", fg: "#060316", muted: "#5C5A66", circle: "rgba(6,3,22,0.04)", border: "#E3E3E1" },
+  grey: { label: "Grey", bg: "#E3E3E1", fg: "#060316", muted: "#4F4D58", circle: "rgba(255,255,255,0.4)", border: "transparent" },
 };
 
 export const COLOURS = Object.keys(CARD_STYLES) as AccountColour[];

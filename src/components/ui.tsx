@@ -5,13 +5,13 @@ type ButtonProps = ComponentProps<"button"> & {
   size?: "lg" | "md" | "sm";
 };
 
-/** Pill button. "primary" is the lime main action (black text on lime). */
+/** Pill button. "primary" is the amber main action (near-black text on it). */
 export function Button({ variant = "primary", size = "lg", className = "", ...props }: ButtonProps) {
   const look = {
-    primary: "bg-lime text-ink",
+    primary: "bg-accent text-on-accent",
     secondary: "bg-card text-ink ring-1 ring-inset ring-line",
     ghost: "text-ink underline-offset-4 enabled:hover:underline",
-    danger: "bg-ember text-white",
+    danger: "bg-alert text-on-alert",
   }[variant];
   const dims = {
     lg: "h-14 px-6 text-body font-bold",
@@ -44,10 +44,10 @@ export function Label({ htmlFor, children }: { htmlFor: string; children: ReactN
   );
 }
 
-/** Error message: white text on an ember fill (ember text on white fails contrast). */
+/** Error message: near-black text on an orange fill (orange text on white fails contrast). */
 export function ErrorNote({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="rounded-tile bg-ember px-4 py-3 text-meta font-semibold text-white">
+    <p role="alert" className="rounded-tile bg-alert px-4 py-3 text-meta font-semibold text-on-alert">
       {children}
     </p>
   );

@@ -83,7 +83,7 @@ export function DatePopover({
         aria-label={`Date, ${dateLabel(value)}. Change`}
         onClick={toggle}
         className={`flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-meta font-semibold transition-colors duration-150 ${
-          open ? "border-ink bg-ink text-white" : "border-line bg-card text-ink"
+          open ? "border-select bg-select text-on-select" : "border-line bg-card text-ink"
         }`}
       >
         <CalendarDays aria-hidden size={16} strokeWidth={2} />
@@ -141,7 +141,7 @@ export function DatePopover({
                   onClick={() => pick(date)}
                   className={`flex size-11 items-center justify-center rounded-full text-body transition-colors duration-150 ${
                     on
-                      ? "bg-lime font-bold text-ink"
+                      ? "bg-accent font-bold text-on-accent"
                       : isToday
                         ? "font-bold text-ink ring-[1.5px] ring-ink ring-inset"
                         : "font-medium text-ink hover:bg-page"

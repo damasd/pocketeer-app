@@ -213,10 +213,10 @@ function CategoryForm({
           value={name}
           aria-invalid={nameMissing}
           onChange={(e) => setName(e.target.value)}
-          className={`bg-page ${nameMissing ? "ring-2 ring-ember ring-inset" : ""}`}
+          className={`bg-page ${nameMissing ? "ring-2 ring-alert ring-inset" : ""}`}
         />
         {nameMissing && (
-          <p className="self-start rounded-full bg-ember px-3 py-1 text-meta font-semibold text-white">Give the category a name first</p>
+          <p className="self-start rounded-full bg-alert px-3 py-1 text-meta font-semibold text-on-alert">Give the category a name first</p>
         )}
       </div>
 
@@ -247,7 +247,7 @@ function CategoryForm({
                 aria-pressed={on}
                 onClick={() => setIcon(key)}
                 className={`flex aspect-square min-h-11 items-center justify-center rounded-full transition-colors duration-150 ${
-                  on ? "bg-lime text-ink" : "bg-page text-ink"
+                  on ? "bg-accent text-on-accent" : "bg-page text-ink"
                 }`}
               >
                 <Icon aria-hidden size={20} strokeWidth={2} />

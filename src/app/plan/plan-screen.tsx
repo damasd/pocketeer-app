@@ -334,7 +334,7 @@ function PlanBody({ today }: { today: string }) {
             </button>
           </div>
 
-          <section aria-label="Plan for this period" className="flex flex-col gap-2.5 rounded-card bg-ink p-5 text-white">
+          <section aria-label="Plan for this period" className="flex flex-col gap-2.5 rounded-card bg-night-raised p-5 text-white">
             <SummaryLine label="Expected income" value={expectedIncome} />
             <SummaryLine label="Expense budget" value={expenseBudget} />
             <SummaryLine label="Saving target" value={savingTarget} />
@@ -342,7 +342,7 @@ function PlanBody({ today }: { today: string }) {
             <div className="flex items-center justify-between gap-2">
               <span className="min-w-0 text-meta text-[#BDBDBD]">{left >= 0 ? "Left to plan" : "Over-planned by"}</span>
               <span
-                className={`flex-none rounded-full px-3 py-1 text-heading font-bold whitespace-nowrap ${left >= 0 ? "bg-lime text-ink" : "bg-ember text-white"}`}
+                className={`flex-none rounded-full px-3 py-1 text-heading font-bold whitespace-nowrap ${left >= 0 ? "bg-accent text-on-accent" : "bg-alert text-on-alert"}`}
               >
                 {formatRupiah(Math.abs(left))}
               </span>
@@ -527,7 +527,7 @@ function PlanSlides({ slides }: { slides: Slide[] }) {
 
 /**
  * One category on a Plan slide: the amount you type, a bar, and how it's going.
- * Expense: spent against the budget (ember when over). Income: received against what you expect.
+ * Expense: spent against the budget (orange when over). Income: received against what you expect.
  * Saving: put into the goal this period against the target.
  */
 function AmountRow({
@@ -572,14 +572,14 @@ function AmountRow({
   }
 
   let bar: number;
-  let barColour = "bg-ink";
+  let barColour = "bg-select";
   let status: ReactNode;
   if (kind === "expense") {
     const line = budgetLine(amount, actual);
     bar = line.barPercent;
-    if (line.over) barColour = "bg-ember";
+    if (line.over) barColour = "bg-alert";
     status = line.over ? (
-      <span className="rounded-full bg-ember px-2 py-0.5 font-semibold text-white">{formatRupiah(line.remaining)} over</span>
+      <span className="rounded-full bg-alert px-2 py-0.5 font-semibold text-on-alert">{formatRupiah(line.remaining)} over</span>
     ) : (
       <span className="font-semibold">{formatRupiah(line.remaining)} left</span>
     );
@@ -592,7 +592,7 @@ function AmountRow({
       amount === 0 ? (
         <span className="text-muted">No amount set</span>
       ) : line.reached ? (
-        <span className="rounded-full bg-lime px-2 py-0.5 font-semibold text-ink">{reachedLabel}</span>
+        <span className="rounded-full bg-accent px-2 py-0.5 font-semibold text-on-accent">{reachedLabel}</span>
       ) : (
         <span className="font-semibold">
           {formatRupiah(line.remaining)} {kind === "income" ? "to come" : "to go"}
@@ -619,7 +619,7 @@ function AmountRow({
             </button>
           )}
         </span>
-        <span className="flex h-11 w-[150px] flex-none items-center gap-1 rounded-full bg-page px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+        <span className="flex h-11 w-[150px] flex-none items-center gap-1 rounded-full bg-page px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
           <span aria-hidden className="text-meta font-semibold text-muted">
             Rp
           </span>
@@ -688,7 +688,7 @@ function GoalsTab({
 
   return (
     <>
-      <section aria-label="All goals" className="flex flex-col gap-1 rounded-card bg-ink p-5 text-white">
+      <section aria-label="All goals" className="flex flex-col gap-1 rounded-card bg-night-raised p-5 text-white">
         <span className="text-meta text-[#BDBDBD]">Total saved</span>
         <span className="text-amount leading-[1.25] font-bold tracking-[-0.03em]">{formatRupiah(savedTotal)}</span>
         <div
@@ -699,7 +699,7 @@ function GoalsTab({
           aria-valuenow={pct}
           className="mt-3 h-2 overflow-hidden rounded-full bg-nav-selected"
         >
-          <div className="h-full rounded-full bg-lime" style={{ width: `${pct}%` }} />
+          <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
         </div>
         <span className="mt-1.5 flex items-baseline justify-between gap-2 text-meta text-[#BDBDBD]">
           {targeted.length ? (
@@ -718,7 +718,7 @@ function GoalsTab({
       <button
         type="button"
         onClick={onNew}
-        className="flex h-12 items-center justify-center gap-2 rounded-full bg-lime text-body font-bold text-ink"
+        className="flex h-12 items-center justify-center gap-2 rounded-full bg-accent text-body font-bold text-on-accent"
       >
         <Plus aria-hidden size={16} strokeWidth={2.5} />
         New goal
@@ -757,11 +757,11 @@ function GoalsTab({
             {goal ? (
               <>
                 <span aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-page">
-                  <span className="block h-full rounded-full bg-ink" style={{ width: `${percent}%` }} />
+                  <span className="block h-full rounded-full bg-select" style={{ width: `${percent}%` }} />
                 </span>
                 <span className="mt-0.5 flex w-full items-center justify-between gap-2 text-caption">
                   <span className="text-muted">{toGo > 0 ? `${formatRupiah(toGo)} to go` : "Goal reached"}</span>
-                  <span className={`rounded-full px-2 py-0.5 font-semibold ${percent >= 100 ? "bg-lime text-ink" : "bg-page"}`}>
+                  <span className={`rounded-full px-2 py-0.5 font-semibold ${percent >= 100 ? "bg-accent text-on-accent" : "bg-page"}`}>
                     {percent}% saved
                   </span>
                 </span>
@@ -832,7 +832,7 @@ function NewCategory({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor={`new-${kind}-amount`}>{kind === "income" ? "Expected this period" : "Budget this period"} (optional)</Label>
-        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
           <span aria-hidden className="text-body font-semibold text-muted">
             Rp
           </span>

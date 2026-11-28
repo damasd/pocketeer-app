@@ -41,7 +41,7 @@ export function PeriodsScreen() {
                 <span className="text-body font-semibold">
                   {p.name}
                   {today && today >= p.start && today <= p.end && (
-                    <span className="ml-2 rounded-full bg-lime px-2 py-0.5 text-caption font-semibold">Now</span>
+                    <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-caption font-semibold text-on-accent">Now</span>
                   )}
                 </span>
                 <span className="text-meta font-medium text-muted">{periodRangeLabel(p)}</span>

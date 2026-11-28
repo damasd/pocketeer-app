@@ -149,7 +149,7 @@ function AnalyticsBody({ today }: { today: string }) {
                   setRange(r.value);
                   setSelectedKey(null);
                 }}
-                className={`h-11 rounded-full border px-3.5 text-caption ${on ? "border-lime bg-lime font-bold" : "border-line bg-card font-semibold"}`}
+                className={`h-11 rounded-full border px-3.5 text-caption ${on ? "border-accent bg-accent font-bold text-on-accent" : "border-line bg-card font-semibold"}`}
               >
                 {r.label}
               </button>
@@ -171,12 +171,12 @@ function AnalyticsBody({ today }: { today: string }) {
         {/* Legend for the bar picked: the light part is the plan, the dark part what really happened. */}
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-caption">
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="hatch-lime size-3 rounded-bar" />
+            <span aria-hidden className="hatch-accent size-3 rounded-bar" />
             <span className="text-muted">{PLAN_WORD[type]}</span>
             <span className="font-bold tabular-nums">{money(plan)}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span aria-hidden className="size-3 rounded-bar bg-lime" />
+            <span aria-hidden className="size-3 rounded-bar bg-accent" />
             <span className="text-muted">{VERB[type].label}</span>
             <span className="font-bold tabular-nums">{money(total)}</span>
           </span>
@@ -235,7 +235,7 @@ function AnalyticsBody({ today }: { today: string }) {
   );
 }
 
-/** Bar per bucket; the selected one is lime. Each bar is a button. Scrolls sideways when there are many. */
+/** Bar per bucket; the selected one is amber. Each bar is a button. Scrolls sideways when there are many. */
 function Bars({
   list,
   totals,
@@ -282,11 +282,11 @@ function Bars({
               >
                 <span aria-hidden data-bar className="relative block w-full origin-bottom" style={{ height: h }}>
                   <span
-                    className={`absolute inset-x-0 bottom-0 rounded-bar transition-colors duration-150 ${on ? "hatch-lime" : "hatch-grey"}`}
+                    className={`absolute inset-x-0 bottom-0 rounded-bar transition-colors duration-150 ${on ? "hatch-accent" : "hatch-grey"}`}
                     style={{ height: planned }}
                   />
                   <span
-                    className={`absolute inset-x-0 bottom-0 rounded-bar transition-colors duration-150 ${on ? "bg-lime" : "bg-[#C9C9C9]"}`}
+                    className={`absolute inset-x-0 bottom-0 rounded-bar transition-colors duration-150 ${on ? "bg-accent" : "bg-chart-idle"}`}
                     style={{ height: done || (planned ? 0 : 4) }}
                   />
                 </span>
@@ -360,7 +360,7 @@ function Donut({
             />
           </mask>
         </defs>
-        <circle cx="100" cy="100" r={R} fill="none" stroke="#F2F2F2" strokeWidth="28" />
+        <circle cx="100" cy="100" r={R} fill="none" style={{ stroke: "var(--color-page)" }} strokeWidth="28" />
         <g mask={`url(#${maskId})`}>
         {arcs.map(({ s, len, start }) => (
             <circle
@@ -369,7 +369,7 @@ function Donut({
               cy="100"
               r={R}
               fill="none"
-              stroke={s.colour}
+              style={{ stroke: s.colour }}
               strokeWidth="28"
               strokeDasharray={`${Math.max(len - gap, 0)} ${C}`}
               strokeDashoffset={-start}

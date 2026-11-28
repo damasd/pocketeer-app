@@ -173,7 +173,7 @@ function Switch({
     >
       <span
         aria-hidden
-        className={`flex h-8 w-[52px] items-center rounded-full p-1 transition-colors duration-150 ${checked ? "bg-lime" : "bg-line"}`}
+        className={`flex h-8 w-[52px] items-center rounded-full p-1 transition-colors duration-150 ${checked ? "bg-accent" : "bg-line"}`}
       >
         <span
           className={`size-6 rounded-full shadow-sm transition-transform duration-150 ease-out ${

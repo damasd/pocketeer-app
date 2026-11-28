@@ -11,6 +11,7 @@ import { BudgetTileBody } from "@/components/budget-tile";
 import { TilePager } from "@/components/tile-pager";
 import { FitText } from "@/components/fit-text";
 import { Greeting } from "@/components/greeting";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { LogForm } from "@/components/log-sheet";
 import { Sheet } from "@/components/sheet";
 import { TransactionRow } from "@/components/transaction-row";
@@ -239,7 +240,7 @@ export function HomeScreen() {
       />
       {/* One screen tall and clipped top to bottom only, so the page never scrolls while the cards
           of the card pull can still fly out sideways. */}
-      <main ref={pageRef} className="relative mx-auto flex h-dvh w-full max-w-[480px] flex-col overflow-y-clip bg-ink">
+      <main ref={pageRef} className="relative mx-auto flex h-dvh w-full max-w-[480px] flex-col overflow-y-clip bg-night">
         {/* Swipe left anywhere on the header: the account cards slide and Accounts opens. */}
         <div
           ref={headerRef}
@@ -247,7 +248,11 @@ export function HomeScreen() {
           className="relative flex flex-none touch-pan-y flex-col gap-6 px-5 pt-[max(32px,env(safe-area-inset-top))] pb-7 text-white select-none"
           {...swipeHandlers}
         >
-          <Greeting />
+          {/* Photo and greeting on the left, the dark mode toggle on the right, centred on the same line. */}
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <Greeting />
+            <ThemeToggle />
+          </div>
 
           {/* The card stack sits beside the budget, its top level with it, reaching the right edge. */}
           <div className="relative">
@@ -272,7 +277,7 @@ export function HomeScreen() {
                     aria-valuenow={head.barPercent}
                     className="mt-3.5 h-2 overflow-hidden rounded-full bg-nav-selected"
                   >
-                    <div className={`h-full rounded-full ${head.over ? "bg-ember" : "bg-lime"}`} style={{ width: `${head.barPercent}%` }} />
+                    <div className={`h-full rounded-full ${head.over ? "bg-alert" : "bg-accent"}`} style={{ width: `${head.barPercent}%` }} />
                   </div>
                   <div className="mt-1.5 flex justify-between text-caption text-[#BDBDBD]">
                     <span>
@@ -289,7 +294,7 @@ export function HomeScreen() {
                   </span>
                   <Link
                     href="/plan"
-                    className="mt-3 flex h-11 items-center self-start rounded-full bg-lime px-4 text-meta font-bold text-ink"
+                    className="mt-3 flex h-11 items-center self-start rounded-full bg-accent px-4 text-meta font-bold text-on-accent"
                   >
                     Set budgets
                   </Link>
@@ -355,7 +360,7 @@ export function HomeScreen() {
                 <ChevronRight aria-hidden size={15} strokeWidth={2.5} />
               </Link>
             </div>
-            <div className="flex flex-col gap-1 rounded-card bg-ink p-5 text-white">
+            <div className="flex flex-col gap-1 rounded-card bg-night-raised p-5 text-white">
               <span className="text-meta text-[#BDBDBD]">Saved this month</span>
               {loading ? (
                 <span aria-hidden className="mt-1 block h-9 w-44 rounded-tile bg-nav-selected" />
@@ -366,7 +371,7 @@ export function HomeScreen() {
                 <span className="mt-2 flex items-center gap-1.5 text-caption text-[#BDBDBD]">
                   <span
                     className={`rounded-full px-2.5 py-1 font-bold ${
-                      saving.trend === "down" ? "bg-nav-selected text-white" : "bg-lime text-ink"
+                      saving.trend === "down" ? "bg-nav-selected text-white" : "bg-accent text-on-accent"
                     }`}
                   >
                     {saving.trend === "same"

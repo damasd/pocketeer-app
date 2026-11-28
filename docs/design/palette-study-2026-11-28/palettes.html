@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pocketeer · palette study</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:#E7E7E3;color:#111;width:1440px;font-feature-settings:"tnum"}
+.board{width:1440px;height:1040px;padding:36px 48px;display:none;gap:40px;background:#E7E7E3}
+.board.on{display:flex}
+.overview{display:none;width:1440px;padding:36px 40px 40px;background:#E7E7E3;flex-direction:column;gap:22px}
+.overview.on{display:flex}
+.phone{width:375px;height:812px;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 8px #111,0 24px 48px rgba(0,0,0,.18);flex:none}
+.mini{transform:scale(.42);transform-origin:top left;width:375px;height:812px}
+.miniwrap{width:158px;height:341px;flex:none}
+.side{flex:1;display:flex;flex-direction:column;gap:14px;padding-top:0}
+.k{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B6B6B}
+h2{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:4px}
+.src{display:flex;gap:6px;margin-top:10px}
+.src i{width:44px;height:44px;border-radius:10px;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.card{background:#fff;border-radius:18px;padding:14px 18px}
+.card h4{font-size:15px;font-weight:700;margin-bottom:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td{padding:4px 4px;border-bottom:1px solid #EEE;vertical-align:middle}
+td.sw{width:34px}td.sw i{display:block;width:26px;height:26px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+td.hex{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#444;width:84px}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.ok{background:#E3F7D9;color:#1E5E0E}.bad{background:#FBE3DE;color:#8A2512}.mid{background:#FFF1CC;color:#6B4C00}
+.note{font-size:13px;line-height:1.5;color:#333}
+.note b{color:#111}
+/* ---------- the app, driven by CSS variables ---------- */
+.app{position:absolute;inset:0;background:var(--page);color:var(--text);overflow:hidden;font-size:15px}
+.hdr{background:var(--dark);color:var(--onDark);padding:54px 20px 28px;position:relative;height:300px}
+.av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7a8f6a,#c9d1b8);flex:none}
+.row{display:flex;align-items:center;justify-content:space-between}
+.g12{gap:12px}.g8{gap:8px}
+.mutedOnDark{color:var(--mutedOnDark)}
+.big{font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1.2}
+.track{height:8px;border-radius:999px;background:var(--trackOnDark);overflow:hidden;margin-top:14px}
+.track>span{display:block;height:100%;width:50%;background:var(--accent);border-radius:999px}
+.stack{position:absolute;right:-40px;top:96px;display:flex}
+.stack i{display:block;width:90px;height:118px;border-radius:16px;margin-left:-62px}
+.panel{position:absolute;left:0;right:0;top:272px;bottom:0;background:var(--card);border-radius:24px 24px 0 0;padding:10px 20px 0}
+.grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:0 auto}
+.sec{display:flex;align-items:center;justify-content:space-between;height:44px}
+.sec h3{font-size:17px;font-weight:600}
+.sec a{font-size:13px;font-weight:600;color:var(--text)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:4px}
+.tile{aspect-ratio:1;background:var(--tile);border-radius:16px;padding:16px;display:flex;flex-direction:column}
+.ic{width:44px;height:44px;border-radius:50%;background:var(--card);display:grid;place-items:center;color:var(--text)}
+.ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tname{margin-top:auto;font-size:17px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tleft{margin-top:4px;height:20px;font-size:13px;color:var(--muted);display:flex;align-items:center}
+.over{background:var(--alert);color:var(--onAlert);font-size:12px;font-weight:700;padding:0 8px;line-height:20px;border-radius:999px}
+.bar{margin-top:16px;height:6px;border-radius:999px;background:var(--card);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:999px;background:var(--barFill)}
+.bar.e>span{background:var(--alert)}
+.dots{display:flex;justify-content:center;gap:6px;margin-top:12px}
+.dots i{height:6px;width:6px;border-radius:9px;background:var(--line)}.dots i.on{width:16px;background:var(--text)}
+.nav{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:336px;height:64px;border-radius:999px;background:var(--navBg);box-shadow:inset 0 0 0 1px var(--navEdge),0 10px 30px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:space-between;padding:0 8px;z-index:5;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.nav .t{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:var(--navIdle)}
+.nav .t.on{background:var(--navSel);color:var(--navSelIcon)}
+.nav .log{background:var(--accent);color:var(--onAccent)}
+.nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* analytics */
+.pageTitle{font-size:24px;font-weight:700;letter-spacing:-.02em;padding:56px 20px 0;height:112px;display:flex;align-items:center}
+.seg{display:flex;background:var(--card);border-radius:999px;padding:4px;gap:4px;margin:0 20px;box-shadow:inset 0 0 0 1px var(--line)}
+.seg div{flex:1;height:44px;border-radius:999px;display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--segIdle)}
+.seg .on{background:var(--segThumb);color:var(--onSegThumb)}
+.seg.g{background:var(--page);box-shadow:none;margin:12px 0 0}
+.acard{background:var(--card);border-radius:24px;margin:16px 20px 0;padding:20px}
+.meta{font-size:13px;color:var(--muted)}
+.amt{font-size:30px;font-weight:700;letter-spacing:-.03em;margin-top:2px}
+.chart{height:150px;display:flex;align-items:flex-end;gap:8px;margin-top:16px;border-bottom:1px solid var(--line)}
+.chart div{flex:1;border-radius:6px 6px 0 0;background:var(--chartIdle)}
+.chart div.sel{background:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accentEdge)}
+.axis{display:flex;gap:8px;margin-top:6px}.axis span{flex:1;text-align:center;font-size:12px;color:var(--muted)}.axis span.b{color:var(--text);font-weight:700}
+.legend{display:flex;gap:14px;margin-top:12px;font-size:12px;color:var(--muted)}.legend b{color:var(--text)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.donutrow{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:center;margin-top:10px}
+.lrow{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="chart" viewBox="0 0 24 24"><path d="M6 20v-6M12 20V5M18 20v-9"/></symbol>
+<symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+<symbol id="eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A9.8 9.8 0 0 1 12 5c5 0 9 5 9 7a8.6 8.6 0 0 1-2.4 3.4M6.6 6.6C4.4 8 3 10.2 3 12c0 2 4 7 9 7a9.4 9.4 0 0 0 5.4-1.6"/></symbol>
+<symbol id="bus" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="15" rx="4"/><path d="M6 11h12M9 18v3M15 18v3"/></symbol>
+<symbol id="food" viewBox="0 0 24 24"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M16 3c-2 1-3 4-3 7h3v11"/></symbol>
+<symbol id="film" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 8l2-4 15 0 1 4M8 4l2 4M13 4l2 4"/></symbol>
+<symbol id="dots" viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01"/></symbol>
+</defs></svg>
+
+<div id="root"></div>
+
+<script>
+/* Roles: dark (header, nav, saving card), page, card, tile (tile fill on the white panel), text, muted,
+   line, accent (main action: Log, progress, selected period, card stack), onAccent, alert (over budget),
+   onAlert, segThumb (selected segment), barFill (tile progress), navSel (selected nav circle). */
+const P = [
+ { id:0, name:"Current", sub:"Ink · Lime · Ember (today)", src:["#111111","#F2F2F2","#FFFFFF","#D1FC00","#D63F22"],
+   dark:"#111111", stack:["#D1FC00","#FFFFFF","#3A3A3A"], page:"#F2F2F2", card:"#FFFFFF", tile:"#F2F2F2", text:"#111111", muted:"#6B6B6B", line:"#E4E4E4",
+   accent:"#D1FC00", onAccent:"#111111", alert:"#D63F22", onAlert:"#FFFFFF", segThumb:"#111111", onSegThumb:"#FFFFFF",
+   barFill:"#111111", navSel:"#2E2E2E", navSelIcon:"#FFFFFF", navIdle:"#9A9A9A", chartIdle:"#C9C9C9",
+   notes:["The baseline: one bright accent on black and white."] },
+ { id:1, name:"Volcanic Ash", sub:"#FB5607 · #8338EC · #212529 · #E9ECEF", src:["#FB5607","#8338EC","#212529","#E9ECEF"],
+   dark:"#212529", stack:["#8338EC","#FFFFFF","#FB5607"], page:"#E9ECEF", card:"#FFFFFF", tile:"#E9ECEF", text:"#212529", muted:"#5F656B", line:"#DDE1E5",
+   accent:"#8338EC", onAccent:"#FFFFFF", alert:"#FB5607", onAlert:"#212529", segThumb:"#212529", onSegThumb:"#FFFFFF",
+   barFill:"#212529", navSel:"#3A3F45", navSelIcon:"#FFFFFF", navIdle:"#9AA0A6", chartIdle:"#C9CDD2",
+   notes:["<b>Purple</b> becomes the main action (white + on it). <b>Orange</b> takes over “needs attention”: warm, alarming, and dark text reads on it.",
+          "Muted text darkened to #5F656B so it still passes on the grey page."] },
+ { id:2, name:"Elegance Digitals", sub:"Blue · Orange · Light orange · White · Black", src:["#2461F5","#FF6B0B","#FFB54D","#FFFFFF","#1F1F1F"],
+   dark:"#1F1F1F", stack:["#FFB54D","#FFFFFF","#2461F5"], page:"#F2F4FA", card:"#FFFFFF", tile:"#F2F4FA", text:"#1F1F1F", muted:"#5E6470", line:"#E1E5EF",
+   accent:"#FFB54D", onAccent:"#1F1F1F", alert:"#FF6B0B", onAlert:"#1F1F1F", segThumb:"#2461F5", onSegThumb:"#FFFFFF",
+   barFill:"#1F1F1F", navSel:"#2461F5", navSelIcon:"#FFFFFF", navIdle:"#9A9A9A", chartIdle:"#C9CEDA",
+   notes:["<b>Black</b> for the Home header and nav bar; <b>blue</b> for the selected states and the back account card (light orange, white, blue).",
+          "<b>Light orange</b> is the main action; <b>deep orange</b> means over budget. Both carry black text. The two oranges are close: over budget reads less urgent than with red."] },
+ { id:3, name:"Cool Lime & Ocean", sub:"#D7E8FA · Charcoal · #5DF9C0 · #3B1EFF", src:["#D7E8FA","#2A2D3A","#5DF9C0","#3B1EFF"],
+   dark:"#2A2D3A", stack:["#5DF9C0","#FFFFFF","#3B1EFF"], page:"#D7E8FA", card:"#FFFFFF", tile:"#EDF4FC", text:"#2A2D3A", muted:"#4F5B6B", line:"#C9DAEE",
+   accent:"#5DF9C0", onAccent:"#2A2D3A", alert:"#D63F22", onAlert:"#FFFFFF", segThumb:"#3B1EFF", onSegThumb:"#FFFFFF",
+   barFill:"#3B1EFF", navSel:"#3B1EFF", navSelIcon:"#FFFFFF", navIdle:"#9AA3B2", chartIdle:"#B9CBE2",
+   notes:["<b>Mint</b> replaces lime as the main action; <b>ocean blue</b> marks selection and fills the tile bars.",
+          "No warm colour in this palette, so over budget keeps today's <b>ember</b>. The pale blue page needs darker muted text (#4F5B6B)."] },
+ { id:4, name:"miki+", sub:"Ghost White · Aureolin · Night Blue · Strong Blue", src:["#F8F8FF","#EEF105","#020143","#0805F1"],
+   dark:"#020143", stack:["#EEF105","#FFFFFF","#0805F1"], page:"#ECECF6", card:"#F8F8FF", tile:"#ECECF6", text:"#020143", muted:"#55557A", line:"#DCDCEB",
+   accent:"#EEF105", onAccent:"#020143", alert:"#D63F22", onAlert:"#FFFFFF", segThumb:"#0805F1", onSegThumb:"#FFFFFF",
+   barFill:"#0805F1", navSel:"#0805F1", navSelIcon:"#FFFFFF", navIdle:"#8C8CB0", chartIdle:"#C6C6DE",
+   notes:["The closest to today's feel: <b>yellow</b> on <b>night blue</b> instead of lime on black, with <b>strong blue</b> for selection and bars.",
+          "No warm colour, so over budget keeps <b>ember</b>. Page is a tint of Ghost White (#ECECF6) so the white cards still stand out."] },
+ { id:5, name:"Off-White · Yellow · Violet", sub:"#FFFFF5 · #FFBC01 · #500DCE · #060316", src:["#FFFFF5","#FFBC01","#500DCE","#060316"],
+   dark:"#060316", stack:["#FFBC01","#FFFFFF","#500DCE"], page:"#F3F3F2", card:"#FFFFFF", tile:"#F3F3F2", text:"#060316", muted:"#5C5A66", line:"#E3E3E1",
+   accent:"#FFBC01", onAccent:"#060316", alert:"#F75C03", onAlert:"#060316", segThumb:"#500DCE", onSegThumb:"#FFFFFF",
+   barFill:"#500DCE", navSel:"#500DCE", navSelIcon:"#FFFFFF", navIdle:"#9895A6", chartIdle:"#D3D3D0",
+   dk:{page:"#111111", card:"#2A2A2A", tile:"#383838", navBg:"#383838",
+     colours:{segThumb:"#A47CF3", onSegThumb:"#060316", barFill:"#A47CF3", navSel:"#A47CF3", navSelIcon:"#060316", stack:["#FFBC01","#FFFFFF","#A47CF3"]},
+     note:"Violet lightened to <b>#A47CF3</b> in dark mode only, so the bars and selected switch stand out on the grey surfaces; it carries near-black text and icons."},
+   notes:["Warm and editorial: <b>amber</b> is the main action, <b>violet</b> the selected state and bars, near-black the header.",
+          "White cards on a neutral #F3F3F2 page. <b>Orange #F75C03</b> means over budget, with near-black text on it: white on this orange is only 3.2:1, too low for the small pill text."] },
+ { id:6, name:"Lime & Blue", sub:"#CDF22B · #1E45FB · Black · White", src:["#CDF22B","#1E45FB","#181818","#FFFFFF"],
+   dark:"#181818", stack:["#CDF22B","#FFFFFF","#1E45FB"], page:"#F2F2F2", card:"#FFFFFF", tile:"#F2F2F2", text:"#181818", muted:"#6B6B6B", line:"#E4E4E4",
+   accent:"#CDF22B", onAccent:"#181818", alert:"#D63F22", onAlert:"#FFFFFF", segThumb:"#1E45FB", onSegThumb:"#FFFFFF",
+   barFill:"#181818", navSel:"#1E45FB", navSelIcon:"#FFFFFF", navIdle:"#9A9A9A", chartIdle:"#C9C9C9",
+   notes:["Today's look, plus <b>cobalt blue</b> for the selected states and the back account card (lime, white, blue): the smallest change.",
+          "Lime stays the main action with black on it. No warm colour here either, so over budget keeps <b>ember</b>."] },
+ { id:7, name:"Navy · Lime Signal · Mint", sub:"#1F2A44 · #E1FF7C · #4AD1B0 · #2E2E2E · #DBDBDB", src:["#1F2A44","#E1FF7C","#4AD1B0","#2E2E2E","#DBDBDB"],
+   dark:"#1F2A44", stack:["#E1FF7C","#FFFFFF","#4AD1B0"], page:"#ECECEC", card:"#FFFFFF", tile:"#ECECEC", text:"#1F2A44", muted:"#5C6270", line:"#DBDBDB",
+   accent:"#E1FF7C", onAccent:"#1F2A44", alert:"#D63F22", onAlert:"#FFFFFF", segThumb:"#1F2A44", onSegThumb:"#FFFFFF",
+   barFill:"#4AD1B0", barEdge:true, navSel:"#2E2E2E", navSelIcon:"#FFFFFF", navIdle:"#9AA0AE", chartIdle:"#C9CCD3",
+   notes:["Softer: <b>navy</b> instead of black, a paler <b>lime</b> for the main action, <b>mint</b> for the tile bars.",
+          "Off White (#DBDBDB) is too dark for the page behind grey text (3.6:1), so it becomes the line colour and the page is #ECECEC. Over budget keeps <b>ember</b>."] },
+];
+
+/* ---------- dark mode: derived from each palette's own dark colour ---------- */
+const hx=n=>Math.round(Math.max(0,Math.min(255,n))).toString(16).padStart(2,"0");
+const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>{const x=rgb(a),y=rgb(b);return "#"+x.map((v,i)=>hx(v+(y[i]-v)*t)).join("").toUpperCase()};
+function passing(fgStart,bg,target,toward){let t=0,c=fgStart;while(cr(c,bg)<target&&t<1){t+=.04;c=mix(fgStart,toward,t)}return c}
+function darkOf(p){
+  const base=p.dark, o=p.dk||{};
+  const page=o.page||mix(base,"#000000",.45);          // page and Home header
+  const card=o.card||mix(base,"#FFFFFF",.05);          // panel and cards
+  const tile=o.tile||mix(base,"#FFFFFF",.11);          // tiles
+  const navBg=o.navBg||tile;                           // nav bar
+  const text="#F4F4F6";
+  const muted=passing(mix(text,tile,.5),tile,4.5,text);
+  const colouredThumb=p.segThumb!==p.dark;
+  const custom=p.dk?[`Set by you: page and header ${page}, panel and cards ${card}, nav bar ${navBg}; tiles ${tile} so they stand out from the panel. Text ${text}; grey text ${muted} so it passes AA on tiles.`]:null;
+  return {...p, mode:"dark", page, hdr:page, card, tile, text, muted,
+    line:o.card?mix(card,"#FFFFFF",.12):mix(base,"#FFFFFF",.18), navBg, navEdge:o.navBg?mix(navBg,"#FFFFFF",.08):mix(base,"#FFFFFF",.2),
+    segThumb: colouredThumb?p.segThumb:text, onSegThumb: colouredThumb?p.onSegThumb:base,
+    barFill: p.barFill===p.dark?text:p.barFill,
+    navSel: p.navSel===p.segThumb&&colouredThumb?p.navSel:mix(base,"#FFFFFF",.3), navSelIcon:"#FFFFFF",
+    navIdle:mix(text,navBg,.45), chartIdle:o.card?mix(card,"#FFFFFF",.22):mix(base,"#FFFFFF",.24), donut2:text,
+    notes:[...(custom||[`Derived from ${base}: page and header ${page}, panel and cards ${card}, tiles and nav bar ${tile}. Text ${text}; grey text ${muted} so it passes AA on tiles.`]),
+      ...(o.colours?[]:[colouredThumb?"Selected states keep the palette colour.":"Selected switches turn light (dark text on them): black on a dark page would vanish."]),
+      o.note||"Main action, over budget and the account cards keep their light-mode colours."], ...(o.colours||{})};
+}
+
+/* contrast */
+const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+const pill=(r,large)=>{const need=large?3:4.5;const cls=r>=need?"ok":r>=3?"mid":"bad";return `<span class="pill ${cls}">${r.toFixed(1)}:1 ${r>=need?"AA":large?"fail":"large only"}</span>`};
+
+const ico=(id)=>`<svg><use href="#${id}"/></svg>`;
+function vars(p){
+  const hdr=p.hdr||p.dark;
+  return `--dark:${p.dark};--hdr:${hdr};--page:${p.page};--card:${p.card};--tile:${p.tile};--text:${p.text};--muted:${p.muted};--line:${p.line};--accent:${p.accent};--onAccent:${p.onAccent};--alert:${p.alert};--onAlert:${p.onAlert};--segThumb:${p.segThumb};--onSegThumb:${p.onSegThumb};--barFill:${p.barFill};--navSel:${p.navSel};--navSelIcon:${p.navSelIcon};--navIdle:${p.navIdle};--chartIdle:${p.chartIdle};--navBg:${p.navBg||p.dark};--navEdge:${p.navEdge||"transparent"};--onDark:#FFFFFF;--mutedOnDark:rgba(255,255,255,.72);--trackOnDark:rgba(255,255,255,.18);--segIdle:${p.muted};--accentEdge:${cr(p.accent,p.card)<1.6?p.text:"transparent"}`;
+}
+function nav(sel){return `<div class="nav"><div class="t ${sel==0?"on":""}">${ico("home")}</div><div class="t">${ico("wallet")}</div><div class="t log">${ico("plus")}</div><div class="t ${sel==2?"on":""}">${ico("chart")}</div><div class="t">${ico("target")}</div></div>`}
+function tile(name,icon,left,pct,over){
+  return `<div class="tile"><div class="ic">${ico(icon)}</div><div class="tname">${name}</div><div class="tleft">${over?`<span class="over">Rp 225.000 over</span>`:`${left} left`}</div><div class="bar ${over?"e":""}"><span style="width:${pct}%"></span></div></div>`;
+}
+function home(p){
+  return `<div class="app" style="${vars(p)}">
+    <div class="hdr" style="background:var(--hdr)">
+      <div class="row g12" style="justify-content:flex-start"><div class="av"></div><div><div style="font-size:13px" class="mutedOnDark">Welcome back,</div><div style="font-size:15px;font-weight:700">damasdwinito</div></div></div>
+      <div style="margin-top:28px;margin-right:92px">
+        <div class="row g8" style="justify-content:flex-start;font-size:13px"><span class="mutedOnDark">This month budget</span><svg style="width:18px;height:18px;fill:none;stroke:rgba(255,255,255,.72);stroke-width:2"><use href="#eyeoff"/></svg></div>
+        <div class="big" style="margin-top:4px">Rp 4.017.200</div>
+        <div class="track"><span></span></div>
+        <div class="row" style="font-size:12px;margin-top:6px"><span><b>50%</b> <span class="mutedOnDark">spent of</span></span><span class="mutedOnDark">Rp 8.050.000</span></div>
+      </div>
+      <div class="stack">${(p.stack||[p.accent,"#2a2a2a","#FFFFFF"]).map(c=>`<i style="background:${c};box-shadow:0 0 0 1px rgba(255,255,255,.12)"></i>`).join("")}</div>
+    </div>
+    <div class="panel">
+      <div class="grab"></div>
+      <div class="sec" style="margin-top:2px"><h3>Budget</h3><a>See all ›</a></div>
+      <div class="tiles">
+        ${tile("Transportation","bus","Rp 1.050.000",25)}${tile("Food","food","Rp 450.000",25)}
+        ${tile("Entertainment","film","",100,true)}${tile("Other Expenses","dots","Rp 573.000",77)}
+      </div>
+      <div class="dots"><i class="on"></i><i></i></div>
+    </div>
+    ${nav(0)}
+  </div>`;
+}
+function analytics(p){
+  const bars=[0,0,0,0,0,0,0,0,0,0,0,62];
+  return `<div class="app" style="${vars(p)}">
+    <div class="pageTitle">Analytics</div>
+    <div class="seg"><div class="on">Expenses</div><div>Income</div><div>Saving</div></div>
+    <div class="acard">
+      <div class="meta row g8" style="justify-content:flex-start">Spent <svg style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><use href="#eyeoff"/></svg></div>
+      <div class="amt">Rp 4.032.800</div>
+      <div class="seg g"><div class="on">Month</div><div>Quarter</div><div>Year</div></div>
+      <div class="meta" style="margin-top:8px">December</div>
+      <div class="chart">${bars.map((h,i)=>`<div class="${i==11?"sel":""}" style="height:${h? h+"%":"4px"}"></div>`).join("")}</div>
+      <div class="axis">${"JFMAMJJASOND".split("").map((m,i)=>`<span class="${i==11?"b":""}">${m}</span>`).join("")}</div>
+      <div class="legend"><span><i style="background:var(--accent);box-shadow:inset 0 0 0 1px var(--accentEdge)"></i>Spent <b>Rp 4.032.800</b></span><span><i style="background:var(--chartIdle)"></i>Budget <b>Rp 8.050.000</b></span></div>
+    </div>
+    <div class="acard">
+      <div style="font-size:17px;font-weight:700">By category</div>
+      <div class="donutrow">
+        <svg viewBox="0 0 42 42" style="width:120px;height:120px;transform:rotate(-90deg)">
+          <circle cx="21" cy="21" r="15.9" fill="none" stroke="${p.accent}" stroke-width="7" stroke-dasharray="61 39"/>
+          <circle cx="21" cy="21" r="15.9" fill="none" stroke="${p.donut2||p.dark}" stroke-width="7" stroke-dasharray="25 75" stroke-dashoffset="-61.5"/>
+          <circle cx="21" cy="21" r="15.9" fill="none" stroke="${p.segThumb===p.dark?p.muted:p.segThumb}" stroke-width="7" stroke-dasharray="9 91" stroke-dashoffset="-87"/>
+          <circle cx="21" cy="21" r="15.9" fill="none" stroke="${p.chartIdle}" stroke-width="7" stroke-dasharray="5 95" stroke-dashoffset="-96.5"/>
+        </svg>
+        <div>
+          <div class="lrow"><span>Other</span><b>61%</b></div><div class="lrow"><span>Entertainment</span><b>25%</b></div>
+          <div class="lrow"><span>Transport</span><b>9%</b></div><div class="lrow"><span>2 more</span><b>5%</b></div>
+        </div>
+      </div>
+    </div>
+    ${nav(2)}
+  </div>`;
+}
+function board(p){
+  const dk=p.mode==="dark";
+  const rows=[
+    ["Text on page",p.text,p.page,false],["Muted text on page",p.muted,p.page,false],["Muted text on card",p.muted,p.card,false],
+    ["Text on main action",p.onAccent,p.accent,false],["Text on over-budget pill",p.onAlert,p.alert,false],
+    ["Text on selected segment",p.onSegThumb,p.segThumb,false],["White on header",'#FFFFFF',p.hdr||p.dark,true],
+    ["Main action vs card (shape)",p.accent,p.card,true],["Grey text on tile",p.muted,p.tile,false],["Bar colour vs tile (shape)",p.barFill,p.tile,true],
+  ];
+  const roles=[["Header / nav bar",`${p.hdr||p.dark} / ${p.navBg||p.dark}`,p.hdr||p.dark],["Page",p.page,p.page],["Card",p.card,p.card],
+    ["Main action",p.accent,p.accent],["Needs attention",p.alert,p.alert],["Selected · bars",p.segThumb===p.barFill?p.segThumb:`${p.segThumb} / ${p.barFill}`,p.segThumb]];
+  return `<section class="board" id="b${p.id}">
+    <div class="phone">${home(p)}</div>
+    <div class="phone">${analytics(p)}</div>
+    <div class="side">
+      <div><div class="k">${p.id? `Palette ${p.id} of 7`:"Reference"} · ${dk?"dark mode":"light mode"} · mockup only, no code changed</div><h2>${p.name}${dk?" · Dark":""}</h2>
+        <div class="src">${p.src.map(c=>`<i style="background:${c}" title="${c}"></i>`).join("")}</div>
+        <div class="note" style="margin-top:6px;color:#6B6B6B">${p.sub}</div></div>
+      <div class="card"><h4>How the palette maps to the app</h4><table>${roles.map(r=>`<tr><td class="sw"><i style="background:${r[2]}"></i></td><td>${r[0]}</td><td class="hex">${r[1]}</td></tr>`).join("")}</table></div>
+      <div class="card"><h4>Contrast (WCAG AA)</h4><table>${rows.map(r=>`<tr><td>${r[0]}</td><td style="text-align:right">${pill(cr(r[1],r[2]),r[3])}</td></tr>`).join("")}</table></div>
+      <div class="card note">${p.notes.map(n=>`<p style="margin-bottom:6px">${n}</p>`).join("")}</div>
+    </div>
+  </section>`;
+}
+function overview(list,dk){
+  return `<section class="overview" id="ov">
+    <div><div class="k">Palette study · Home screen · ${dk?"dark mode":"light mode"} · mockup only, no code changed</div><h2>Current vs 7 alternatives${dk?" · Dark mode":""}</h2></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:26px 20px">
+      ${list.map(p=>`<div style="display:flex;gap:14px;align-items:flex-start"><div class="miniwrap"><div class="phone mini" style="box-shadow:0 0 0 6px #111">${home(p)}</div></div>
+        <div style="padding-top:4px;min-width:0"><div style="font-size:12px;font-weight:700;color:#6B6B6B">${p.id?`0${p.id}`:"NOW"}</div><div style="font-size:16px;font-weight:800;line-height:1.2;margin-top:2px">${p.name}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">${p.src.map(c=>`<i style="display:block;width:20px;height:20px;border-radius:6px;background:${c};box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)"></i>`).join("")}</div></div></div>`).join("")}
+    </div>
+  </section>`;
+}
+const qs=new URLSearchParams(location.search), q=qs.get("p"), dkMode=qs.get("m")==="dark";
+const LIST=dkMode?P.map(darkOf):P;
+document.getElementById("root").innerHTML = q==="ov" ? overview(LIST,dkMode) : LIST.map(board).join("");
+if(q!=="ov"){(document.getElementById("b"+(q??"0"))||document.getElementById("b0")).classList.add("on")}
+else document.getElementById("ov").classList.add("on");
+</script>
+</body>
+</html>

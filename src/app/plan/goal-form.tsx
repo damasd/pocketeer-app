@@ -84,7 +84,7 @@ export function GoalForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="goal-target">Target amount (optional)</Label>
-        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-lime">
+        <div className="flex h-[52px] items-center gap-1.5 rounded-tile bg-page px-4 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
           <span aria-hidden className="text-body font-semibold text-muted">
             Rp
           </span>

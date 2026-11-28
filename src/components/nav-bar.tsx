@@ -57,7 +57,7 @@ function TabLink({ tab, active, pathname, linkRef }: { tab: Tab; active: boolean
       className={[
         // The grey circle behind the selected icon is the sliding one in NavBar.
         "relative z-10 flex size-12 items-center justify-center rounded-full transition-colors duration-300",
-        active ? "text-white" : "text-nav-idle hover:text-white",
+        active ? "text-on-select" : "text-nav-idle hover:text-white",
       ].join(" ")}
     >
       <Icon aria-hidden size={24} strokeWidth={active ? 2.25 : 2} />
@@ -123,7 +123,7 @@ export function NavBar() {
       <nav
         aria-label="Main"
         inert={typing}
-        className={`fixed left-1/2 z-40 flex h-16 w-[336px] -translate-x-1/2 select-none items-center justify-between rounded-full bg-ink px-2 shadow-[0_10px_30px_rgba(17,17,17,0.28)] transition-[translate,opacity] duration-200 ease-out motion-reduce:transition-none ${
+        className={`fixed left-1/2 z-40 flex h-16 w-[336px] -translate-x-1/2 select-none items-center justify-between rounded-full bg-night-raised px-2 shadow-[0_10px_30px_rgba(17,17,17,0.28)] transition-[translate,opacity] duration-200 ease-out motion-reduce:transition-none ${
           // Out of the way while typing: the keyboard covers the bottom of the screen anyway.
           typing ? "pointer-events-none translate-y-[calc(100%+48px)] opacity-0" : ""
         }`}
@@ -133,7 +133,7 @@ export function NavBar() {
           <span
             aria-hidden
             data-nav-circle
-            className={`absolute top-2 z-0 size-12 rounded-full bg-nav-selected ${
+            className={`absolute top-2 z-0 size-12 rounded-full bg-select ${
               // Moved with left, not transform: Safari draws a transformed, animating element on its
               // own layer above the icons whatever the stacking order.
               circle.animate ? "transition-[left,opacity] duration-[300ms] ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none" : ""
@@ -149,8 +149,8 @@ export function NavBar() {
           aria-label="Log transaction"
           aria-haspopup="dialog"
           onClick={() => setLogOpen(true)}
-          // Sits inside the bar: the same 48 px circle as the selected-tab highlight, lime with a black +.
-          className="relative z-10 flex size-12 flex-none items-center justify-center rounded-full bg-lime text-ink transition-transform duration-150 ease-out active:scale-[0.94]"
+          // Sits inside the bar: the same 48 px circle as the selected-tab highlight, amber with a near-black +.
+          className="relative z-10 flex size-12 flex-none items-center justify-center rounded-full bg-accent text-on-accent transition-transform duration-150 ease-out active:scale-[0.94]"
         >
           <Plus aria-hidden size={24} strokeWidth={2.5} />
         </button>

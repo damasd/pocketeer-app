@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Expenses, income, transfers and savings, per pay period.",
     start_url: "/",
     display: "standalone",
-    background_color: "#F2F2F2",
-    theme_color: "#F2F2F2",
+    background_color: "#F3F3F2",
+    theme_color: "#F3F3F2",
     icons: [
       { src: "/pwa-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/pwa-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
