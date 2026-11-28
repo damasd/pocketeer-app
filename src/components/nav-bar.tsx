@@ -149,9 +149,10 @@ export function NavBar() {
           aria-label="Log transaction"
           aria-haspopup="dialog"
           onClick={() => setLogOpen(true)}
-          className="relative z-10 flex size-[68px] flex-none -translate-y-3 items-center justify-center rounded-full bg-lime text-ink shadow-[0_6px_16px_rgba(17,17,17,0.25)] transition-transform duration-150 ease-out active:scale-[0.96]"
+          // Sits inside the bar: the same 48 px circle as the selected-tab highlight, lime with a black +.
+          className="relative z-10 flex size-12 flex-none items-center justify-center rounded-full bg-lime text-ink transition-transform duration-150 ease-out active:scale-[0.94]"
         >
-          <Plus aria-hidden size={30} strokeWidth={2.5} />
+          <Plus aria-hidden size={24} strokeWidth={2.5} />
         </button>
         {RIGHT.map((tab) => (
           <TabLink key={tab.href} tab={tab} active={isActive(pathname, tab.href)} pathname={pathname} linkRef={linkRef(tab.href)} />
