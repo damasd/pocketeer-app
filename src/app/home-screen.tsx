@@ -313,7 +313,9 @@ export function HomeScreen() {
             covered ? "overflow-y-auto" : "overflow-hidden"
           }`}
         >
-          <div aria-hidden className="h-[5px] w-10 self-center rounded-full bg-line" />
+          {/* No extra gap under the handle (the Budget title row's own 44 px height spaces it), so both rows of
+              tiles and their dots clear the nav bar. */}
+          <div aria-hidden className="-mb-6 h-[5px] w-10 self-center rounded-full bg-line" />
 
           <section aria-labelledby="tiles-title" className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
